@@ -30,6 +30,12 @@ model User {
   
   // Opportunities relationship (for mentors)
   opportunities Opportunity[]
+  
+  // Saved opportunities relationship (for mentees)
+  savedOpportunities SavedOpportunity[]
+  
+  // Applications relationship (for mentees)
+  applications Application[]
 }
 
 model Profile {
@@ -86,6 +92,10 @@ model Opportunity {
   compensation      String?
   applicationDeadline DateTime?
   
+  // Relationships
+  savedOpportunities SavedOpportunity[]
+  applications        Application[]
+  
   // Timestamps
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -104,4 +114,39 @@ enum OpportunityStatus {
   APPROVED
   REJECTED
   CLOSED
+}
+
+model SavedOpportunity {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @db.ObjectId
+  opportunityId String      @db.ObjectId
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  
+  @@unique([userId, opportunityId])
+}
+
+model Application {
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  menteeId      String           @db.ObjectId
+  opportunityId String           @db.ObjectId
+  status        ApplicationStatus @default(PENDING)
+  cvFile        String?          // S3 key for CV file
+  cvFileName    String?          // Original filename for CV
+  coverLetter   String?
+  mentee        User             @relation(fields: [menteeId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  @@unique([menteeId, opportunityId])
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
 }

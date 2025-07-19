@@ -1,6 +1,6 @@
 # Task ID: 2
 # Title: User Profile Management (Mentor & Mentee)
-# Status: in-progress
+# Status: done
 # Dependencies: 1
 # Priority: high
 # Description: Develop the functionality for Mentees and Mentors to create, view, and edit their profiles.
@@ -11,33 +11,97 @@ Create profile pages for both roles. Mentee Profile: Education, interests, locat
 After logging in as a mentee/mentor, verify that the profile creation form is presented and can be submitted. Test editing and saving changes to the profile fields.
 
 # Subtasks:
-## 1. Update Database Schema for Profile Management [pending]
+## 1. Update Database Schema for Profile Management [done]
 ### Dependencies: None
 ### Description: Extend the existing user schema to include profile fields for both mentors and mentees
 ### Details:
 Add profile-related fields to the users table or create separate profile tables. For mentees: education, interests, location, purpose_of_registration. For mentors: specialty, sub_specialty, workplace, availability_status. Use Prisma migrations to update the schema.
+<info added on 2025-07-18T10:32:28.526Z>
+The database schema has been updated. The API endpoints should be built based on the new `Profile` model, which has a one-to-one relationship with the `User` model.
 
-## 2. Create Profile API Endpoints [pending]
+**Finalized Profile Model Fields:**
+*   **Common:** bio, location, avatar
+*   **Mentee-specific:** education, interests (String array), purposeOfRegistration
+*   **Mentor-specific:** specialty, subSpecialty, workplace, availabilityStatus, yearsOfExperience
+</info added on 2025-07-18T10:32:28.526Z>
+
+## 2. Create Profile API Endpoints [done]
 ### Dependencies: None
 ### Description: Develop API endpoints for creating, reading, updating, and deleting user profiles
 ### Details:
 Create RESTful API endpoints: GET /api/profile (get current user's profile), PUT /api/profile (update profile), POST /api/profile (create profile if doesn't exist). Handle both mentor and mentee profile types with appropriate validation.
+<info added on 2025-07-18T10:33:47.933Z>
+**Implementation Update:**
+The profile API endpoints have been created in `/api/profile/route.ts`.
+- **GET `/api/profile`**: Retrieves the current authenticated user's profile.
+- **POST `/api/profile`**: Creates a new profile, with checks to prevent duplicates.
+- **PUT `/api/profile`**: Updates an existing profile, using an upsert for flexibility.
+Key features include JWT authentication, validation for role-specific fields (mentor/mentee), and robust error handling. A Prisma query issue involving conflicting `select` and `include` statements was also resolved. The API is now ready for frontend integration.
+</info added on 2025-07-18T10:33:47.933Z>
 
-## 3. Build Profile Management UI Components [pending]
+## 3. Build Profile Management UI Components [done]
 ### Dependencies: None
 ### Description: Create React components for profile forms and display
 ### Details:
 Create reusable form components for profile editing. Include form validation, error handling, and success feedback. Design separate forms for mentor and mentee profiles with appropriate fields. Use modern UI components and responsive design.
+<info added on 2025-07-18T10:36:45.217Z>
+Successfully created profile management UI components:
 
-## 4. Create Profile Pages [pending]
+1.  **ProfileForm Component** (`src/components/ProfileForm.tsx`):
+    *   A comprehensive, reusable form handling both mentor and mentee profiles.
+    *   Features role-based conditional rendering for specific fields (e.g., mentee's education/purpose, mentor's specialty/workplace).
+    *   Includes form validation, error handling, and supports comma-separated input for interests.
+
+2.  **ProfileDisplay Component** (`src/components/ProfileDisplay.tsx`):
+    *   A read-only component to display user profile data.
+    *   Includes role-specific sections, an avatar, color-coded availability status, interest badges, and a profile completion indicator.
+
+3.  **Badge Component** (`src/components/ui/badge.tsx`):
+    *   A new, reusable UI component with multiple variants for displaying status indicators and tags.
+
+All components are responsive and ready for integration into the profile pages in the next subtask.
+</info added on 2025-07-18T10:36:45.217Z>
+
+## 4. Create Profile Pages [done]
 ### Dependencies: None
 ### Description: Develop dedicated profile pages for viewing and editing user profiles
 ### Details:
 Create /profile page that shows current user's profile and allows editing. Implement conditional rendering based on user role (mentor/mentee). Include profile completion status and navigation. Ensure proper authentication checks and redirects.
+<info added on 2025-07-18T10:38:15.747Z>
+Implementation Update:
+The profile page at `src/app/profile/page.tsx` is now fully integrated and functional.
 
-## 5. Implement Profile Integration and Testing [pending]
+Key features completed:
+- Full integration with profile API endpoints (GET, POST, PUT) for creating and updating profiles.
+- A toggle between view (ProfileDisplay) and edit (ProfileForm) modes has been implemented.
+- The page handles both profile creation for new users and updates for existing ones.
+- Robust loading states, error handling, and form validation have been added.
+- Authentication checks are in place, redirecting unauthenticated users.
+- The UI is responsive and includes role-based conditional rendering for profile fields.
+</info added on 2025-07-18T10:38:15.747Z>
+
+## 5. Implement Profile Integration and Testing [done]
 ### Dependencies: None
 ### Description: Integrate profile functionality with existing authentication and test the complete flow
 ### Details:
 Connect profile management with the existing login system. Add profile completion checks to dashboard. Write comprehensive tests for API endpoints and UI components. Test profile creation, editing, and validation for both user types.
+<info added on 2025-07-18T10:42:15.297Z>
+**Implementation Summary:**
+
+*   **Dashboard & Profile Completion Flow:**
+    *   Integrated profile data fetching into the main dashboard, which now renders role-specific views for Mentees, Mentors, and Admins.
+    *   Created a `ProfileCompletionBanner` component that appears for users with incomplete profiles, providing a direct link to the profile editing page.
+    *   Key platform features are disabled until a user's profile is complete, enforcing the completion flow.
+    *   Implemented role-specific messaging in the banner to guide Mentees and Mentors appropriately.
+
+*   **Mentor Dashboard Enhancements:**
+    *   Developed a dedicated `MentorDashboard` to house mentor-specific functionalities.
+    *   Displayed the mentor's availability status prominently using color-coded badges.
+    *   The interface includes sections for managing mentees, scheduling sessions, and sharing resources.
+
+*   **Comprehensive Testing:**
+    *   Verified that all profile API endpoints for creation, editing, and retrieval are working correctly.
+    *   Confirmed that form validation and error handling are robust.
+    *   Tested all new components for responsive design and proper integration with the authentication system.
+</info added on 2025-07-18T10:42:15.297Z>
 

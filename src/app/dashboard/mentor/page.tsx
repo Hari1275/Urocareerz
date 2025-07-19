@@ -32,6 +32,18 @@ interface Opportunity {
   createdAt: string;
 }
 
+interface Application {
+  id: string;
+  opportunityId: string;
+  menteeId: string;
+  menteeName: string;
+  menteeEmail: string;
+  status: string;
+  appliedAt: string;
+  resumeUrl?: string;
+  coverLetter?: string;
+}
+
 export default function MentorDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -40,6 +52,12 @@ export default function MentorDashboardPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loadingOpportunities, setLoadingOpportunities] = useState(false);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+  const [selectedApplication, setSelectedApplication] =
+    useState<Application | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -92,6 +110,7 @@ export default function MentorDashboardPage() {
   useEffect(() => {
     if (user) {
       fetchOpportunities();
+      fetchApplications();
     }
   }, [user]);
 
@@ -107,6 +126,68 @@ export default function MentorDashboardPage() {
       console.error("Failed to fetch opportunities:", err);
     } finally {
       setLoadingOpportunities(false);
+    }
+  };
+
+  const fetchApplications = async () => {
+    setLoadingApplications(true);
+    try {
+      const response = await fetch("/api/applications/mentor");
+      if (response.ok) {
+        const data = await response.json();
+        setApplications(data.applications || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch applications:", err);
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
+  const handleReviewApplication = (application: Application) => {
+    setSelectedApplication(application);
+    setShowReviewModal(true);
+  };
+
+  const handleUpdateApplicationStatus = async (
+    status: "ACCEPTED" | "REJECTED"
+  ) => {
+    if (!selectedApplication) return;
+
+    setReviewing(true);
+    try {
+      const response = await fetch(
+        `/api/applications/${selectedApplication.id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      if (response.ok) {
+        // Update the application in the local state
+        setApplications((prev) =>
+          prev.map((app) =>
+            app.id === selectedApplication.id ? { ...app, status } : app
+          )
+        );
+        setShowReviewModal(false);
+        setSelectedApplication(null);
+        setSuccessMessage(`Application ${status.toLowerCase()} successfully!`);
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to update application status");
+      }
+    } catch (err) {
+      console.error("Failed to update application status:", err);
+      alert("Failed to update application status");
+    } finally {
+      setReviewing(false);
     }
   };
 
@@ -153,6 +234,25 @@ export default function MentorDashboardPage() {
         return "Other";
       default:
         return type;
+    }
+  };
+
+  const getApplicationStatusBadge = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return <Badge variant="secondary">Pending Review</Badge>;
+      case "ACCEPTED":
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Accepted
+          </Badge>
+        );
+      case "REJECTED":
+        return <Badge variant="destructive">Rejected</Badge>;
+      case "WITHDRAWN":
+        return <Badge variant="outline">Withdrawn</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -229,10 +329,10 @@ export default function MentorDashboardPage() {
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Mentor Dashboard
+              Welcome back, Dr. {user.lastName}!
             </h1>
             <p className="mt-2 text-gray-600">
-              Manage your mentees and mentorship activities
+              Guide the next generation of urologists
             </p>
           </div>
 
@@ -260,9 +360,9 @@ export default function MentorDashboardPage() {
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Post Opportunity</CardTitle>
-                <CardDescription>
-                  Share fellowships, jobs, or observerships with the community
-                </CardDescription>
+                <div className="text-sm text-gray-600">
+                  Share fellowships, jobs, or observerships
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-green-50 rounded-md">
@@ -297,10 +397,10 @@ export default function MentorDashboardPage() {
             {/* Manage Mentees Card */}
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Manage Mentees</CardTitle>
-                <CardDescription>
-                  View and manage your current mentee relationships
-                </CardDescription>
+                <CardTitle>Applications</CardTitle>
+                <div className="text-sm text-gray-600">
+                  View applications from mentees
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-primary-50 rounded-md">
@@ -321,17 +421,29 @@ export default function MentorDashboardPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full btn-primary">View Mentees</Button>
+                <Button
+                  className="w-full btn-primary"
+                  onClick={() => {
+                    // Scroll to applications section
+                    document
+                      .getElementById("applications-section")
+                      ?.scrollIntoView({
+                        behavior: "smooth",
+                      });
+                  }}
+                >
+                  View Applications
+                </Button>
               </CardFooter>
             </Card>
 
             {/* Schedule Sessions Card */}
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Schedule Sessions</CardTitle>
-                <CardDescription>
-                  Manage your availability and schedule mentoring sessions
-                </CardDescription>
+                <CardTitle>My Schedule</CardTitle>
+                <div className="text-sm text-gray-600">
+                  Manage availability and bookings
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-secondary-50 rounded-md">
@@ -362,9 +474,9 @@ export default function MentorDashboardPage() {
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Mentoring Resources</CardTitle>
-                <CardDescription>
-                  Access tools and materials to enhance your mentoring
-                </CardDescription>
+                <div className="text-sm text-gray-600">
+                  Access tools and materials
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-accent-50 rounded-md">
@@ -474,45 +586,254 @@ export default function MentorDashboardPage() {
             )}
           </div>
 
-          {/* Upcoming Sessions */}
-          <div className="mt-10">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Upcoming Sessions
-            </h2>
-            <Card className="glass-card">
-              <CardContent className="p-6">
-                <div className="text-center py-8">
-                  <p className="text-gray-500">
-                    You don't have any upcoming sessions scheduled.
-                  </p>
-                  <Button className="mt-4 btn-primary">
-                    Schedule a Session
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Applications Section */}
+          <div id="applications-section" className="mt-10">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Applications from Mentees
+              </h2>
+              <Button
+                onClick={fetchApplications}
+                variant="outline"
+                disabled={loadingApplications}
+              >
+                {loadingApplications ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
+
+            {loadingApplications ? (
+              <Card className="glass-card">
+                <CardContent className="p-6">
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-500">
+                      Loading applications...
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : applications.length === 0 ? (
+              <Card className="glass-card">
+                <CardContent className="p-6">
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      No applications received yet.
+                    </p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Applications will appear here when mentees apply to your
+                      opportunities.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {applications.map((application) => {
+                  const opportunity = opportunities.find(
+                    (opp) => opp.id === application.opportunityId
+                  );
+                  return (
+                    <Card key={application.id} className="glass-card">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {application.menteeName}
+                              </h3>
+                              {getApplicationStatusBadge(application.status)}
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Applied to:{" "}
+                              {opportunity?.title || "Unknown Opportunity"}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Email: {application.menteeEmail}
+                            </p>
+                            {application.coverLetter && (
+                              <p className="text-gray-700 text-sm line-clamp-2 mb-2">
+                                Cover Letter: {application.coverLetter}
+                              </p>
+                            )}
+                            <div className="flex gap-2 mt-3">
+                              {application.resumeUrl && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    window.open(application.resumeUrl, "_blank")
+                                  }
+                                >
+                                  View Resume
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleReviewApplication(application)
+                                }
+                              >
+                                Review Application
+                              </Button>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Applied on{" "}
+                              {new Date(
+                                application.appliedAt
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Recent Mentee Requests */}
+          {/* Quick Actions */}
           <div className="mt-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Recent Mentee Requests
+              Quick Actions
             </h2>
             <Card className="glass-card">
               <CardContent className="p-6">
                 <div className="text-center py-8">
-                  <p className="text-gray-500">
-                    No pending mentee requests at the moment.
+                  <p className="text-gray-500 mb-4">
+                    Ready to help mentees grow?
                   </p>
-                  <Button className="mt-4 btn-secondary">
-                    View All Requests
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      className="btn-primary"
+                      onClick={() =>
+                        router.push("/dashboard/mentor/post-opportunity")
+                      }
+                    >
+                      Post Opportunity
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        document
+                          .getElementById("applications-section")
+                          ?.scrollIntoView({
+                            behavior: "smooth",
+                          });
+                      }}
+                    >
+                      View Applications
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/profile")}
+                    >
+                      Update Profile
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
+
+      {/* Application Review Modal */}
+      {showReviewModal && selectedApplication && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                Review Application
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowReviewModal(false);
+                  setSelectedApplication(null);
+                }}
+              >
+                ✕
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Application Details */}
+              <div className="border-b pb-4">
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  {selectedApplication.menteeName}
+                </h3>
+                <p className="text-sm text-gray-600 mb-1">
+                  <strong>Email:</strong> {selectedApplication.menteeEmail}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <strong>Applied:</strong>{" "}
+                  {new Date(selectedApplication.appliedAt).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <strong>Status:</strong> {selectedApplication.status}
+                </p>
+                {selectedApplication.coverLetter && (
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-gray-900 mb-1">
+                      Cover Letter:
+                    </p>
+                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                      {selectedApplication.coverLetter}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Resume Section */}
+              {selectedApplication.resumeUrl && (
+                <div className="border-b pb-4">
+                  <h4 className="font-medium text-gray-900 mb-2">Resume</h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      window.open(selectedApplication.resumeUrl, "_blank")
+                    }
+                  >
+                    View Resume
+                  </Button>
+                </div>
+              )}
+
+              {/* Review Actions */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowReviewModal(false);
+                    setSelectedApplication(null);
+                  }}
+                  disabled={reviewing}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleUpdateApplicationStatus("REJECTED")}
+                  disabled={reviewing}
+                >
+                  {reviewing ? "Rejecting..." : "Reject Application"}
+                </Button>
+                <Button
+                  className="btn-primary"
+                  onClick={() => handleUpdateApplicationStatus("ACCEPTED")}
+                  disabled={reviewing}
+                >
+                  {reviewing ? "Accepting..." : "Accept Application"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

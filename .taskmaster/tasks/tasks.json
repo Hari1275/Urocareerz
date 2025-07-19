@@ -148,7 +148,7 @@
         "dependencies": [
           2
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -161,7 +161,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -221,67 +221,66 @@
         "id": 5,
         "title": "Admin Dashboard: User & Content Moderation",
         "description": "Build the core admin dashboard for manual approval of new users and all posted content.",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
         "details": "Create an admin-only interface to view lists of pending user registrations and submitted opportunities. Implement 'approve' and 'reject' actions for both users and content. Admins must also be able to remove flagged/inappropriate posts and assign user roles.",
         "testStrategy": "Log in as an Admin. Verify access to the dashboard. Approve a pending user and a pending post, and confirm their status changes. Reject a user/post and confirm they are handled correctly.",
-        "priority": "high",
-        "dependencies": [
-          2,
-          3
-        ],
-        "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Design and Create User Database Schema",
-            "description": "Define and implement the database schema required for storing user information, including credentials and profile data. This includes creating the necessary tables and columns.",
-            "dependencies": [],
-            "details": "Create a 'users' table with columns: 'id' (UUID, primary key), 'email' (VARCHAR, unique, not null), 'password_hash' (VARCHAR, not null), 'created_at' (TIMESTAMP), and 'updated_at' (TIMESTAMP). Use a migration tool like Alembic or Flyway to script and apply these changes.",
+            "title": "Implement Admin Role-Based Access Control (RBAC) Middleware",
+            "description": "Create middleware to protect admin-only API routes, ensuring only users with the 'admin' role can access them.",
+            "details": "The middleware should run after the standard authentication middleware. It will check the authenticated user's role from the session/token. If the role is not 'admin', it should return a 403 Forbidden error. This middleware will be applied to all new admin API endpoints.",
             "status": "pending",
-            "testStrategy": "Run the migration and verify the 'users' table and its columns are created correctly in the development database. Manually test constraints by attempting to insert a user with a duplicate email."
+            "dependencies": [],
+            "parentTaskId": 5
           },
           {
             "id": 2,
-            "title": "Implement User Registration Endpoint",
-            "description": "Create a public API endpoint (e.g., POST /api/auth/register) that allows new users to create an account. The endpoint must validate input, hash the password, and store the new user.",
+            "title": "Create Admin API Endpoints for User Management",
+            "description": "Develop API endpoints for admins to manage users, including approving/rejecting pending accounts and changing user roles.",
+            "details": "Implement endpoints like `POST /api/admin/users/{id}/approve`, `POST /api/admin/users/{id}/reject`, and `PUT /api/admin/users/{id}/role`. Also include an endpoint `GET /api/admin/users?status=pending` to list users awaiting approval. These endpoints must be protected by the admin RBAC middleware.",
+            "status": "pending",
             "dependencies": [
               1
             ],
-            "details": "The endpoint should accept 'email' and 'password'. Validate the email format and enforce password complexity rules (e.g., minimum length). Use a strong hashing algorithm like bcrypt to hash the password before storing it. On success, return a 201 Created status with the new user's ID and email.",
-            "status": "pending",
-            "testStrategy": "Write integration tests to cover successful registration, registration with a duplicate email (expect 409 Conflict), and registration with invalid input (expect 400 Bad Request)."
+            "parentTaskId": 5
           },
           {
             "id": 3,
-            "title": "Implement User Login Endpoint and JWT Generation",
-            "description": "Create a public API endpoint (e.g., POST /api/auth/login) that authenticates users with their credentials and returns a JSON Web Token (JWT) upon success.",
+            "title": "Create Admin API Endpoints for Content Moderation",
+            "description": "Develop API endpoints for admins to moderate user-submitted content (opportunities), including approval, rejection, and deletion.",
+            "details": "Implement endpoints like `POST /api/admin/opportunities/{id}/approve`, `POST /api/admin/opportunities/{id}/reject`, and `DELETE /api/admin/opportunities/{id}`. Include a `GET /api/admin/opportunities?status=pending` endpoint to fetch content awaiting moderation. Protect all endpoints with the admin RBAC middleware.",
+            "status": "pending",
             "dependencies": [
               1
             ],
-            "details": "The endpoint should accept 'email' and 'password'. Fetch the user by email from the database. Use bcrypt's compare function to verify the password against the stored hash. If valid, generate a signed JWT containing the user's ID and an expiration claim. Return the JWT in the response body.",
-            "status": "pending",
-            "testStrategy": "Write integration tests for successful login (expect 200 OK and a JWT), login with an incorrect password (expect 401 Unauthorized), and login for a non-existent user (expect 401 Unauthorized)."
+            "parentTaskId": 5
           },
           {
             "id": 4,
-            "title": "Create Authentication Middleware for Protected Routes",
-            "description": "Develop a middleware function that can be applied to API routes to ensure the request is made by an authenticated user. It should validate the JWT from the request headers.",
-            "dependencies": [
-              3
-            ],
-            "details": "The middleware should extract the token from the 'Authorization: Bearer <token>' header. It must verify the token's signature using the application's secret key and check that it has not expired. If valid, decode the payload, fetch the user from the database, and attach the user object to the request context. If invalid, it should abort the request with a 401 Unauthorized error.",
+            "title": "Build User Management UI in Admin Dashboard",
+            "description": "Implement the UI components within the existing admin dashboard to manage users by connecting to the new user management APIs.",
+            "details": "Create a view that lists pending and active users, fetched from the new admin API. Add buttons for 'Approve', 'Reject', and a modal/form to change a user's role. Connect these UI elements to the corresponding API endpoints and handle state updates.",
             "status": "pending",
-            "testStrategy": "Create a test-only protected endpoint. Write unit tests for the middleware that simulate requests with a valid token, an expired token, an invalid token, and no token, asserting the correct outcome for each case."
+            "dependencies": [
+              2
+            ],
+            "parentTaskId": 5
           },
           {
             "id": 5,
-            "title": "Develop a Protected 'Get User Profile' Endpoint",
-            "description": "Create a protected endpoint (e.g., GET /api/users/me) that uses the authentication middleware to return the profile information of the currently logged-in user.",
-            "dependencies": [
-              4
-            ],
-            "details": "Apply the authentication middleware created in the previous task to this new route. The route handler should access the user object from the request context (placed there by the middleware) and return non-sensitive user data, such as 'id', 'email', and 'created_at'.",
+            "title": "Build Content Moderation UI in Admin Dashboard",
+            "description": "Implement the UI components within the admin dashboard to moderate submitted opportunities by connecting to the new content moderation APIs.",
+            "details": "Create a view to display a queue of pending opportunities fetched from the API. Each item should have 'Approve' and 'Reject' buttons. Implement functionality to view and delete any existing post. Connect all actions to the content moderation API endpoints and manage UI state accordingly.",
             "status": "pending",
-            "testStrategy": "Write an integration test that first calls the login endpoint to get a valid JWT, then uses that token to make a request to the /api/users/me endpoint. Assert that the response is 200 OK and contains the correct user's data. Also test the endpoint without a token, expecting a 401 Unauthorized."
+            "dependencies": [
+              3
+            ],
+            "parentTaskId": 5
           }
         ]
       },

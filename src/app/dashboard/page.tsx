@@ -297,6 +297,7 @@ function MenteeDashboard({
   profile: Profile | null;
   onLogout: () => void;
 }) {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
       <DashboardHeader user={user} profile={profile} onLogout={onLogout} />
@@ -307,21 +308,21 @@ function MenteeDashboard({
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Mentee Dashboard
+              Welcome back, {user.firstName}!
             </h1>
             <p className="mt-2 text-gray-600">
-              Find mentors and grow your career in urology
+              Discover opportunities and connect with mentors in urology
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Find Mentors Card */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Opportunity Board Card */}
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Find Mentors</CardTitle>
-                <CardDescription>
-                  Connect with experienced professionals in your field
-                </CardDescription>
+                <CardTitle>Browse Opportunities</CardTitle>
+                <div className="text-sm text-gray-600">
+                  Find fellowships, jobs, and research positions
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-primary-50 rounded-md">
@@ -336,25 +337,28 @@ function MenteeDashboard({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"
                     />
                   </svg>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full btn-primary" disabled={!profile}>
-                  Browse Mentors
+                <Button
+                  className="w-full btn-primary"
+                  onClick={() => router.push("/opportunities")}
+                >
+                  Explore Opportunities
                 </Button>
               </CardFooter>
             </Card>
 
-            {/* My Mentorships Card */}
+            {/* My Applications Card */}
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>My Mentorships</CardTitle>
-                <CardDescription>
-                  Manage your active mentorship connections
-                </CardDescription>
+                <CardTitle>My Applications</CardTitle>
+                <div className="text-sm text-gray-600">
+                  View and track your applications
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-secondary-50 rounded-md">
@@ -369,14 +373,54 @@ function MenteeDashboard({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full btn-secondary" disabled={!profile}>
-                  View Mentorships
+                <Button
+                  className="w-full btn-secondary"
+                  onClick={() => router.push("/applications")}
+                >
+                  View Applications
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Find Mentors Card */}
+            <Card className="glass-card hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle>Find Mentors</CardTitle>
+                <div className="text-sm text-gray-600">
+                  Connect with experienced urologists
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-40 flex items-center justify-center bg-accent-50 rounded-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-12 w-12 text-accent-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  disabled={!profile}
+                >
+                  Browse Mentors
                 </Button>
               </CardFooter>
             </Card>
@@ -385,15 +429,15 @@ function MenteeDashboard({
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Learning Resources</CardTitle>
-                <CardDescription>
-                  Access educational materials for your career growth
-                </CardDescription>
+                <div className="text-sm text-gray-600">
+                  Access educational materials and guides
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="h-40 flex items-center justify-center bg-accent-50 rounded-md">
+                <div className="h-40 flex items-center justify-center bg-green-50 rounded-md">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-accent-400"
+                    className="h-12 w-12 text-green-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -415,20 +459,31 @@ function MenteeDashboard({
             </Card>
           </div>
 
-          {/* Upcoming Sessions */}
+          {/* Quick Actions */}
           <div className="mt-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Upcoming Sessions
+              Quick Actions
             </h2>
             <Card className="glass-card">
               <CardContent className="p-6">
                 <div className="text-center py-8">
-                  <p className="text-gray-500">
-                    You don't have any upcoming sessions scheduled.
+                  <p className="text-gray-500 mb-4">
+                    Ready to take the next step in your career?
                   </p>
-                  <Button className="mt-4 btn-primary" disabled={!profile}>
-                    Schedule a Session
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      className="btn-primary"
+                      onClick={() => router.push("/opportunities")}
+                    >
+                      Browse Opportunities
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/profile")}
+                    >
+                      Update Profile
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -448,6 +503,7 @@ function MentorDashboard({
   profile: Profile | null;
   onLogout: () => void;
 }) {
+  const router = useRouter();
   const getAvailabilityColor = (status: string) => {
     switch (status) {
       case "Available":
@@ -473,10 +529,10 @@ function MentorDashboard({
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Mentor Dashboard
+              Welcome back, Dr. {user.lastName}!
             </h1>
             <p className="mt-2 text-gray-600">
-              Help mentees grow and share your expertise
+              Guide the next generation of urologists
             </p>
             {profile && (
               <div className="mt-4 flex items-center space-x-2">
@@ -496,10 +552,10 @@ function MentorDashboard({
             {/* Manage Mentees Card */}
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Manage Mentees</CardTitle>
-                <CardDescription>
-                  View and manage your mentorship relationships
-                </CardDescription>
+                <CardTitle>My Mentees</CardTitle>
+                <div className="text-sm text-gray-600">
+                  View and manage your mentees
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-primary-50 rounded-md">
@@ -529,10 +585,10 @@ function MentorDashboard({
             {/* Schedule Sessions Card */}
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Schedule Sessions</CardTitle>
-                <CardDescription>
-                  Manage your availability and session bookings
-                </CardDescription>
+                <CardTitle>My Schedule</CardTitle>
+                <div className="text-sm text-gray-600">
+                  Manage availability and bookings
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-secondary-50 rounded-md">
@@ -563,9 +619,9 @@ function MentorDashboard({
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Share Resources</CardTitle>
-                <CardDescription>
-                  Upload and share educational materials
-                </CardDescription>
+                <div className="text-sm text-gray-600">
+                  Upload educational materials
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-accent-50 rounded-md">
@@ -597,20 +653,28 @@ function MentorDashboard({
             </Card>
           </div>
 
-          {/* Upcoming Sessions */}
+          {/* Quick Actions */}
           <div className="mt-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Upcoming Sessions
+              Quick Actions
             </h2>
             <Card className="glass-card">
               <CardContent className="p-6">
                 <div className="text-center py-8">
-                  <p className="text-gray-500">
-                    You don't have any upcoming sessions scheduled.
+                  <p className="text-gray-500 mb-4">
+                    Ready to help mentees grow?
                   </p>
-                  <Button className="mt-4 btn-primary" disabled={!profile}>
-                    View All Sessions
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button className="btn-primary" disabled={!profile}>
+                      View Mentees
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/profile")}
+                    >
+                      Update Profile
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -648,9 +712,9 @@ function AdminDashboard({
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>User Management</CardTitle>
-                <CardDescription>
+                <div className="text-sm text-gray-600">
                   Manage users, roles, and permissions
-                </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-primary-50 rounded-md">
@@ -679,9 +743,9 @@ function AdminDashboard({
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Platform Analytics</CardTitle>
-                <CardDescription>
+                <div className="text-sm text-gray-600">
                   View usage statistics and metrics
-                </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-secondary-50 rounded-md">
@@ -710,9 +774,9 @@ function AdminDashboard({
             <Card className="glass-card hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Platform Settings</CardTitle>
-                <CardDescription>
+                <div className="text-sm text-gray-600">
                   Configure system settings and preferences
-                </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-40 flex items-center justify-center bg-accent-50 rounded-md">

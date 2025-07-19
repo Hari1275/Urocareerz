@@ -1,0 +1,195 @@
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@/generated/prisma";
+import { verifyEdgeToken } from "@/lib/edge-auth";
+
+const prisma = new PrismaClient();
+
+export async function GET(request: NextRequest) {
+  try {
+    // Verify authentication
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await verifyEdgeToken(token, process.env.JWT_SECRET!);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    // Get user role
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { role: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    let applications;
+
+    if (user.role === "MENTEE") {
+      // Mentees see their own applications
+      applications = await prisma.application.findMany({
+        where: { menteeId: payload.userId },
+        include: {
+          opportunity: {
+            include: {
+              mentor: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  profile: {
+                    select: {
+                      specialty: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } else if (user.role === "MENTOR") {
+      // Mentors see applications for their opportunities
+      applications = await prisma.application.findMany({
+        where: {
+          opportunity: {
+            mentorId: payload.userId,
+          },
+        },
+        include: {
+          opportunity: true,
+          mentee: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } else {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    return NextResponse.json({ applications });
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Verify authentication
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await verifyEdgeToken(token, process.env.JWT_SECRET!);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    // Verify user is a mentee
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== "MENTEE") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    const { opportunityId, coverLetter, cvFile, cvFileName } =
+      await request.json();
+
+    if (!opportunityId) {
+      return NextResponse.json(
+        { error: "Opportunity ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if opportunity exists and is approved
+    const opportunity = await prisma.opportunity.findUnique({
+      where: { id: opportunityId },
+      select: { status: true },
+    });
+
+    if (!opportunity) {
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 }
+      );
+    }
+
+    if (opportunity.status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "Cannot apply to unapproved opportunity" },
+        { status: 400 }
+      );
+    }
+
+    // Check if already applied
+    const existingApplication = await prisma.application.findUnique({
+      where: {
+        menteeId_opportunityId: {
+          menteeId: payload.userId,
+          opportunityId: opportunityId,
+        },
+      },
+    });
+
+    if (existingApplication) {
+      return NextResponse.json(
+        { error: "Already applied to this opportunity" },
+        { status: 400 }
+      );
+    }
+
+    // Create the application
+    const application = await prisma.application.create({
+      data: {
+        menteeId: payload.userId,
+        opportunityId: opportunityId,
+        coverLetter: coverLetter || null,
+        cvFile: cvFile || null,
+        cvFileName: cvFileName || null,
+      },
+      include: {
+        opportunity: {
+          include: {
+            mentor: {
+              select: {
+                firstName: true,
+                lastName: true,
+                profile: {
+                  select: {
+                    specialty: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ application }, { status: 201 });
+  } catch (error) {
+    console.error("Error creating application:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

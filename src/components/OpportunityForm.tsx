@@ -119,10 +119,10 @@ export default function OpportunityForm({
           <CardTitle className="text-2xl font-bold text-gray-900">
             Post New Opportunity
           </CardTitle>
-          <CardDescription>
+          <div className="text-sm text-gray-600">
             Share fellowships, jobs, observerships, or other opportunities with
             the community
-          </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
