@@ -220,67 +220,78 @@
       {
         "id": 5,
         "title": "Admin Dashboard: User & Content Moderation",
-        "description": "Build the core admin dashboard for manual approval of new users and all posted content.",
-        "status": "pending",
+        "description": "Build the core admin dashboard for manual approval of new users and all posted content, featuring a complete UI overhaul using modern components.",
+        "status": "done",
         "dependencies": [
           1
         ],
         "priority": "high",
-        "details": "Create an admin-only interface to view lists of pending user registrations and submitted opportunities. Implement 'approve' and 'reject' actions for both users and content. Admins must also be able to remove flagged/inappropriate posts and assign user roles.",
-        "testStrategy": "Log in as an Admin. Verify access to the dashboard. Approve a pending user and a pending post, and confirm their status changes. Reject a user/post and confirm they are handled correctly.",
+        "details": "Create an admin-only interface using a modern shadcn/ui design with a sidebar layout and data tables. The dashboard will be used to view lists of pending user registrations and submitted opportunities. Implement 'approve' and 'reject' actions for both users and content. Admins must also be able to remove flagged/inappropriate posts and assign user roles. The single admin user will log in via the standard OTP system.",
+        "testStrategy": "Log in as the pre-configured Admin user via the standard OTP flow. Verify access to the dashboard and its modern layout. In the user management table, approve a pending user and confirm their status changes. In the content moderation table, reject a pending post and confirm it is handled correctly. Test table sorting and filtering.",
         "subtasks": [
           {
             "id": 1,
             "title": "Implement Admin Role-Based Access Control (RBAC) Middleware",
             "description": "Create middleware to protect admin-only API routes, ensuring only users with the 'admin' role can access them.",
-            "details": "The middleware should run after the standard authentication middleware. It will check the authenticated user's role from the session/token. If the role is not 'admin', it should return a 403 Forbidden error. This middleware will be applied to all new admin API endpoints.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
-            "parentTaskId": 5
+            "details": "The middleware should run after the standard authentication middleware. It will check the authenticated user's role from the session/token. If the role is not 'admin', it should return a 403 Forbidden error. This middleware will be applied to all new admin API endpoints.",
+            "testStrategy": ""
           },
           {
             "id": 2,
             "title": "Create Admin API Endpoints for User Management",
             "description": "Develop API endpoints for admins to manage users, including approving/rejecting pending accounts and changing user roles.",
-            "details": "Implement endpoints like `POST /api/admin/users/{id}/approve`, `POST /api/admin/users/{id}/reject`, and `PUT /api/admin/users/{id}/role`. Also include an endpoint `GET /api/admin/users?status=pending` to list users awaiting approval. These endpoints must be protected by the admin RBAC middleware.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
-            "parentTaskId": 5
+            "details": "Implement endpoints like `POST /api/admin/users/{id}/approve`, `POST /api/admin/users/{id}/reject`, and `PUT /api/admin/users/{id}/role`. Also include an endpoint `GET /api/admin/users?status=pending` to list users awaiting approval. These endpoints must be protected by the admin RBAC middleware.",
+            "testStrategy": ""
           },
           {
             "id": 3,
             "title": "Create Admin API Endpoints for Content Moderation",
             "description": "Develop API endpoints for admins to moderate user-submitted content (opportunities), including approval, rejection, and deletion.",
-            "details": "Implement endpoints like `POST /api/admin/opportunities/{id}/approve`, `POST /api/admin/opportunities/{id}/reject`, and `DELETE /api/admin/opportunities/{id}`. Include a `GET /api/admin/opportunities?status=pending` endpoint to fetch content awaiting moderation. Protect all endpoints with the admin RBAC middleware.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
-            "parentTaskId": 5
+            "details": "Implement endpoints like `POST /api/admin/opportunities/{id}/approve`, `POST /api/admin/opportunities/{id}/reject`, and `DELETE /api/admin/opportunities/{id}`. Include a `GET /api/admin/opportunities?status=pending` endpoint to fetch content awaiting moderation. Protect all endpoints with the admin RBAC middleware.",
+            "testStrategy": ""
           },
           {
             "id": 4,
-            "title": "Build User Management UI in Admin Dashboard",
-            "description": "Implement the UI components within the existing admin dashboard to manage users by connecting to the new user management APIs.",
-            "details": "Create a view that lists pending and active users, fetched from the new admin API. Add buttons for 'Approve', 'Reject', and a modal/form to change a user's role. Connect these UI elements to the corresponding API endpoints and handle state updates.",
-            "status": "pending",
+            "title": "Build User Management UI with shadcn/ui Data Table",
+            "description": "Implement the user management interface within the admin dashboard using shadcn/ui components, focusing on a data table for efficient user handling.",
+            "status": "done",
             "dependencies": [
               2
             ],
-            "parentTaskId": 5
+            "details": "Build the user management view using a shadcn/ui `<DataTable>`. This table should list all users and include columns for name, email, role, and status. Implement filtering (by status) and sorting capabilities. Integrate 'Approve'/'Reject' buttons for pending users and a modal/dropdown to change roles. Connect all UI actions to the user management API endpoints.\n<info added on 2025-07-19T09:19:29.829Z>\nThe implementation should emphasize a clean and professional presentation, ensuring the user data is displayed clearly and the action buttons (approve/reject, change role) are intuitive to use.\n</info added on 2025-07-19T09:19:29.829Z>",
+            "testStrategy": ""
           },
           {
             "id": 5,
-            "title": "Build Content Moderation UI in Admin Dashboard",
-            "description": "Implement the UI components within the admin dashboard to moderate submitted opportunities by connecting to the new content moderation APIs.",
-            "details": "Create a view to display a queue of pending opportunities fetched from the API. Each item should have 'Approve' and 'Reject' buttons. Implement functionality to view and delete any existing post. Connect all actions to the content moderation API endpoints and manage UI state accordingly.",
-            "status": "pending",
+            "title": "Build Content Moderation UI with shadcn/ui Data Table",
+            "description": "Implement the content moderation interface within the admin dashboard using shadcn/ui components, featuring a data table for managing opportunities.",
+            "status": "done",
             "dependencies": [
               3
             ],
-            "parentTaskId": 5
+            "details": "Build the content moderation view using a shadcn/ui `<DataTable>`. The table will display submitted opportunities with columns like title, author, and status. Implement filtering by status (e.g., 'pending', 'approved') and sorting. Add 'Approve', 'Reject', and 'Delete' action buttons for each item. Connect all UI actions to the content moderation API endpoints.\n<info added on 2025-07-19T09:20:00.089Z>\nThe table should be presented in a clean and professional format.\n</info added on 2025-07-19T09:20:00.089Z>",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Core Admin Dashboard Layout with Sidebar",
+            "description": "Create the foundational layout for the admin dashboard using shadcn/ui, including a persistent sidebar for navigation and a main content area.",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "Build the primary dashboard shell with a clean, professional aesthetic using shadcn/ui components. Implement a sidebar for navigating between 'User Management' and 'Content Moderation' sections. This layout will serve as the container for all other admin views and must be protected by the admin RBAC middleware.",
+            "testStrategy": ""
           }
         ]
       },
@@ -464,7 +475,7 @@
     ],
     "metadata": {
       "created": "2025-07-18T05:40:25.172Z",
-      "updated": "2025-07-19T03:51:46.145Z",
+      "updated": "2025-07-19T09:29:44.142Z",
       "description": "Tasks for master context"
     }
   }

@@ -140,7 +140,9 @@ export default function DashboardPage() {
 
   // Render different dashboard based on user role
   if (user.role === "ADMIN") {
-    return <AdminDashboard user={user} onLogout={handleLogout} />;
+    // Redirect admins to the dedicated admin dashboard
+    router.push("/admin");
+    return null;
   } else if (user.role === "MENTOR") {
     // Redirect mentors to the dedicated mentor dashboard
     router.push("/dashboard/mentor");

@@ -5,7 +5,7 @@ import { verifyEdgeToken } from "./lib/edge-auth";
 const protectedPaths = ["/dashboard", "/profile"];
 
 // Define which paths require admin role
-const adminPaths = ["/admin"];
+const adminPaths = ["/admin", "/api/admin"];
 
 // Define which paths are public (don't require authentication)
 const publicPaths = [
