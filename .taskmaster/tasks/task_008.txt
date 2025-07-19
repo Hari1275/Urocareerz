@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Search Functionality for Users
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Implement search functionality for mentors to find mentees.
+# Details:
+Develop a search interface for Mentors to find Mentees based on profile criteria like interests and location. This complements the existing opportunity search for Mentees.
+
+# Test Strategy:
+Log in as a Mentor. Use the search feature to filter mentees by location and interests. Verify that the search results are accurate based on existing mentee profiles.

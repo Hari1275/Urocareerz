@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-07-18T05:42:51.870Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Foundation: Project Setup & Secure Authentication",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand the 'Foundation: Project Setup & Secure Authentication' task into detailed subtasks. The subtasks should cover: 1. Initializing the Next.js project with Tailwind and Shadcn UI. 2. Setting up the MongoDB database and creating the initial User schema with Prisma. 3. Developing the backend API route to handle email input and send an OTP using Brevo. 4. Creating the API route to verify the OTP, create a user record if one doesn't exist, and generate session tokens. 5. Implementing client-side session management and creating a middleware for protecting routes. 6. Building the frontend login/registration form and UI flow.",
+			"reasoning": "This task is highly complex as it establishes the entire project's technical foundation and includes a security-critical custom authentication flow with a third-party API (Brevo), session management, and database setup. Each component is a significant piece of work."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "User Profile Management (Mentor & Mentee)",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'User Profile Management' task. Create subtasks for: 1. Extending the Prisma schema to include MentorProfile and MenteeProfile models with their respective fields. 2. Developing the API endpoints to create, retrieve, and update user profiles, ensuring a user can only edit their own profile. 3. Building the frontend form and page for Mentor profile creation and editing. 4. Building the frontend form and page for Mentee profile creation and editing. 5. Implementing the logic to direct newly registered users to the appropriate profile creation page.",
+			"reasoning": "The complexity comes from handling two distinct user roles with different profile structures. This requires separate data models, conditional UI, and role-specific logic, making it more involved than a single-role profile system."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Opportunity Posting (Mentor Flow)",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand the 'Opportunity Posting (Mentor Flow)' task. The subtasks should cover: 1. Defining and migrating the 'Opportunity' model in the Prisma schema, including fields like title, description, location, and a 'status' field defaulting to 'pending'. 2. Creating a protected API endpoint that allows only users with the 'Mentor' role to create a new opportunity. 3. Designing and building the frontend form component for opportunity submission. 4. Integrating the form into a dedicated 'Post New Opportunity' page accessible to mentors.",
+			"reasoning": "This is a standard CRUD 'create' operation. Its complexity is moderate, involving a new data model, a secure API endpoint, and a frontend form. The workflow is linear and well-defined."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Opportunity Board & Application (Mentee Flow)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Opportunity Board & Application (Mentee Flow)' task. Create subtasks for: 1. Building the API endpoint and frontend page to display a list of 'approved' opportunities, including server-side filtering. 2. Setting up an AWS S3 bucket and creating a secure backend API endpoint to generate pre-signed URLs for CV uploads. 3. Developing the frontend application modal/page, including the form and the file upload component that uses the pre-signed URL. 4. Implementing the 'Save for Later' functionality, including the necessary database schema and API endpoints. 5. Creating a dedicated page for Mentees to view their saved opportunities.",
+			"reasoning": "This task is highly complex due to the combination of multiple distinct features: a filtered content board, a 'favorites' system, and a complex file upload process involving a third-party service (AWS S3) which requires secure handling."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Admin Dashboard: User & Content Moderation",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Admin Dashboard: User & Content Moderation' task. Subtasks should include: 1. Implementing a robust 'admin' role and middleware to secure all admin-related API routes and pages. 2. Developing the 'User Management' section with a list of pending users and actions to approve/reject them. 3. Developing the 'Content Moderation' section with a list of pending opportunities and actions to approve/reject them. 4. Adding functionality for admins to delete any existing opportunity post. 5. Adding functionality for admins to view all users and modify their roles.",
+			"reasoning": "Complexity is high because this task involves creating a secure, role-protected area with multiple critical administrative functions. Each function (user moderation, content moderation, role assignment) requires its own secure API and UI components."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Email Notification System",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Email Notification System' task. Create subtasks for: 1. Configuring the Brevo API integration and creating reusable email templates. 2. Triggering an email to the Mentor when a Mentee applies to their opportunity. 3. Triggering an email to the Mentor when an admin approves their submitted opportunity. 4. Triggering a welcome email to the user when an admin approves their registration. 5. Building a feature in the admin dashboard allowing admins to compose and send a custom email announcement to all users.",
+			"reasoning": "The task's complexity is moderate. While integrating a third-party API is straightforward, it requires careful implementation to trigger notifications from multiple, distinct points in the application's business logic, plus a separate UI for custom announcements."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Mentee Content Contribution",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Mentee Content Contribution' task. Break it down into subtasks for the two main features: 1. Implementing the form and API for Mentees to submit external opportunities, ensuring these submissions enter the admin moderation queue. 2. Designing the Prisma schema for 'DiscussionThread' and 'DiscussionReply' models. 3. Developing the API endpoints for creating and listing discussion threads. 4. Developing the API endpoints for viewing a single thread and posting replies to it. 5. Building the frontend UI for the case discussion section.",
+			"reasoning": "This task is complex because it bundles two separate features: a content submission flow that mirrors an existing one for a new role, and an entirely new, moderately complex forum-like feature requiring its own data models, APIs, and multi-part UI."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Search Functionality for Users",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand the 'Search Functionality for Users' task. Create subtasks to: 1. Design and build the search interface page for Mentors, including input fields for interests and location. 2. Create a new API endpoint that accepts search query parameters from the frontend. 3. Implement the backend logic to query the MenteeProfile data based on the provided criteria. 4. Develop the frontend component to render the search results, displaying key information from the mentee profiles.",
+			"reasoning": "This is a standard, self-contained search/filter feature. The complexity is moderate, involving a clear, linear process of building the UI, API, database query, and results display."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Admin Analytics & Audit Logs",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Admin Analytics & Audit Logs' task. Create subtasks for: 1. Developing the backend queries and frontend components to display simple metrics on the admin dashboard. 2. Designing and creating the 'AuditLog' model in the Prisma schema. 3. Implementing a centralized logging service to record key events. 4. Integrating calls to the logging service into the existing API endpoints for actions like user approval and post deletion. 5. Building a new page in the admin dashboard to display the audit log records.",
+			"reasoning": "The complexity is driven by the audit logging requirement. While the analytics part is simple, implementing a robust logging system requires creating a new data model, a reusable service, and integrating it into numerous existing endpoints, which is a significant effort."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "MVP Launch Readiness & Finalization",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'MVP Launch Readiness & Finalization' task. Create subtasks for: 1. Performing a comprehensive review of the entire application on various screen sizes and implementing all necessary CSS adjustments for mobile responsiveness. 2. Creating the legal disclaimer and terms of service modal and implementing the logic to show it on first login. 3. Developing a script or an admin-only function to seed the database with initial content. 4. Conducting a final security audit, reviewing key areas like authentication, input sanitization, and data storage. 5. Performing a final pass for UI/UX polish and fixing minor visual bugs.",
+			"reasoning": "This 'catch-all' task is complex due to the breadth of its components. Mobile responsiveness and the final security review are particularly time-consuming and critical, requiring a holistic review of the entire application codebase."
+		}
+	]
+}

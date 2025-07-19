@@ -1,0 +1,43 @@
+# Task ID: 2
+# Title: User Profile Management (Mentor & Mentee)
+# Status: in-progress
+# Dependencies: 1
+# Priority: high
+# Description: Develop the functionality for Mentees and Mentors to create, view, and edit their profiles.
+# Details:
+Create profile pages for both roles. Mentee Profile: Education, interests, location, purpose of registration. Mentor Profile: Specialty/sub-specialty, workplace, availability status (static text). Ensure profiles can be updated by the user.
+
+# Test Strategy:
+After logging in as a mentee/mentor, verify that the profile creation form is presented and can be submitted. Test editing and saving changes to the profile fields.
+
+# Subtasks:
+## 1. Update Database Schema for Profile Management [pending]
+### Dependencies: None
+### Description: Extend the existing user schema to include profile fields for both mentors and mentees
+### Details:
+Add profile-related fields to the users table or create separate profile tables. For mentees: education, interests, location, purpose_of_registration. For mentors: specialty, sub_specialty, workplace, availability_status. Use Prisma migrations to update the schema.
+
+## 2. Create Profile API Endpoints [pending]
+### Dependencies: None
+### Description: Develop API endpoints for creating, reading, updating, and deleting user profiles
+### Details:
+Create RESTful API endpoints: GET /api/profile (get current user's profile), PUT /api/profile (update profile), POST /api/profile (create profile if doesn't exist). Handle both mentor and mentee profile types with appropriate validation.
+
+## 3. Build Profile Management UI Components [pending]
+### Dependencies: None
+### Description: Create React components for profile forms and display
+### Details:
+Create reusable form components for profile editing. Include form validation, error handling, and success feedback. Design separate forms for mentor and mentee profiles with appropriate fields. Use modern UI components and responsive design.
+
+## 4. Create Profile Pages [pending]
+### Dependencies: None
+### Description: Develop dedicated profile pages for viewing and editing user profiles
+### Details:
+Create /profile page that shows current user's profile and allows editing. Implement conditional rendering based on user role (mentor/mentee). Include profile completion status and navigation. Ensure proper authentication checks and redirects.
+
+## 5. Implement Profile Integration and Testing [pending]
+### Dependencies: None
+### Description: Integrate profile functionality with existing authentication and test the complete flow
+### Details:
+Connect profile management with the existing login system. Add profile completion checks to dashboard. Write comprehensive tests for API endpoints and UI components. Test profile creation, editing, and validation for both user types.
+

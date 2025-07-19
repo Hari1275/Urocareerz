@@ -1,0 +1,43 @@
+# Task ID: 5
+# Title: Admin Dashboard: User & Content Moderation
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Build the core admin dashboard for manual approval of new users and all posted content.
+# Details:
+Create an admin-only interface to view lists of pending user registrations and submitted opportunities. Implement 'approve' and 'reject' actions for both users and content. Admins must also be able to remove flagged/inappropriate posts and assign user roles.
+
+# Test Strategy:
+Log in as an Admin. Verify access to the dashboard. Approve a pending user and a pending post, and confirm their status changes. Reject a user/post and confirm they are handled correctly.
+
+# Subtasks:
+## 1. Design and Create User Database Schema [pending]
+### Dependencies: None
+### Description: Define and implement the database schema required for storing user information, including credentials and profile data. This includes creating the necessary tables and columns.
+### Details:
+Create a 'users' table with columns: 'id' (UUID, primary key), 'email' (VARCHAR, unique, not null), 'password_hash' (VARCHAR, not null), 'created_at' (TIMESTAMP), and 'updated_at' (TIMESTAMP). Use a migration tool like Alembic or Flyway to script and apply these changes.
+
+## 2. Implement User Registration Endpoint [pending]
+### Dependencies: 5.1
+### Description: Create a public API endpoint (e.g., POST /api/auth/register) that allows new users to create an account. The endpoint must validate input, hash the password, and store the new user.
+### Details:
+The endpoint should accept 'email' and 'password'. Validate the email format and enforce password complexity rules (e.g., minimum length). Use a strong hashing algorithm like bcrypt to hash the password before storing it. On success, return a 201 Created status with the new user's ID and email.
+
+## 3. Implement User Login Endpoint and JWT Generation [pending]
+### Dependencies: 5.1
+### Description: Create a public API endpoint (e.g., POST /api/auth/login) that authenticates users with their credentials and returns a JSON Web Token (JWT) upon success.
+### Details:
+The endpoint should accept 'email' and 'password'. Fetch the user by email from the database. Use bcrypt's compare function to verify the password against the stored hash. If valid, generate a signed JWT containing the user's ID and an expiration claim. Return the JWT in the response body.
+
+## 4. Create Authentication Middleware for Protected Routes [pending]
+### Dependencies: 5.3
+### Description: Develop a middleware function that can be applied to API routes to ensure the request is made by an authenticated user. It should validate the JWT from the request headers.
+### Details:
+The middleware should extract the token from the 'Authorization: Bearer <token>' header. It must verify the token's signature using the application's secret key and check that it has not expired. If valid, decode the payload, fetch the user from the database, and attach the user object to the request context. If invalid, it should abort the request with a 401 Unauthorized error.
+
+## 5. Develop a Protected 'Get User Profile' Endpoint [pending]
+### Dependencies: 5.4
+### Description: Create a protected endpoint (e.g., GET /api/users/me) that uses the authentication middleware to return the profile information of the currently logged-in user.
+### Details:
+Apply the authentication middleware created in the previous task to this new route. The route handler should access the user object from the request context (placed there by the middleware) and return non-sensitive user data, such as 'id', 'email', and 'created_at'.
+

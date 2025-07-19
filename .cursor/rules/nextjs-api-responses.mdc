@@ -1,0 +1,119 @@
+# API Response Handling in Next.js
+
+- **API Response Consistency**
+  - Use consistent response formats across all API endpoints
+  - Handle errors properly with appropriate status codes
+  - Include proper error messages for debugging
+
+## Common Issues and Solutions
+
+### Inconsistent Response Formats
+
+- **❌ DON'T**: Use inconsistent response formats across endpoints
+  ```typescript
+  // Endpoint 1: Returns direct data
+  return NextResponse.json(data);
+  
+  // Endpoint 2: Returns wrapped data
+  return NextResponse.json({ data: data });
+  
+  // Endpoint 3: Returns different structure
+  return NextResponse.json({ result: data, success: true });
+  ```
+
+- **✅ DO**: Use consistent response formats across all endpoints
+  ```typescript
+  // Success response
+  return NextResponse.json({ data: userData });
+  
+  // Error response
+  return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  ```
+
+### Error Handling
+
+- **❌ DON'T**: Return generic errors or incorrect status codes
+  ```typescript
+  // Generic error with incorrect status code
+  return NextResponse.json({ error: 'An error occurred' }, { status: 500 });
+  
+  // Missing status code
+  return NextResponse.json({ error: 'Invalid input' });
+  ```
+
+- **✅ DO**: Use specific error messages and appropriate status codes
+  ```typescript
+  // 400 Bad Request - Client error (invalid input)
+  return NextResponse.json(
+    { error: 'Email format is invalid' },
+    { status: 400 }
+  );
+  
+  // 401 Unauthorized - Authentication required
+  return NextResponse.json(
+    { error: 'Authentication required' },
+    { status: 401 }
+  );
+  
+  // 403 Forbidden - Authenticated but not authorized
+  return NextResponse.json(
+    { error: 'You do not have permission to access this resource' },
+    { status: 403 }
+  );
+  
+  // 404 Not Found - Resource not found
+  return NextResponse.json(
+    { error: 'User not found' },
+    { status: 404 }
+  );
+  
+  // 500 Internal Server Error - Server error
+  return NextResponse.json(
+    { error: 'Database connection failed' },
+    { status: 500 }
+  );
+  ```
+
+### Try-Catch Blocks
+
+- **❌ DON'T**: Forget to use try-catch blocks in API routes
+  ```typescript
+  export async function GET(req: NextRequest) {
+    // This might throw an error and crash the server
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    return NextResponse.json({ user });
+  }
+  ```
+
+- **✅ DO**: Always wrap API route handlers in try-catch blocks
+  ```typescript
+  export async function GET(req: NextRequest) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({ data: user });
+    } catch (error) {
+      console.error('Get user error:', error);
+      return NextResponse.json(
+        { error: 'Failed to get user information' },
+        { status: 500 }
+      );
+    }
+  }
+  ```
+
+## Best Practices
+
+1. **Define response interfaces** - Create TypeScript interfaces for API responses
+2. **Use descriptive error messages** - Include specific error messages that help with debugging
+3. **Log errors** - Always log errors on the server side for debugging
+4. **Include appropriate headers** - Set proper content-type and cache-control headers
+5. **Validate input** - Validate all input data before processing
+6. **Use appropriate HTTP methods** - GET for fetching, POST for creating, PUT/PATCH for updating, DELETE for removing

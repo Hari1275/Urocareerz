@@ -1,0 +1,49 @@
+# Task ID: 1
+# Title: Foundation: Project Setup & Secure Authentication
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Initialize the project repository and implement the core secure email-based OTP authentication system for all user roles.
+# Details:
+Setup Next.js project with MongoDB, Prisma, Shadcn UI, and Tailwind CSS. Create a custom email OTP login/registration flow using Brevo. Implement session management with timeouts and refresh tokens. Establish basic database schemas for users.
+
+# Test Strategy:
+Verify project setup by running the dev server. Test user registration with a valid email, OTP reception, and successful login. Test session timeout and invalid OTP scenarios.
+
+# Subtasks:
+## 1. Design and Implement User Database Schema [done]
+### Dependencies: None
+### Description: Create the database table(s) to store user information, including email, a hashed password, and timestamps.
+### Details:
+Use a migration tool to create a 'users' table. Key columns should be 'id' (PK), 'email' (unique), 'password_hash' (string), 'created_at', and 'updated_at'. Ensure the password column is large enough for a bcrypt hash. Do not store passwords in plain text.
+
+## 2. Create API Endpoint for User Registration [done]
+### Dependencies: 1.1
+### Description: Develop a public API endpoint (e.g., POST /api/register) that allows new users to create an account.
+### Details:
+The endpoint should accept an email and password. It must validate the input (e.g., valid email format, password complexity). Hash the password using a strong library like bcrypt before saving the new user to the database. On success, return a 201 Created status with the new user's ID and email.
+
+## 3. Implement User Login Endpoint with JWT [done]
+### Dependencies: 1.1
+### Description: Create an API endpoint (e.g., POST /api/login) for user authentication that returns a JSON Web Token (JWT) on success.
+### Details:
+The endpoint accepts an email and password. It should find the user by email, then compare the provided password against the stored hash using bcrypt's compare function. If credentials are valid, generate a signed JWT containing the user ID and an expiration claim. Return the JWT in the response body.
+
+## 4. Implement Middleware for Protected API Routes [done]
+### Dependencies: 1.3
+### Description: Create server-side middleware to verify the JWT on incoming requests to secure specific endpoints.
+### Details:
+The middleware should extract the JWT from the 'Authorization: Bearer <token>' header. It must verify the token's signature and check for expiration. If the token is valid, attach the decoded user payload (e.g., user ID) to the request object for use by route handlers. If invalid, respond with a 401 Unauthorized error.
+
+## 5. Develop Frontend Registration and Login Forms [done]
+### Dependencies: 1.2, 1.3
+### Description: Build the UI components for the registration and login pages using a frontend framework.
+### Details:
+Create two separate forms with fields for email and password. Implement client-side validation. On submission, make API calls to the registration or login endpoints. On successful login, store the received JWT securely (e.g., in an HttpOnly cookie or local storage) and redirect the user to a protected area.
+
+## 6. Create Protected User Profile Page [done]
+### Dependencies: 1.4, 1.5
+### Description: Build a user profile page that is only accessible to authenticated users and displays their information.
+### Details:
+Create a new frontend route (e.g., /profile) that is wrapped in a private route component. This component should check for a valid JWT; if none exists, it should redirect to the login page. The page should fetch user data from a new, protected backend endpoint (e.g., GET /api/users/me) which uses the authentication middleware.
+

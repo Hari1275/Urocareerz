@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Opportunity Posting (Mentor Flow)
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Enable authenticated Mentors to post new opportunities such as fellowships, jobs, or observerships.
+# Details:
+Create a form for mentors to submit opportunities. The form should capture details like title, description, location, and experience level. Submitted posts should be saved with a 'pending approval' status.
+
+# Test Strategy:
+Log in as a Mentor. Verify the 'Post Opportunity' feature is available. Submit a new post and confirm it is saved to the database with a pending status.

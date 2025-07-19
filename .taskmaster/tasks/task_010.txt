@@ -1,0 +1,43 @@
+# Task ID: 10
+# Title: MVP Launch Readiness & Finalization
+# Status: pending
+# Dependencies: 4, 5, 6
+# Priority: high
+# Description: Implement final UI/UX polish, legal requirements, and initial content for launch.
+# Details:
+Ensure the entire application is mobile responsive. Implement the legal disclaimer and terms of service modal to be shown on first login. Create an admin function or script for initial content seeding (jobs/fellowships). Perform a final review of security practices, including encrypted storage for sensitive data.
+
+# Test Strategy:
+Test the application on various screen sizes (desktop, tablet, mobile). Verify the legal disclaimer appears on first login and requires acceptance. Confirm initial content is seeded correctly and visible on the platform.
+
+# Subtasks:
+## 1. Design and Implement User Database Schema [pending]
+### Dependencies: None
+### Description: Create the necessary database table(s) to store user information, including credentials and profile data.
+### Details:
+Define a 'users' table with columns for id (primary key), email (unique), hashed_password, created_at, and updated_at. Use a database migration tool (e.g., Flyway, Alembic, Knex.js) to create and apply the schema changes.
+
+## 2. Implement Secure Password Hashing Service [pending]
+### Dependencies: None
+### Description: Create a reusable service or module for hashing and verifying user passwords securely.
+### Details:
+Use a strong, adaptive hashing algorithm like bcrypt or Argon2. Create two functions: one `hashPassword(plainTextPassword)` that returns a hash, and another `verifyPassword(plainTextPassword, hash)` that returns a boolean. Do not use outdated algorithms like MD5 or SHA1.
+
+## 3. Develop User Registration API Endpoint [pending]
+### Dependencies: 10.1, 10.2
+### Description: Create a public API endpoint (e.g., POST /api/auth/register) for new users to create an account.
+### Details:
+The endpoint should accept user data (e.g., email, password) in the request body. Validate the input (e.g., check for valid email format, password complexity). Use the Password Hashing Service to hash the password before storing the new user record in the database. Return a success message or a newly created user object (without the password hash).
+
+## 4. Develop User Login API Endpoint [pending]
+### Dependencies: 10.1, 10.2
+### Description: Create a public API endpoint (e.g., POST /api/auth/login) for existing users to authenticate.
+### Details:
+The endpoint should accept user credentials (email, password). Find the user by email in the database. Use the Password Hashing Service to compare the provided password with the stored hash. If they match, generate a JSON Web Token (JWT) containing the user's ID and role. Return the JWT to the client.
+
+## 5. Create Authentication Middleware for Protected Routes [pending]
+### Dependencies: 10.4
+### Description: Implement middleware to verify the JWT on incoming requests to secure specific API endpoints.
+### Details:
+The middleware should extract the JWT from the 'Authorization' header (e.g., 'Bearer <token>'). It must then verify the token's signature and expiration. If valid, decode the payload to identify the user and attach the user information to the request object for use in subsequent handlers. If invalid, it should return a 401 Unauthorized or 403 Forbidden error.
+

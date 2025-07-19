@@ -1,0 +1,80 @@
+# JWT and TypeScript Integration
+
+- **JWT Type Handling**
+  - When using `jsonwebtoken` with TypeScript, handle type issues properly
+  - The library has incomplete type definitions that can cause TypeScript errors
+
+## Common Issues and Solutions
+
+### JWT Sign Method
+
+- **❌ DON'T**: Use direct type assertions that don't match library expectations
+  ```typescript
+  // This causes TypeScript errors
+  jwt.sign(payload, secret as jwt.Secret, { expiresIn: '1h' });
+  ```
+
+- **✅ DO**: Use one of these approaches:
+
+  1. **Use @ts-ignore for direct usage** (quick but not ideal for production)
+  ```typescript
+  // @ts-ignore - Bypass TypeScript error for jwt.sign
+  jwt.sign(payload, secret, { expiresIn: '1h' });
+  ```
+
+  2. **Use Buffer for the secret** (better approach)
+  ```typescript
+  // Convert string secret to Buffer
+  jwt.sign(payload, Buffer.from(secret, 'utf-8'), { expiresIn: '1h' });
+  ```
+
+  3. **Create proper type definitions** (best for production)
+  ```typescript
+  // In a separate types file
+  declare module 'jsonwebtoken' {
+    export interface SignOptions {
+      expiresIn?: string | number;
+      // Add other options as needed
+    }
+    
+    export function sign(
+      payload: string | object | Buffer,
+      secretOrPrivateKey: string | Buffer,
+      options?: SignOptions
+    ): string;
+    
+    // Define other methods as needed
+  }
+  ```
+
+### JWT Verify Method
+
+- **❌ DON'T**: Assume TypeScript will correctly infer return types
+  ```typescript
+  // This might cause TypeScript errors or incorrect typing
+  const decoded = jwt.verify(token, secret);
+  ```
+
+- **✅ DO**: Always use explicit type assertions for the result
+  ```typescript
+  // Define your payload interface
+  interface JWTPayload {
+    userId: string;
+    email: string;
+    role: string;
+    // other fields
+  }
+  
+  // Use type assertion with the verify method
+  const decoded = jwt.verify(token, secret) as JWTPayload;
+  ```
+
+## Best Practices
+
+1. **Define payload interfaces** - Always create explicit interfaces for JWT payloads
+2. **Handle environment variables safely** - Check if JWT_SECRET exists before using it
+3. **Use try-catch blocks** - JWT verification can throw errors that should be caught
+4. **Consider alternatives** - For better TypeScript support, consider using libraries like:
+   - `jose` - Modern JWT implementation with good TypeScript support
+   - `@auth/core` - Auth.js core library with TypeScript support
+5. **Document @ts-ignore usage** - If using @ts-ignore, add a comment explaining why

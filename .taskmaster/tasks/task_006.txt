@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Email Notification System
+# Status: pending
+# Dependencies: 4, 5
+# Priority: medium
+# Description: Integrate the Brevo email service to send automated notifications for key platform events.
+# Details:
+Configure email triggers for: application submission (to mentor), admin approval of a post (to mentor), new user approval (to user), and custom announcements sent from the admin dashboard.
+
+# Test Strategy:
+Trigger each event (e.g., apply for a job, approve a post) and verify that the correct email notification is sent to the intended recipient's inbox.

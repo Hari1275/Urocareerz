@@ -1,0 +1,11 @@
+# Task ID: 9
+# Title: Admin Analytics & Audit Logs
+# Status: pending
+# Dependencies: 5
+# Priority: low
+# Description: Enhance the admin dashboard with simple analytics and audit logging.
+# Details:
+Add a section to the admin dashboard to display simple metrics like total user sign-ups and total number of posts. Implement a logging system to record key admin and user actions (e.g., user approved, post deleted, role changed).
+
+# Test Strategy:
+As an Admin, view the analytics dashboard and confirm the counts are correct. Perform an action like approving a user, then check the audit log to ensure the action was recorded with the correct details.

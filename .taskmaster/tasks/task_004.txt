@@ -1,0 +1,43 @@
+# Task ID: 4
+# Title: Opportunity Board & Application (Mentee Flow)
+# Status: pending
+# Dependencies: 3
+# Priority: high
+# Description: Implement the job board where Mentees can browse, filter, save, and apply for opportunities.
+# Details:
+Create a page to display a list of approved opportunities. Implement simple filters for Location and Experience Level. Develop the application flow, including CV upload to AWS S3. Mentees should be able to save opportunities to a personal list.
+
+# Test Strategy:
+Log in as a Mentee. Verify that approved posts are visible on the board. Test filters to ensure results are narrowed correctly. Test the application process, including successful CV upload.
+
+# Subtasks:
+## 1. Design and Implement User Database Schema [pending]
+### Dependencies: None
+### Description: Create the necessary database table(s) to store user information, including credentials and profile data.
+### Details:
+Use a migration tool (e.g., Flyway, Alembic, Knex.js migrations). The 'users' table should include columns for 'id' (primary key), 'email' (unique), 'password_hash' (string), 'created_at', and 'updated_at'. Ensure the password field is designed to store a hashed value, not plaintext.
+
+## 2. Develop User Registration API Endpoint [pending]
+### Dependencies: 4.1
+### Description: Create a public API endpoint (e.g., POST /api/auth/register) that allows new users to sign up.
+### Details:
+The endpoint should accept user data (email, password) in the request body. It must validate the input (e.g., valid email format, password complexity). Before saving, hash the user's password using a strong algorithm like bcrypt. Return a success message or the newly created user object (without the password hash).
+
+## 3. Implement JWT Generation and Validation Service [pending]
+### Dependencies: None
+### Description: Create a reusable service or module for creating and verifying JSON Web Tokens (JWTs).
+### Details:
+The service should have two main functions: `generateToken(user)` which takes a user object and returns a signed JWT containing user ID and role, and `verifyToken(token)` which validates a token's signature and expiration. Use a strong secret key stored securely in environment variables.
+
+## 4. Develop User Login API Endpoint [pending]
+### Dependencies: 4.1, 4.3
+### Description: Create a public API endpoint (e.g., POST /api/auth/login) for users to authenticate.
+### Details:
+The endpoint accepts user credentials (email, password). It should find the user by email in the database, compare the provided password against the stored hash using the bcrypt compare function. If credentials are valid, use the JWT service to generate a token and return it to the client.
+
+## 5. Create Authentication Middleware for Protected Routes [pending]
+### Dependencies: 4.3
+### Description: Implement a middleware that intercepts requests to protected API endpoints, validates the JWT from the Authorization header, and attaches the user's identity to the request object.
+### Details:
+The middleware should extract the token from the 'Authorization: Bearer <token>' header. Use the JWT service to verify the token. If valid, extract the user payload and attach it to the request context (e.g., `req.user`). If invalid or missing, return a 401 Unauthorized error.
+

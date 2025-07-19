@@ -1,0 +1,75 @@
+# Environment Variables in Next.js
+
+- **Environment Variable Handling**
+  - Always validate environment variables before use
+  - Consider using a validation library like Zod for complex validation
+  - Document required environment variables
+
+## Common Issues and Solutions
+
+### Missing Environment Variables
+
+- **❌ DON'T**: Access environment variables directly without validation
+  ```typescript
+  // This might cause runtime errors if the variable is undefined
+  const secret = process.env.JWT_SECRET;
+  jwt.sign(payload, secret);
+  ```
+
+- **✅ DO**: Always check if environment variables exist before using them
+  ```typescript
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not defined');
+  }
+  
+  jwt.sign(payload, secret);
+  ```
+
+### Environment Variable Documentation
+
+- **❌ DON'T**: Leave environment variables undocumented
+  ```
+  # .env.example with no comments
+  JWT_SECRET=
+  DATABASE_URL=
+  ```
+
+- **✅ DO**: Document all environment variables with comments and examples
+  ```
+  # .env.example
+  # Required for JWT authentication
+  # Generate with: openssl rand -base64 32
+  JWT_SECRET=your-jwt-secret-key-here
+  
+  # MongoDB connection string
+  # Format: mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>
+  DATABASE_URL=mongodb+srv://username:password@cluster0.mongodb.net/database
+  ```
+
+### Environment Variable Types
+
+- **❌ DON'T**: Assume environment variables are of the correct type
+  ```typescript
+  // This might cause unexpected behavior if JWT_EXPIRES_IN is not a number
+  const expiresIn = process.env.JWT_EXPIRES_IN;
+  jwt.sign(payload, secret, { expiresIn });
+  ```
+
+- **✅ DO**: Parse and validate environment variable types
+  ```typescript
+  // Parse and provide default value
+  const expiresIn = process.env.JWT_EXPIRES_IN || '1h';
+  jwt.sign(payload, secret, { expiresIn });
+  
+  // For numeric values
+  const port = parseInt(process.env.PORT || '3000', 10);
+  ```
+
+## Best Practices
+
+1. **Create `.env.example`** - Include a template file with all required variables
+2. **Centralize environment validation** - Create a utility function or module to validate all environment variables at startup
+3. **Use typed environment variables** - Consider creating a typed interface for your environment variables
+4. **Add validation** - Use a validation library like Zod to ensure environment variables meet requirements
+5. **Document required format** - Include comments about the expected format and generation method for sensitive values

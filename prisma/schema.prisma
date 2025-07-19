@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  role      Role     @default(MENTEE)
+  otpSecret String?
+  otpExpiry DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Profile relationship
+  profile   Profile?
+  
+  // Opportunities relationship (for mentors)
+  opportunities Opportunity[]
+}
+
+model Profile {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String   @unique @db.ObjectId
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Common profile fields
+  bio                   String?
+  location              String?
+  avatar                String? // S3 key for avatar file
+  avatarFileName        String? // Original filename for avatar
+  resume                String? // S3 key for resume file
+  resumeFileName        String? // Original filename
+  
+  // Mentee-specific fields
+  education             String?
+  interests             String[]
+  purposeOfRegistration String?
+  
+  // Mentor-specific fields
+  specialty             String?
+  subSpecialty          String?
+  workplace             String?
+  availabilityStatus    String   @default("Available")
+  yearsOfExperience     Int?
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+enum Role {
+  MENTEE
+  MENTOR
+  ADMIN
+}
+
+model Opportunity {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  title             String
+  description       String
+  location          String?
+  experienceLevel   String?
+  opportunityType   OpportunityType
+  status            OpportunityStatus @default(PENDING)
+  mentorId          String   @db.ObjectId
+  mentor            User     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  
+  // Additional fields
+  requirements      String?
+  benefits          String?
+  duration          String?
+  compensation      String?
+  applicationDeadline DateTime?
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+enum OpportunityType {
+  FELLOWSHIP
+  JOB
+  OBSERVERSHIP
+  RESEARCH
+  OTHER
+}
+
+enum OpportunityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CLOSED
+}
