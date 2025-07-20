@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import {
   MapPin,
   Briefcase,
@@ -30,7 +31,12 @@ interface Opportunity {
   id: string;
   title: string;
   description: string;
-  opportunityType: string;
+  opportunityType: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
   location?: string;
   experienceLevel?: string;
   requirements?: string;
@@ -62,6 +68,7 @@ interface User {
 
 export default function OpportunityDetailPage() {
   const router = useRouter();
+  const { getTypeBadge } = useOpportunityTypes();
   const params = useParams();
   const [user, setUser] = useState<User | null>(null);
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
@@ -148,23 +155,6 @@ export default function OpportunityDetailPage() {
   const handleApply = () => {
     if (opportunity) {
       router.push(`/opportunities/${opportunity.id}/apply`);
-    }
-  };
-
-  const getOpportunityTypeLabel = (type: string) => {
-    switch (type) {
-      case "FELLOWSHIP":
-        return "Fellowship";
-      case "JOB":
-        return "Job";
-      case "OBSERVERSHIP":
-        return "Observership";
-      case "RESEARCH":
-        return "Research";
-      case "OTHER":
-        return "Other";
-      default:
-        return type;
     }
   };
 
@@ -287,7 +277,14 @@ export default function OpportunityDetailPage() {
                 <div className="flex items-center gap-1">
                   <Briefcase className="h-4 w-4" />
                   <span>
-                    {getOpportunityTypeLabel(opportunity.opportunityType)}
+                    {(() => {
+                      const typeInfo = getTypeBadge(
+                        opportunity.opportunityType.name
+                      );
+                      return typeInfo
+                        ? typeInfo.name
+                        : opportunity.opportunityType.name;
+                    })()}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">

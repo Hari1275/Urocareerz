@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { verifyEdgeToken } from "@/lib/edge-auth";
-
-const prisma = new PrismaClient();
+import { sendApplicationSubmissionEmail } from "@/lib/email";
 
 export async function GET(request: NextRequest) {
   try {
@@ -172,6 +171,7 @@ export async function POST(request: NextRequest) {
               select: {
                 firstName: true,
                 lastName: true,
+                email: true,
                 profile: {
                   select: {
                     specialty: true,
@@ -181,8 +181,51 @@ export async function POST(request: NextRequest) {
             },
           },
         },
+        mentee: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     });
+
+    // Send email notification to mentor
+    try {
+      const mentorName =
+        `${application.opportunity.mentor.firstName || ""} ${
+          application.opportunity.mentor.lastName || ""
+        }`.trim() || "Mentor";
+      const menteeName =
+        `${application.mentee.firstName || ""} ${
+          application.mentee.lastName || ""
+        }`.trim() || application.mentee.email;
+
+      const emailResult = await sendApplicationSubmissionEmail({
+        email: application.opportunity.mentor.email,
+        mentorName: mentorName,
+        menteeName: menteeName,
+        opportunityTitle: application.opportunity.title,
+        menteeEmail: application.mentee.email,
+      });
+
+      if (!emailResult.success) {
+        console.error(
+          "Failed to send application submission email:",
+          emailResult.error
+        );
+        // Don't fail the request if email fails, just log it
+      } else {
+        console.log(
+          "Application submission email sent successfully to:",
+          application.opportunity.mentor.email
+        );
+      }
+    } catch (emailError) {
+      console.error("Error sending application submission email:", emailError);
+      // Don't fail the request if email fails, just log it
+    }
 
     return NextResponse.json({ application }, { status: 201 });
   } catch (error) {

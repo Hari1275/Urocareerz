@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import {
   Search,
   MapPin,
@@ -33,7 +34,12 @@ interface Opportunity {
   id: string;
   title: string;
   description: string;
-  opportunityType: string;
+  opportunityType: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
   location?: string;
   experienceLevel?: string;
   requirements?: string;
@@ -60,6 +66,7 @@ interface User {
 
 export default function OpportunitiesPage() {
   const router = useRouter();
+  const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
   const [user, setUser] = useState<User | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,23 +158,6 @@ export default function OpportunitiesPage() {
     router.push(`/opportunities/${opportunityId}/apply`);
   };
 
-  const getOpportunityTypeLabel = (type: string) => {
-    switch (type) {
-      case "FELLOWSHIP":
-        return "Fellowship";
-      case "JOB":
-        return "Job";
-      case "OBSERVERSHIP":
-        return "Observership";
-      case "RESEARCH":
-        return "Research";
-      case "OTHER":
-        return "Other";
-      default:
-        return type;
-    }
-  };
-
   const getExperienceLevelLabel = (level: string) => {
     switch (level?.toLowerCase()) {
       case "entry":
@@ -201,7 +191,7 @@ export default function OpportunitiesPage() {
     const matchesType =
       !typeFilter ||
       typeFilter === "all" ||
-      opportunity.opportunityType === typeFilter;
+      opportunity.opportunityType.name === typeFilter;
 
     return matchesSearch && matchesLocation && matchesExperience && matchesType;
   });
@@ -316,11 +306,11 @@ export default function OpportunitiesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="FELLOWSHIP">Fellowship</SelectItem>
-                    <SelectItem value="JOB">Job</SelectItem>
-                    <SelectItem value="OBSERVERSHIP">Observership</SelectItem>
-                    <SelectItem value="RESEARCH">Research</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
+                    {opportunityTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -397,9 +387,20 @@ export default function OpportunitiesPage() {
                     <div className="space-y-3">
                       {/* Opportunity Type and Experience */}
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {getOpportunityTypeLabel(opportunity.opportunityType)}
-                        </Badge>
+                        {(() => {
+                          const typeInfo = getTypeBadge(
+                            opportunity.opportunityType.name
+                          );
+                          return typeInfo ? (
+                            <Badge className={typeInfo.colorClass}>
+                              {typeInfo.name}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">
+                              {opportunity.opportunityType.name}
+                            </Badge>
+                          );
+                        })()}
                         {opportunity.experienceLevel && (
                           <Badge variant="secondary">
                             {getExperienceLevelLabel(

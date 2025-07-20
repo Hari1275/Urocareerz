@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import FileUpload from "@/components/FileUpload";
+import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { Upload, FileText, Send, ArrowLeft } from "lucide-react";
 
 const applicationSchema = z.object({
@@ -32,7 +33,12 @@ interface Opportunity {
   id: string;
   title: string;
   description: string;
-  opportunityType: string;
+  opportunityType: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
   location?: string;
   experienceLevel?: string;
   mentor: {
@@ -48,6 +54,7 @@ interface ApplicationFormProps {
 
 export default function ApplicationForm({ opportunity }: ApplicationFormProps) {
   const router = useRouter();
+  const { getTypeBadge } = useOpportunityTypes();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCvFile, setSelectedCvFile] = useState<File | null>(null);
   const [isUploadingCv, setIsUploadingCv] = useState(false);
@@ -171,23 +178,6 @@ export default function ApplicationForm({ opportunity }: ApplicationFormProps) {
     }
   };
 
-  const getOpportunityTypeLabel = (type: string) => {
-    switch (type) {
-      case "FELLOWSHIP":
-        return "Fellowship";
-      case "JOB":
-        return "Job";
-      case "OBSERVERSHIP":
-        return "Observership";
-      case "RESEARCH":
-        return "Research";
-      case "OTHER":
-        return "Other";
-      default:
-        return type;
-    }
-  };
-
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
@@ -241,9 +231,16 @@ export default function ApplicationForm({ opportunity }: ApplicationFormProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                <CardDescription>
-                  {getOpportunityTypeLabel(opportunity.opportunityType)}
-                </CardDescription>
+                <div className="text-sm text-muted-foreground">
+                  {(() => {
+                    const typeInfo = getTypeBadge(
+                      opportunity.opportunityType.name
+                    );
+                    return typeInfo
+                      ? typeInfo.name
+                      : opportunity.opportunityType.name;
+                  })()}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -295,9 +292,9 @@ export default function ApplicationForm({ opportunity }: ApplicationFormProps) {
                   <FileText className="h-5 w-5" />
                   Application Form
                 </CardTitle>
-                <CardDescription>
+                <div className="text-sm text-muted-foreground">
                   Please fill out the form below to apply for this opportunity
-                </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

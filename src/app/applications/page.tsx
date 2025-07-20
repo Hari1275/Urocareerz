@@ -3,14 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import {
   FileText,
   Calendar,
@@ -36,7 +31,12 @@ interface Application {
     id: string;
     title: string;
     description: string;
-    opportunityType: string;
+    opportunityType: {
+      id: string;
+      name: string;
+      description?: string;
+      color?: string;
+    };
     location?: string;
     experienceLevel?: string;
     mentor: {
@@ -57,10 +57,12 @@ interface User {
 
 export default function ApplicationsPage() {
   const router = useRouter();
+  const { getTypeBadge } = useOpportunityTypes();
   const [user, setUser] = useState<User | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,8 +93,8 @@ export default function ApplicationsPage() {
           const data = await applicationsResponse.json();
           setApplications(data.applications || []);
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -146,23 +148,6 @@ export default function ApplicationsPage() {
     }
   };
 
-  const getOpportunityTypeLabel = (type: string) => {
-    switch (type) {
-      case "FELLOWSHIP":
-        return "Fellowship";
-      case "JOB":
-        return "Job";
-      case "OBSERVERSHIP":
-        return "Observership";
-      case "RESEARCH":
-        return "Research";
-      case "OTHER":
-        return "Other";
-      default:
-        return type;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -171,6 +156,52 @@ export default function ApplicationsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleWithdrawApplication = async (applicationId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to withdraw this application? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setWithdrawingId(applicationId);
+
+      const response = await fetch(
+        `/api/applications/${applicationId}/withdraw`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to withdraw application");
+      }
+
+      // Update the application in the local state
+      setApplications((prevApplications) =>
+        prevApplications.map((app) =>
+          app.id === applicationId ? { ...app, status: "WITHDRAWN" } : app
+        )
+      );
+
+      // Show success message
+      alert("Application withdrawn successfully");
+    } catch (error: unknown) {
+      console.error("Error withdrawing application:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to withdraw application"
+      );
+    } finally {
+      setWithdrawingId(null);
+    }
   };
 
   if (loading) {
@@ -264,7 +295,7 @@ export default function ApplicationsPage() {
                     No Applications Yet
                   </h3>
                   <p className="text-gray-500 mb-4">
-                    You haven't submitted any applications yet. Start by
+                    You haven&apos;t submitted any applications yet. Start by
                     browsing available opportunities.
                   </p>
                   <Button onClick={() => router.push("/opportunities")}>
@@ -286,7 +317,7 @@ export default function ApplicationsPage() {
                         <CardTitle className="text-lg">
                           {application.opportunity.title}
                         </CardTitle>
-                        <CardDescription className="mt-2">
+                        <div className="mt-2">
                           <div className="flex items-center gap-4 text-sm">
                             <div className="flex items-center gap-1">
                               <MapPin className="h-4 w-4" />
@@ -298,13 +329,19 @@ export default function ApplicationsPage() {
                             <div className="flex items-center gap-1">
                               <Briefcase className="h-4 w-4" />
                               <span>
-                                {getOpportunityTypeLabel(
-                                  application.opportunity.opportunityType
-                                )}
+                                {(() => {
+                                  const typeInfo = getTypeBadge(
+                                    application.opportunity.opportunityType.name
+                                  );
+                                  return typeInfo
+                                    ? typeInfo.name
+                                    : application.opportunity.opportunityType
+                                        .name;
+                                })()}
                               </span>
                             </div>
                           </div>
-                        </CardDescription>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {getStatusBadge(application.status)}
@@ -381,12 +418,19 @@ export default function ApplicationsPage() {
                           <Button
                             variant="outline"
                             className="text-red-600 hover:text-red-700"
-                            onClick={() => {
-                              // TODO: Implement withdraw functionality
-                              alert("Withdraw functionality coming soon");
-                            }}
+                            onClick={() =>
+                              handleWithdrawApplication(application.id)
+                            }
+                            disabled={withdrawingId === application.id}
                           >
-                            Withdraw Application
+                            {withdrawingId === application.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                                Withdrawing...
+                              </>
+                            ) : (
+                              "Withdraw Application"
+                            )}
                           </Button>
                         )}
                       </div>

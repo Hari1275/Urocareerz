@@ -17,7 +17,12 @@ interface Opportunity {
   id: string;
   title: string;
   description: string;
-  opportunityType: string;
+  opportunityType: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
   location?: string;
   experienceLevel?: string;
   requirements?: string;
@@ -42,7 +47,11 @@ interface User {
   role: string;
 }
 
-export default function ApplyPage({ params }: { params: { id: string } }) {
+export default function ApplyPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -52,6 +61,8 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const { id } = await params;
+
         // Fetch user data
         const userResponse = await fetch("/api/user");
         if (!userResponse.ok) {
@@ -73,9 +84,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
         }
 
         // Fetch opportunity details
-        const opportunityResponse = await fetch(
-          `/api/opportunities/${params.id}`
-        );
+        const opportunityResponse = await fetch(`/api/opportunities/${id}`);
         if (!opportunityResponse.ok) {
           if (opportunityResponse.status === 404) {
             setError("Opportunity not found");
@@ -95,7 +104,23 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
           return;
         }
 
-        setOpportunity(opportunityData.opportunity);
+        // Transform the opportunity data to match the expected interface
+        const transformedOpportunity = {
+          ...opportunityData.opportunity,
+          opportunityType: {
+            id: opportunityData.opportunity.opportunityType.id,
+            name: opportunityData.opportunity.opportunityType.name,
+            description:
+              opportunityData.opportunity.opportunityType.description,
+            color: opportunityData.opportunity.opportunityType.color,
+          },
+          mentor: {
+            firstName: opportunityData.opportunity.mentor.firstName || "",
+            lastName: opportunityData.opportunity.mentor.lastName || "",
+            specialty: opportunityData.opportunity.mentor.profile?.specialty,
+          },
+        };
+        setOpportunity(transformedOpportunity);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -104,7 +129,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     };
 
     fetchData();
-  }, [params.id, router]);
+  }, [params, router]);
 
   if (loading) {
     return (
@@ -127,7 +152,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader>
             <CardTitle className="text-red-500">Error</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <div className="text-sm text-muted-foreground">{error}</div>
           </CardHeader>
           <CardContent>
             <Button onClick={() => router.push("/opportunities")}>

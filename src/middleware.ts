@@ -87,7 +87,7 @@ export default async function middleware(req: NextRequest) {
         } else {
           return NextResponse.redirect(new URL("/dashboard", req.url));
         }
-      } catch (error) {
+      } catch {
         // Token is invalid, continue to show landing page
         return NextResponse.next();
       }

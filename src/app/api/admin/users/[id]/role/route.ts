@@ -4,9 +4,17 @@ import { withAdminAuth } from "@/lib/admin-auth";
 
 // PUT /api/admin/users/[id]/role - Update user role
 export const PUT = withAdminAuth(
-  async (req: NextRequest, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, context?: { params: Promise<{ id: string }> }) => {
     try {
-      const userId = params.id;
+      const params = await context?.params;
+      const userId = params?.id;
+
+      if (!userId) {
+        return NextResponse.json(
+          { error: "User ID is required" },
+          { status: 400 }
+        );
+      }
       const { role } = await req.json();
 
       // Validate role

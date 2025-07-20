@@ -8,8 +8,16 @@ export interface AdminUser {
 }
 
 // Admin authentication middleware for API routes
-export function withAdminAuth(handler: Function) {
-  return async (req: NextRequest) => {
+export function withAdminAuth(
+  handler: (
+    req: NextRequest,
+    context?: { params: Promise<{ [key: string]: string }> }
+  ) => Promise<NextResponse>
+) {
+  return async (
+    req: NextRequest,
+    context?: { params: Promise<{ [key: string]: string }> }
+  ) => {
     try {
       // Get token from cookies
       const token = req.cookies.get("token")?.value;
@@ -38,9 +46,10 @@ export function withAdminAuth(handler: Function) {
       }
 
       // Add admin user to request
-      (req as any).adminUser = decoded;
+      (req as unknown as Record<string, unknown>).adminUser = decoded;
 
-      return await handler(req);
+      // Pass both req and context to the handler
+      return await handler(req, context);
     } catch (error) {
       console.error("Admin auth error:", error);
       return NextResponse.json(
@@ -53,5 +62,7 @@ export function withAdminAuth(handler: Function) {
 
 // Helper function to get admin user from request
 export function getAdminUser(req: NextRequest): AdminUser | null {
-  return (req as any).adminUser || null;
+  return (
+    ((req as unknown as Record<string, unknown>).adminUser as AdminUser) || null
+  );
 }

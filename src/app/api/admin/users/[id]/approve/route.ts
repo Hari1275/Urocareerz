@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAdminAuth } from "@/lib/admin-auth";
+import { sendUserApprovalEmail } from "@/lib/email";
 
 // POST /api/admin/users/[id]/approve - Approve a user
 export const POST = withAdminAuth(
-  async (req: NextRequest, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, context?: { params: Promise<{ id: string }> }) => {
     try {
-      const userId = params.id;
+      const params = await context?.params;
+      const userId = params?.id;
+
+      if (!userId) {
+        return NextResponse.json(
+          { error: "User ID is required" },
+          { status: 400 }
+        );
+      }
 
       // Find the user
       const user = await prisma.user.findUnique({
@@ -35,6 +44,35 @@ export const POST = withAdminAuth(
           updatedAt: true,
         },
       });
+
+      // Send email notification to user
+      try {
+        const userName =
+          `${updatedUser.firstName || ""} ${
+            updatedUser.lastName || ""
+          }`.trim() || updatedUser.email;
+
+        const emailResult = await sendUserApprovalEmail({
+          email: updatedUser.email,
+          userName: userName,
+        });
+
+        if (!emailResult.success) {
+          console.error(
+            "Failed to send user approval email:",
+            emailResult.error
+          );
+          // Don't fail the request if email fails, just log it
+        } else {
+          console.log(
+            "User approval email sent successfully to:",
+            updatedUser.email
+          );
+        }
+      } catch (emailError) {
+        console.error("Error sending user approval email:", emailError);
+        // Don't fail the request if email fails, just log it
+      }
 
       return NextResponse.json({
         message: "User approved successfully",

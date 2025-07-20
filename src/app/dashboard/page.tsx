@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui";
+import { LegalDisclaimerModal } from "@/components/LegalDisclaimerModal";
 
 interface Profile {
   id?: string;
@@ -39,6 +40,7 @@ interface User {
   firstName: string | null;
   lastName: string | null;
   role: string;
+  termsAccepted?: boolean;
 }
 
 export default function DashboardPage() {
@@ -47,6 +49,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLegalModal, setShowLegalModal] = useState(false);
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
@@ -69,6 +72,11 @@ export default function DashboardPage() {
 
         const userData = await userResponse.json();
         setUser(userData.user);
+
+        // Check if user has accepted terms
+        if (!userData.user.termsAccepted) {
+          setShowLegalModal(true);
+        }
 
         // Fetch profile data
         const profileResponse = await fetch("/api/profile", {
@@ -103,6 +111,31 @@ export default function DashboardPage() {
     } catch (err) {
       console.error("Logout failed", err);
     }
+  };
+
+  const handleAcceptTerms = async () => {
+    try {
+      const response = await fetch("/api/user/accept-terms", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to accept terms");
+      }
+
+      // Update user state to reflect terms acceptance
+      setUser((prev) => (prev ? { ...prev, termsAccepted: true } : null));
+      setShowLegalModal(false);
+    } catch (error) {
+      console.error("Error accepting terms:", error);
+      alert("Failed to accept terms. Please try again.");
+    }
+  };
+
+  const handleDeclineTerms = () => {
+    // Log out the user if they decline terms
+    handleLogout();
   };
 
   if (loading) {
@@ -149,7 +182,18 @@ export default function DashboardPage() {
     return null;
   } else {
     return (
-      <MenteeDashboard user={user} profile={profile} onLogout={handleLogout} />
+      <>
+        <MenteeDashboard
+          user={user}
+          profile={profile}
+          onLogout={handleLogout}
+        />
+        <LegalDisclaimerModal
+          open={showLegalModal}
+          onAccept={handleAcceptTerms}
+          onDecline={handleDeclineTerms}
+        />
+      </>
     );
   }
 }

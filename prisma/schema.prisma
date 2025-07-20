@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -22,6 +21,8 @@ model User {
   role      Role     @default(MENTEE)
   otpSecret String?
   otpExpiry DateTime?
+  termsAccepted Boolean @default(false)
+  deletedAt DateTime? // Soft delete field
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -80,7 +81,8 @@ model Opportunity {
   description       String
   location          String?
   experienceLevel   String?
-  opportunityType   OpportunityType
+  opportunityTypeId String   @db.ObjectId
+  opportunityType   OpportunityType @relation(fields: [opportunityTypeId], references: [id])
   status            OpportunityStatus @default(PENDING)
   mentorId          String   @db.ObjectId
   mentor            User     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
@@ -92,6 +94,9 @@ model Opportunity {
   compensation      String?
   applicationDeadline DateTime?
   
+  // Soft delete field
+  deletedAt         DateTime?
+  
   // Relationships
   savedOpportunities SavedOpportunity[]
   applications        Application[]
@@ -101,12 +106,19 @@ model Opportunity {
   updatedAt         DateTime @updatedAt
 }
 
-enum OpportunityType {
-  FELLOWSHIP
-  JOB
-  OBSERVERSHIP
-  RESEARCH
-  OTHER
+model OpportunityType {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  color       String?  // For UI styling (e.g., "blue", "green", "purple")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  opportunities Opportunity[]
+
+  @@map("opportunityTypes")
 }
 
 enum OpportunityStatus {

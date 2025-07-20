@@ -4,9 +4,17 @@ import { withAdminAuth } from "@/lib/admin-auth";
 
 // POST /api/admin/opportunities/[id]/reject - Reject an opportunity
 export const POST = withAdminAuth(
-  async (req: NextRequest, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, context?: { params: Promise<{ id: string }> }) => {
     try {
-      const opportunityId = params.id;
+      const params = await context?.params;
+      const opportunityId = params?.id;
+
+      if (!opportunityId) {
+        return NextResponse.json(
+          { error: "Opportunity ID is required" },
+          { status: 400 }
+        );
+      }
 
       // Find the opportunity
       const opportunity = await prisma.opportunity.findUnique({

@@ -24,13 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
+import { useOpportunityFilters } from "@/hooks/use-opportunity-filters";
 import {
   CheckCircle,
   XCircle,
@@ -43,8 +39,13 @@ interface Opportunity {
   id: string;
   title: string;
   description: string;
-  status: string;
-  opportunityType: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CLOSED";
+  opportunityType: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
   location?: string;
   mentor: {
     firstName: string | null;
@@ -59,6 +60,8 @@ interface Opportunity {
 }
 
 export default function ContentModerationTable() {
+  const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
+  const { getStatusBadge } = useOpportunityFilters();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,44 +172,10 @@ export default function ContentModerationTable() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "APPROVED":
-        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
-      case "PENDING":
-        return <Badge className="bg-orange-100 text-orange-800">Pending</Badge>;
-      case "REJECTED":
-        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
-      case "CLOSED":
-        return <Badge className="bg-gray-100 text-gray-800">Closed</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case "FELLOWSHIP":
-        return <Badge className="bg-blue-100 text-blue-800">Fellowship</Badge>;
-      case "JOB":
-        return <Badge className="bg-green-100 text-green-800">Job</Badge>;
-      case "OBSERVERSHIP":
-        return (
-          <Badge className="bg-purple-100 text-purple-800">Observership</Badge>
-        );
-      case "RESEARCH":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800">Research</Badge>
-        );
-      default:
-        return <Badge variant="secondary">{type}</Badge>;
-    }
-  };
-
   const filteredOpportunities = opportunities.filter((opportunity) => {
     if (statusFilter !== "all" && opportunity.status !== statusFilter)
       return false;
-    if (typeFilter !== "all" && opportunity.opportunityType !== typeFilter)
+    if (typeFilter !== "all" && opportunity.opportunityType.name !== typeFilter)
       return false;
     return true;
   });
@@ -216,7 +185,9 @@ export default function ContentModerationTable() {
       <Card>
         <CardHeader>
           <CardTitle>Content Moderation</CardTitle>
-          <CardDescription>Loading opportunities...</CardDescription>
+          <div className="text-sm text-muted-foreground">
+            Loading opportunities...
+          </div>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
@@ -237,7 +208,9 @@ export default function ContentModerationTable() {
       <Card>
         <CardHeader>
           <CardTitle>Content Moderation</CardTitle>
-          <CardDescription>Error loading opportunities</CardDescription>
+          <div className="text-sm text-muted-foreground">
+            Error loading opportunities
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-red-600">{error}</p>
@@ -253,14 +226,14 @@ export default function ContentModerationTable() {
     <Card>
       <CardHeader>
         <CardTitle>Content Moderation</CardTitle>
-        <CardDescription>
+        <div className="text-sm text-muted-foreground">
           Review and moderate submitted opportunities. Total opportunities:{" "}
           {opportunities.length}
-        </CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         {/* Filters */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="flex items-center space-x-2">
             <label className="text-sm font-medium">Status:</label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -285,18 +258,18 @@ export default function ContentModerationTable() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="FELLOWSHIP">Fellowship</SelectItem>
-                <SelectItem value="JOB">Job</SelectItem>
-                <SelectItem value="OBSERVERSHIP">Observership</SelectItem>
-                <SelectItem value="RESEARCH">Research</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
+                {opportunityTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.name}>
+                    {type.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="rounded-md border">
+        {/* Desktop Table */}
+        <div className="hidden lg:block rounded-md border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -336,7 +309,20 @@ export default function ContentModerationTable() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {getTypeBadge(opportunity.opportunityType)}
+                      {(() => {
+                        const typeInfo = getTypeBadge(
+                          opportunity.opportunityType.name
+                        );
+                        return typeInfo ? (
+                          <Badge className={typeInfo.colorClass}>
+                            {typeInfo.name}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            {opportunity.opportunityType.name}
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <div>
@@ -351,7 +337,16 @@ export default function ContentModerationTable() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(opportunity.status)}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        const statusInfo = getStatusBadge(opportunity.status);
+                        return (
+                          <Badge className={statusInfo.color}>
+                            {statusInfo.label}
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
                     <TableCell>
                       <div className="text-center">
                         <div className="font-medium">
@@ -433,6 +428,149 @@ export default function ContentModerationTable() {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="lg:hidden space-y-4">
+          {filteredOpportunities.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No opportunities found
+            </div>
+          ) : (
+            filteredOpportunities.map((opportunity) => (
+              <Card key={opportunity.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-lg">{opportunity.title}</h3>
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {opportunity.description}
+                    </p>
+                    {opportunity.location && (
+                      <div className="text-xs text-gray-500">
+                        📍 {opportunity.location}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      const typeInfo = getTypeBadge(
+                        opportunity.opportunityType.name
+                      );
+                      return typeInfo ? (
+                        <Badge className={typeInfo.colorClass}>
+                          {typeInfo.name}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          {opportunity.opportunityType.name}
+                        </Badge>
+                      );
+                    })()}
+                    {(() => {
+                      const statusInfo = getStatusBadge(opportunity.status);
+                      return (
+                        <Badge className={statusInfo.color}>
+                          {statusInfo.label}
+                        </Badge>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <div className="font-medium text-sm">
+                        {opportunity.mentor.firstName &&
+                        opportunity.mentor.lastName
+                          ? `${opportunity.mentor.firstName} ${opportunity.mentor.lastName}`
+                          : "No name provided"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {opportunity.mentor.email}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="text-center">
+                      <div className="font-medium">
+                        {opportunity._count.applications} applications
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {opportunity._count.savedOpportunities} saved
+                      </div>
+                    </div>
+                    <div className="text-gray-600">
+                      {new Date(opportunity.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {opportunity.status === "PENDING" && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            handleApproveOpportunity(opportunity.id)
+                          }
+                          disabled={actionLoading === opportunity.id}
+                          className="flex-1"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            handleRejectOpportunity(opportunity.id)
+                          }
+                          disabled={actionLoading === opportunity.id}
+                          className="flex-1 text-red-600 hover:text-red-700"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <MoreHorizontal className="h-4 w-4 mr-1" />
+                          Actions
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onClick={() =>
+                            window.open(
+                              `/opportunities/${opportunity.id}`,
+                              "_blank"
+                            )
+                          }
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleDeleteOpportunity(opportunity.id)
+                          }
+                          disabled={actionLoading === opportunity.id}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </CardContent>
     </Card>

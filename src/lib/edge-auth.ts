@@ -9,103 +9,114 @@ export interface JWTPayload {
 }
 
 // Generate JWT token using Web Crypto API
-export async function generateEdgeToken(payload: JWTPayload, secret: string): Promise<string> {
+export async function generateEdgeToken(
+  payload: JWTPayload,
+  secret: string
+): Promise<string> {
   const header = {
-    alg: 'HS256',
-    typ: 'JWT'
+    alg: "HS256",
+    typ: "JWT",
   };
-  
+
   const now = Math.floor(Date.now() / 1000);
-  const exp = now + (24 * 60 * 60); // 24 hours from now for development
-  
+  const exp = now + 24 * 60 * 60; // 24 hours from now for development
+
   const finalPayload = {
     ...payload,
     iat: now,
-    exp: exp
+    exp: exp,
   };
-  
+
   const headerB64 = btoa(JSON.stringify(header));
   const payloadB64 = btoa(JSON.stringify(finalPayload));
-  
+
   const data = `${headerB64}.${payloadB64}`;
-  
+
   // Create HMAC signature
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secret);
   const key = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
+    { name: "HMAC", hash: "SHA-256" },
     false,
-    ['sign']
+    ["sign"]
   );
-  
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
+
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
   const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
-  
+
   return `${data}.${signatureB64}`;
 }
 
 // Verify JWT token using Web Crypto API
-export async function verifyEdgeToken(token: string, secret: string): Promise<JWTPayload> {
+export async function verifyEdgeToken(
+  token: string,
+  secret: string
+): Promise<JWTPayload> {
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) {
-      throw new Error('Invalid token format');
+      throw new Error("Invalid token format");
     }
 
     const [headerB64, payloadB64, signatureB64] = parts;
-    
+
     // Decode header and payload
     const header = JSON.parse(atob(headerB64));
     const payload = JSON.parse(atob(payloadB64)) as JWTPayload;
-    
+
     // Check if token is expired
     if (payload.exp && Date.now() >= payload.exp * 1000) {
-      throw new Error('Token expired');
+      throw new Error("Token expired");
     }
-    
+
     // Verify signature using Web Crypto API
     const encoder = new TextEncoder();
     const keyData = encoder.encode(secret);
     const key = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
+      { name: "HMAC", hash: "SHA-256" },
       false,
-      ['verify']
+      ["verify"]
     );
-    
-    const signature = Uint8Array.from(atob(signatureB64), c => c.charCodeAt(0));
+
+    const signature = Uint8Array.from(atob(signatureB64), (c) =>
+      c.charCodeAt(0)
+    );
     const data = encoder.encode(`${headerB64}.${payloadB64}`);
-    
-    const isValid = await crypto.subtle.verify('HMAC', key, signature, data);
-    
+
+    const isValid = await crypto.subtle.verify("HMAC", key, signature, data);
+
     if (!isValid) {
-      throw new Error('Invalid signature');
+      throw new Error("Invalid signature");
     }
-    
+
     return payload;
   } catch (error) {
-    throw new Error('Invalid token');
+    throw new Error("Invalid token");
   }
 }
 
 // Decode JWT token without verification (for debugging)
-export function decodeToken(token: string): { header: any; payload: any } {
+export function decodeToken(token: string): {
+  header: Record<string, unknown>;
+  payload: Record<string, unknown>;
+} {
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) {
-      throw new Error('Invalid token format');
+      throw new Error("Invalid token format");
     }
 
     const [headerB64, payloadB64] = parts;
-    
+
     const header = JSON.parse(atob(headerB64));
     const payload = JSON.parse(atob(payloadB64));
-    
+
     return { header, payload };
   } catch (error) {
-    throw new Error('Invalid token format');
+    throw new Error("Invalid token format");
   }
-} 
+}

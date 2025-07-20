@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 
 interface User {
   id: string;
@@ -26,7 +26,12 @@ interface Opportunity {
   id: string;
   title: string;
   description: string;
-  opportunityType: string;
+  opportunityType: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
   status: string;
   location?: string;
   createdAt: string;
@@ -46,6 +51,7 @@ interface Application {
 
 export default function MentorDashboardPage() {
   const router = useRouter();
+  const { getTypeBadge } = useOpportunityTypes();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -217,23 +223,6 @@ export default function MentorDashboardPage() {
         return <Badge variant="outline">Closed</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const getOpportunityTypeLabel = (type: string) => {
-    switch (type) {
-      case "FELLOWSHIP":
-        return "Fellowship";
-      case "JOB":
-        return "Job";
-      case "OBSERVERSHIP":
-        return "Observership";
-      case "RESEARCH":
-        return "Research";
-      case "OTHER":
-        return "Other";
-      default:
-        return type;
     }
   };
 
@@ -562,9 +551,14 @@ export default function MentorDashboardPage() {
                             {getStatusBadge(opportunity.status)}
                           </div>
                           <p className="text-sm text-gray-600 mb-2">
-                            {getOpportunityTypeLabel(
-                              opportunity.opportunityType
-                            )}
+                            {(() => {
+                              const typeInfo = getTypeBadge(
+                                opportunity.opportunityType.name
+                              );
+                              return typeInfo
+                                ? typeInfo.name
+                                : opportunity.opportunityType.name;
+                            })()}
                             {opportunity.location &&
                               ` • ${opportunity.location}`}
                           </p>

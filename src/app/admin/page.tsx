@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,13 +12,14 @@ import {
   LogOut,
   BarChart3,
   UserCheck,
-  UserX,
-  CheckCircle,
-  XCircle,
-  Trash2,
+  Menu,
+  X,
 } from "lucide-react";
 import UserManagementTable from "@/components/UserManagementTable";
+import OpportunityManagementTable from "@/components/OpportunityManagementTable";
 import ContentModerationTable from "@/components/ContentModerationTable";
+import OpportunityTypeManagement from "@/components/OpportunityTypeManagement";
+import { AnnouncementForm } from "@/components/AnnouncementForm";
 
 interface User {
   id: string;
@@ -59,11 +54,12 @@ export default function AdminDashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "content">(
-    "overview"
-  );
-  const [users, setUsers] = useState<User[]>([]);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "users" | "opportunities" | "content" | "types"
+  >("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [, setUsers] = useState<User[]>([]);
+  const [, setOpportunities] = useState<Opportunity[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     pendingUsers: 0,
@@ -94,8 +90,9 @@ export default function AdminDashboardPage() {
 
         setUser(data.user);
         await fetchStats();
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        console.error("Admin: Error in fetchUserData:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -122,12 +119,16 @@ export default function AdminDashboardPage() {
           (o: Opportunity) => o.status === "PENDING"
         ).length;
 
-        setStats({
+        const newStats = {
           totalUsers: usersData.users.length,
           pendingUsers,
           totalOpportunities: opportunitiesData.opportunities.length,
           pendingOpportunities,
-        });
+        };
+
+        setStats(newStats);
+        setUsers(usersData.users);
+        setOpportunities(opportunitiesData.opportunities);
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -142,7 +143,7 @@ export default function AdminDashboardPage() {
       });
       router.push("/");
       router.refresh();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Logout failed", err);
     }
   };
@@ -183,18 +184,31 @@ export default function AdminDashboardPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              {/* Mobile menu button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                {sidebarOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </Button>
               <h1 className="text-xl font-semibold text-gray-900">
                 Admin Dashboard
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="hidden sm:inline text-sm text-gray-600">
                 Welcome, {user.firstName || user.email}
               </span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
@@ -202,14 +216,41 @@ export default function AdminDashboardPage() {
       </header>
 
       <div className="flex">
+        {/* Sidebar - Mobile Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-75"></div>
+          </div>
+        )}
+
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm min-h-screen">
-          <nav className="mt-8">
+        <aside
+          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-sm transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex items-center justify-between p-4 border-b lg:hidden">
+            <h2 className="text-lg font-semibold">Navigation</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <nav className="mt-4 lg:mt-8">
             <div className="px-4 space-y-2">
               <Button
                 variant={activeTab === "overview" ? "default" : "ghost"}
                 className="w-full justify-start"
-                onClick={() => setActiveTab("overview")}
+                onClick={() => {
+                  setActiveTab("overview");
+                  setSidebarOpen(false);
+                }}
               >
                 <BarChart3 className="h-4 w-4 mr-3" />
                 Overview
@@ -217,25 +258,53 @@ export default function AdminDashboardPage() {
               <Button
                 variant={activeTab === "users" ? "default" : "ghost"}
                 className="w-full justify-start"
-                onClick={() => setActiveTab("users")}
+                onClick={() => {
+                  setActiveTab("users");
+                  setSidebarOpen(false);
+                }}
               >
                 <Users className="h-4 w-4 mr-3" />
                 User Management
               </Button>
               <Button
+                variant={activeTab === "opportunities" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  setActiveTab("opportunities");
+                  setSidebarOpen(false);
+                }}
+              >
+                <FileText className="h-4 w-4 mr-3" />
+                Opportunity Management
+              </Button>
+              <Button
                 variant={activeTab === "content" ? "default" : "ghost"}
                 className="w-full justify-start"
-                onClick={() => setActiveTab("content")}
+                onClick={() => {
+                  setActiveTab("content");
+                  setSidebarOpen(false);
+                }}
               >
                 <FileText className="h-4 w-4 mr-3" />
                 Content Moderation
+              </Button>
+              <Button
+                variant={activeTab === "types" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  setActiveTab("types");
+                  setSidebarOpen(false);
+                }}
+              >
+                <Settings className="h-4 w-4 mr-3" />
+                Opportunity Types
               </Button>
             </div>
           </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div>
@@ -244,7 +313,7 @@ export default function AdminDashboardPage() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
@@ -312,13 +381,13 @@ export default function AdminDashboardPage() {
                 </Card>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>
+                    <div className="text-sm text-muted-foreground">
                       Common administrative tasks
-                    </CardDescription>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <Button
@@ -337,15 +406,18 @@ export default function AdminDashboardPage() {
                       <FileText className="h-4 w-4 mr-2" />
                       Moderate Content ({stats.pendingOpportunities})
                     </Button>
+                    <div className="pt-2">
+                      <AnnouncementForm />
+                    </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader>
                     <CardTitle>System Status</CardTitle>
-                    <CardDescription>
+                    <div className="text-sm text-muted-foreground">
                       Platform health and performance
-                    </CardDescription>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -396,6 +468,21 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
+          {activeTab === "opportunities" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Opportunity Management
+                </h2>
+                <p className="text-gray-600">
+                  Review and moderate submitted opportunities
+                </p>
+              </div>
+
+              <OpportunityManagementTable />
+            </div>
+          )}
+
           {activeTab === "content" && (
             <div className="space-y-6">
               <div>
@@ -408,6 +495,22 @@ export default function AdminDashboardPage() {
               </div>
 
               <ContentModerationTable />
+            </div>
+          )}
+
+          {activeTab === "types" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Opportunity Types
+                </h2>
+                <p className="text-gray-600">
+                  Manage different types of opportunities available in the
+                  system
+                </p>
+              </div>
+
+              <OpportunityTypeManagement />
             </div>
           )}
         </main>

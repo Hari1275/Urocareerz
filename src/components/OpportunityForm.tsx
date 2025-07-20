@@ -1,10 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,288 +13,414 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Plus, Edit } from "lucide-react";
+import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 
-const opportunitySchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .max(100, "Title must be less than 100 characters"),
-  description: z
-    .string()
-    .min(10, "Description must be at least 10 characters")
-    .max(1000, "Description must be less than 1000 characters"),
-  location: z.string().optional(),
-  experienceLevel: z.string().optional(),
-  opportunityType: z.enum([
-    "FELLOWSHIP",
-    "JOB",
-    "OBSERVERSHIP",
-    "RESEARCH",
-    "OTHER",
-  ]),
-  requirements: z.string().optional(),
-  benefits: z.string().optional(),
-  duration: z.string().optional(),
-  compensation: z.string().optional(),
-  applicationDeadline: z.string().optional(),
-});
+interface Opportunity {
+  id?: string;
+  title: string;
+  description: string;
+  location?: string;
+  experienceLevel?: string;
+  opportunityTypeId?: string;
+  opportunityType?: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CLOSED";
+  requirements?: string;
+  benefits?: string;
+  duration?: string;
+  compensation?: string;
+  applicationDeadline?: string;
+  mentorId?: string;
+}
 
-type OpportunityFormData = z.infer<typeof opportunitySchema>;
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  role: string;
+}
 
 interface OpportunityFormProps {
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  opportunity?: Opportunity | null;
+  onSuccess: () => void;
 }
 
 export default function OpportunityForm({
+  open,
+  onOpenChange,
+  opportunity,
   onSuccess,
-  onCancel,
 }: OpportunityFormProps) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
+  const [formData, setFormData] = useState<Opportunity>({
+    title: "",
+    description: "",
+    location: "",
+    experienceLevel: "",
+    opportunityTypeId: "",
+    status: "PENDING",
+    requirements: "",
+    benefits: "",
+    duration: "",
+    compensation: "",
+    applicationDeadline: "",
+  });
+  const [mentors, setMentors] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<OpportunityFormData>({
-    resolver: zodResolver(opportunitySchema),
-    defaultValues: {
-      opportunityType: "FELLOWSHIP",
-    },
-  });
+  const isEditing = !!opportunity?.id;
 
-  const opportunityType = watch("opportunityType");
+  useEffect(() => {
+    if (open) {
+      fetchMentors();
+    }
+  }, [open]);
 
-  const onSubmit = async (data: OpportunityFormData) => {
-    setIsSubmitting(true);
+  useEffect(() => {
+    if (opportunity) {
+      setFormData({
+        title: opportunity.title,
+        description: opportunity.description,
+        location: opportunity.location || "",
+        experienceLevel: opportunity.experienceLevel || "",
+        opportunityTypeId: opportunity.opportunityType?.id || "",
+        status: opportunity.status,
+        requirements: opportunity.requirements || "",
+        benefits: opportunity.benefits || "",
+        duration: opportunity.duration || "",
+        compensation: opportunity.compensation || "",
+        applicationDeadline: opportunity.applicationDeadline
+          ? new Date(opportunity.applicationDeadline)
+              .toISOString()
+              .split("T")[0]
+          : "",
+        mentorId: opportunity.mentorId,
+      });
+    } else {
+      setFormData({
+        title: "",
+        description: "",
+        location: "",
+        experienceLevel: "",
+        opportunityTypeId: "",
+        status: "PENDING",
+        requirements: "",
+        benefits: "",
+        duration: "",
+        compensation: "",
+        applicationDeadline: "",
+      });
+    }
+    setError(null);
+  }, [opportunity, open]);
+
+  const fetchMentors = async () => {
+    try {
+      const response = await fetch("/api/admin/users?role=MENTOR");
+      if (response.ok) {
+        const data = await response.json();
+        setMentors(data.users);
+      }
+    } catch (error) {
+      console.error("Failed to fetch mentors:", error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/opportunities", {
-        method: "POST",
+      const url = isEditing
+        ? `/api/admin/opportunities/${opportunity!.id}`
+        : "/api/admin/opportunities";
+
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        credentials: "include",
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to post opportunity");
+        throw new Error(errorData.error || "Failed to save opportunity");
       }
 
-      const result = await response.json();
-      console.log("Opportunity posted successfully:", result);
-
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push("/dashboard/mentor");
-      }
+      onSuccess();
+      onOpenChange(false);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
+  const handleInputChange = (field: keyof Opportunity, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Post New Opportunity
-          </CardTitle>
-          <div className="text-sm text-gray-600">
-            Share fellowships, jobs, observerships, or other opportunities with
-            the community
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                {error}
-              </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <Edit className="h-5 w-5" />
+                Edit Opportunity
+              </>
+            ) : (
+              <>
+                <Plus className="h-5 w-5" />
+                Add New Opportunity
+              </>
             )}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? "Update opportunity details and status."
+              : "Create a new opportunity for mentees."}
+          </DialogDescription>
+        </DialogHeader>
 
-            {/* Basic Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    {...register("title")}
-                    placeholder="e.g., Urology Fellowship Program"
-                    className={errors.title ? "border-red-500" : ""}
-                  />
-                  {errors.title && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.title.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="opportunityType">Opportunity Type *</Label>
-                  <Select
-                    value={opportunityType}
-                    onValueChange={(value) =>
-                      setValue("opportunityType", value as any)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select opportunity type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FELLOWSHIP">Fellowship</SelectItem>
-                      <SelectItem value="JOB">Job</SelectItem>
-                      <SelectItem value="OBSERVERSHIP">Observership</SelectItem>
-                      <SelectItem value="RESEARCH">Research</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.opportunityType && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.opportunityType.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    {...register("description")}
-                    placeholder="Provide a detailed description of the opportunity..."
-                    rows={4}
-                    className={errors.description ? "border-red-500" : ""}
-                  />
-                  {errors.description && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.description.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      {...register("location")}
-                      placeholder="e.g., New York, NY"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="experienceLevel">Experience Level</Label>
-                    <Input
-                      id="experienceLevel"
-                      {...register("experienceLevel")}
-                      placeholder="e.g., Entry Level, Mid-Career"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Additional Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Additional Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="requirements">Requirements</Label>
-                  <Textarea
-                    id="requirements"
-                    {...register("requirements")}
-                    placeholder="List any specific requirements or qualifications..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="benefits">Benefits</Label>
-                  <Textarea
-                    id="benefits"
-                    {...register("benefits")}
-                    placeholder="Describe the benefits of this opportunity..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Duration</Label>
-                    <Input
-                      id="duration"
-                      {...register("duration")}
-                      placeholder="e.g., 1 year, 6 months"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="compensation">Compensation</Label>
-                    <Input
-                      id="compensation"
-                      {...register("compensation")}
-                      placeholder="e.g., $50,000/year, Stipend provided"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="applicationDeadline">
-                    Application Deadline
-                  </Label>
-                  <Input
-                    id="applicationDeadline"
-                    type="date"
-                    {...register("applicationDeadline")}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Form Actions */}
-            <div className="flex justify-end space-x-4 pt-6 border-t">
-              {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-              )}
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="btn-primary"
-              >
-                {isSubmitting ? "Posting..." : "Post Opportunity"}
-              </Button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                placeholder="Enter opportunity title"
+                required
+              />
             </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+            <div className="space-y-2">
+              <Label htmlFor="opportunityType">Type *</Label>
+              <Select
+                value={formData.opportunityTypeId || ""}
+                onValueChange={(value) =>
+                  handleInputChange("opportunityTypeId", value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select opportunity type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {opportunityTypes.map((type) => {
+                    const typeInfo = getTypeBadge(type.name);
+                    return (
+                      <SelectItem key={type.id} value={type.id}>
+                        {typeInfo ? (
+                          <Badge className={typeInfo.colorClass}>
+                            {typeInfo.name}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">{type.name}</Badge>
+                        )}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description *</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Enter detailed description"
+              rows={4}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleInputChange("location", e.target.value)}
+                placeholder="Enter location"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="experienceLevel">Experience Level</Label>
+              <Input
+                id="experienceLevel"
+                value={formData.experienceLevel}
+                onChange={(e) =>
+                  handleInputChange("experienceLevel", e.target.value)
+                }
+                placeholder="e.g., Entry, Mid, Senior"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duration</Label>
+              <Input
+                id="duration"
+                value={formData.duration}
+                onChange={(e) => handleInputChange("duration", e.target.value)}
+                placeholder="e.g., 6 months, 1 year"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="compensation">Compensation</Label>
+              <Input
+                id="compensation"
+                value={formData.compensation}
+                onChange={(e) =>
+                  handleInputChange("compensation", e.target.value)
+                }
+                placeholder="e.g., $50,000/year, Stipend"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="requirements">Requirements</Label>
+            <Textarea
+              id="requirements"
+              value={formData.requirements}
+              onChange={(e) =>
+                handleInputChange("requirements", e.target.value)
+              }
+              placeholder="Enter requirements and qualifications"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="benefits">Benefits</Label>
+            <Textarea
+              id="benefits"
+              value={formData.benefits}
+              onChange={(e) => handleInputChange("benefits", e.target.value)}
+              placeholder="Enter benefits and perks"
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="applicationDeadline">Application Deadline</Label>
+              <Input
+                id="applicationDeadline"
+                type="date"
+                value={formData.applicationDeadline}
+                onChange={(e) =>
+                  handleInputChange("applicationDeadline", e.target.value)
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(
+                  value: "PENDING" | "APPROVED" | "REJECTED" | "CLOSED"
+                ) => handleInputChange("status", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PENDING">
+                    <Badge className="bg-orange-100 text-orange-800">
+                      Pending
+                    </Badge>
+                  </SelectItem>
+                  <SelectItem value="APPROVED">
+                    <Badge className="bg-green-100 text-green-800">
+                      Approved
+                    </Badge>
+                  </SelectItem>
+                  <SelectItem value="REJECTED">
+                    <Badge className="bg-red-100 text-red-800">Rejected</Badge>
+                  </SelectItem>
+                  <SelectItem value="CLOSED">
+                    <Badge className="bg-gray-100 text-gray-800">Closed</Badge>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {!isEditing && (
+            <div className="space-y-2">
+              <Label htmlFor="mentorId">Assign to Mentor</Label>
+              <Select
+                value={formData.mentorId || ""}
+                onValueChange={(value) => handleInputChange("mentorId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a mentor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mentors.map((mentor) => (
+                    <SelectItem key={mentor.id} value={mentor.id}>
+                      {mentor.firstName && mentor.lastName
+                        ? `${mentor.firstName} ${mentor.lastName}`
+                        : mentor.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditing ? "Update Opportunity" : "Create Opportunity"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

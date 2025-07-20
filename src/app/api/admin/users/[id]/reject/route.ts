@@ -4,9 +4,17 @@ import { withAdminAuth } from "@/lib/admin-auth";
 
 // POST /api/admin/users/[id]/reject - Reject a user
 export const POST = withAdminAuth(
-  async (req: NextRequest, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, context?: { params: Promise<{ id: string }> }) => {
     try {
-      const userId = params.id;
+      const params = await context?.params;
+      const userId = params?.id;
+
+      if (!userId) {
+        return NextResponse.json(
+          { error: "User ID is required" },
+          { status: 400 }
+        );
+      }
 
       // Find the user
       const user = await prisma.user.findUnique({
@@ -22,9 +30,12 @@ export const POST = withAdminAuth(
       // 2. Mark them as rejected (would need a status field)
       // 3. Keep them but prevent login (by setting a rejected flag)
 
-      // For now, we'll delete the user and their associated data
-      await prisma.user.delete({
+      // Soft delete the user
+      await prisma.user.update({
         where: { id: userId },
+        data: {
+          deletedAt: new Date(),
+        },
       });
 
       return NextResponse.json({
