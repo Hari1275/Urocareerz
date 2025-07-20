@@ -20,7 +20,7 @@ export function useOpportunityTypes() {
   const fetchOpportunityTypes = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/admin/opportunity-types");
+      const response = await fetch("/api/opportunity-types");
 
       if (!response.ok) {
         throw new Error("Failed to fetch opportunity types");

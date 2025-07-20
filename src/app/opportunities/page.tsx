@@ -191,7 +191,8 @@ export default function OpportunitiesPage() {
     const matchesType =
       !typeFilter ||
       typeFilter === "all" ||
-      opportunity.opportunityType.name === typeFilter;
+      (opportunity.opportunityType &&
+        opportunity.opportunityType.name === typeFilter);
 
     return matchesSearch && matchesLocation && matchesExperience && matchesType;
   });
@@ -387,20 +388,24 @@ export default function OpportunitiesPage() {
                     <div className="space-y-3">
                       {/* Opportunity Type and Experience */}
                       <div className="flex items-center gap-2">
-                        {(() => {
-                          const typeInfo = getTypeBadge(
-                            opportunity.opportunityType.name
-                          );
-                          return typeInfo ? (
-                            <Badge className={typeInfo.colorClass}>
-                              {typeInfo.name}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">
-                              {opportunity.opportunityType.name}
-                            </Badge>
-                          );
-                        })()}
+                        {opportunity.opportunityType ? (
+                          (() => {
+                            const typeInfo = getTypeBadge(
+                              opportunity.opportunityType.name
+                            );
+                            return typeInfo ? (
+                              <Badge className={typeInfo.colorClass}>
+                                {typeInfo.name}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">
+                                {opportunity.opportunityType.name}
+                              </Badge>
+                            );
+                          })()
+                        ) : (
+                          <Badge variant="outline">Unknown Type</Badge>
+                        )}
                         {opportunity.experienceLevel && (
                           <Badge variant="secondary">
                             {getExperienceLevelLabel(

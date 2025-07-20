@@ -329,15 +329,18 @@ export default function ApplicationsPage() {
                             <div className="flex items-center gap-1">
                               <Briefcase className="h-4 w-4" />
                               <span>
-                                {(() => {
-                                  const typeInfo = getTypeBadge(
-                                    application.opportunity.opportunityType.name
-                                  );
-                                  return typeInfo
-                                    ? typeInfo.name
-                                    : application.opportunity.opportunityType
-                                        .name;
-                                })()}
+                                {application.opportunity.opportunityType
+                                  ? (() => {
+                                      const typeInfo = getTypeBadge(
+                                        application.opportunity.opportunityType
+                                          .name
+                                      );
+                                      return typeInfo
+                                        ? typeInfo.name
+                                        : application.opportunity
+                                            .opportunityType.name;
+                                    })()
+                                  : "Unknown Type"}
                               </span>
                             </div>
                           </div>

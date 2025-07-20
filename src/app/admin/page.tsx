@@ -14,11 +14,13 @@ import {
   UserCheck,
   Menu,
   X,
+  MessageSquare,
 } from "lucide-react";
 import UserManagementTable from "@/components/UserManagementTable";
 import OpportunityManagementTable from "@/components/OpportunityManagementTable";
 import ContentModerationTable from "@/components/ContentModerationTable";
 import OpportunityTypeManagement from "@/components/OpportunityTypeManagement";
+import DiscussionManagementTable from "@/components/DiscussionManagementTable";
 import { AnnouncementForm } from "@/components/AnnouncementForm";
 
 interface User {
@@ -55,7 +57,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "opportunities" | "content" | "types"
+    "overview" | "users" | "opportunities" | "content" | "types" | "discussions"
   >("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [, setUsers] = useState<User[]>([]);
@@ -299,12 +301,23 @@ export default function AdminDashboardPage() {
                 <Settings className="h-4 w-4 mr-3" />
                 Opportunity Types
               </Button>
+              <Button
+                variant={activeTab === "discussions" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  setActiveTab("discussions");
+                  setSidebarOpen(false);
+                }}
+              >
+                <MessageSquare className="h-4 w-4 mr-3" />
+                Discussions
+              </Button>
             </div>
           </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-full overflow-hidden">
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div>
@@ -511,6 +524,22 @@ export default function AdminDashboardPage() {
               </div>
 
               <OpportunityTypeManagement />
+            </div>
+          )}
+
+          {activeTab === "discussions" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Discussion Management
+                </h2>
+                <p className="text-gray-600">
+                  Manage discussion threads, moderate content, and control
+                  discussion status
+                </p>
+              </div>
+
+              <DiscussionManagementTable />
             </div>
           )}
         </main>

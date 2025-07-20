@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       description,
       location,
       experienceLevel,
-      opportunityType,
+      opportunityTypeId,
       requirements,
       benefits,
       duration,
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!title || !description || !opportunityType) {
+    if (!title || !description || !opportunityTypeId) {
       return NextResponse.json(
         {
           error: "Title, description, and opportunity type are required",
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         description,
         location,
         experienceLevel,
-        opportunityType,
+        opportunityTypeId,
         requirements,
         benefits,
         duration,
@@ -143,6 +143,7 @@ export async function GET(request: NextRequest) {
               email: true,
             },
           },
+          opportunityType: true,
         },
         orderBy: { createdAt: "desc" },
       });
@@ -157,6 +158,7 @@ export async function GET(request: NextRequest) {
               email: true,
             },
           },
+          opportunityType: true,
         },
         orderBy: { createdAt: "desc" },
       });
@@ -172,6 +174,7 @@ export async function GET(request: NextRequest) {
               email: true,
             },
           },
+          opportunityType: true,
         },
         orderBy: { createdAt: "desc" },
       });

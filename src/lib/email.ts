@@ -51,6 +51,25 @@ export interface EmailCustomAnnouncementData {
   adminName?: string;
 }
 
+export interface EmailMenteeOpportunityApprovalData {
+  menteeEmail: string;
+  menteeName: string;
+  opportunityTitle: string;
+  opportunityType: string;
+  isConverted: boolean;
+  adminNotes: string;
+  adminName?: string;
+}
+
+export interface EmailMenteeOpportunityRejectionData {
+  menteeEmail: string;
+  menteeName: string;
+  opportunityTitle: string;
+  opportunityType: string;
+  adminNotes: string;
+  adminName?: string;
+}
+
 export interface EmailResponse {
   success: boolean;
   messageId?: string;
@@ -322,9 +341,9 @@ export async function sendCustomAnnouncementEmail(
       </html>
     `;
 
-    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
 
-    console.log("Custom announcement email sent successfully:", response);
+    console.log("Custom announcement email sent successfully");
 
     return {
       success: true,
@@ -332,6 +351,108 @@ export async function sendCustomAnnouncementEmail(
     };
   } catch (error) {
     console.error("Failed to send custom announcement email:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Send mentee opportunity approval notification
+ */
+export async function sendMenteeOpportunityApprovalEmail(
+  data: EmailMenteeOpportunityApprovalData
+): Promise<EmailResponse> {
+  try {
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    sendSmtpEmail.to = [{ email: data.menteeEmail }];
+    sendSmtpEmail.subject = `Opportunity Submission ${
+      data.isConverted ? "Approved & Converted" : "Approved"
+    }: ${data.opportunityTitle}`;
+
+    const statusMessage = data.isConverted
+      ? "Your opportunity has been approved and converted to a regular opportunity on the platform!"
+      : "Your opportunity submission has been approved!";
+
+    const conversionNote = data.isConverted
+      ? "<p><strong>Note:</strong> Your opportunity has been converted to a regular opportunity and is now available for all mentees to view and apply.</p>"
+      : "";
+
+    sendSmtpEmail.htmlContent = `
+      <html>
+        <body>
+          <h1>Opportunity Submission Approved!</h1>
+          <p>Hello ${data.menteeName},</p>
+          <p>${statusMessage}</p>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>Opportunity Details:</h3>
+            <p><strong>Title:</strong> ${data.opportunityTitle}</p>
+            <p><strong>Type:</strong> ${data.opportunityType}</p>
+            ${conversionNote}
+            ${
+              data.adminNotes
+                ? `<p><strong>Admin Notes:</strong> ${data.adminNotes}</p>`
+                : ""
+            }
+          </div>
+          <p>Thank you for contributing to the UroCareerz community!</p>
+          <p>Best regards,<br>The UroCareerz Team</p>
+        </body>
+      </html>
+    `;
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+
+    console.log("Mentee opportunity approval email sent successfully");
+
+    return {
+      success: true,
+      messageId: "sent",
+    };
+  } catch (error) {
+    console.error("Failed to send mentee opportunity approval email:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Send mentee opportunity rejection notification
+ */
+export async function sendMenteeOpportunityRejectionEmail(
+  data: EmailMenteeOpportunityRejectionData
+): Promise<EmailResponse> {
+  try {
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    sendSmtpEmail.to = [{ email: data.menteeEmail }];
+    sendSmtpEmail.subject = `Opportunity Submission Rejected: ${data.opportunityTitle}`;
+    sendSmtpEmail.htmlContent = `
+      <html>
+        <body>
+          <h1>Opportunity Submission Rejected!</h1>
+          <p>Hello ${data.menteeName},</p>
+          <p>We regret to inform you that your opportunity submission for <strong>${data.opportunityTitle}</strong> has been rejected.</p>
+          <p>Reason: ${data.adminNotes}</p>
+          <p>Best regards,<br>The UroCareerz Team</p>
+        </body>
+      </html>
+    `;
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+
+    console.log("Mentee opportunity rejection email sent successfully");
+
+    return {
+      success: true,
+      messageId: "sent",
+    };
+  } catch (error) {
+    console.error("Failed to send mentee opportunity rejection email:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

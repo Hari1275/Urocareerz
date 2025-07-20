@@ -24,9 +24,7 @@
             "id": 2,
             "title": "Create API Endpoint for User Registration",
             "description": "Develop a public API endpoint (e.g., POST /api/register) that allows new users to create an account.",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "The endpoint should accept an email and password. It must validate the input (e.g., valid email format, password complexity). Hash the password using a strong library like bcrypt before saving the new user to the database. On success, return a 201 Created status with the new user's ID and email.",
             "status": "done",
             "testStrategy": "Write integration tests for the endpoint. Test the success case with valid data. Test failure cases like duplicate email, invalid email format, and weak password. Verify that the password stored in the database is correctly hashed and does not match the input."
@@ -35,9 +33,7 @@
             "id": 3,
             "title": "Implement User Login Endpoint with JWT",
             "description": "Create an API endpoint (e.g., POST /api/login) for user authentication that returns a JSON Web Token (JWT) on success.",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "The endpoint accepts an email and password. It should find the user by email, then compare the provided password against the stored hash using bcrypt's compare function. If credentials are valid, generate a signed JWT containing the user ID and an expiration claim. Return the JWT in the response body.",
             "status": "done",
             "testStrategy": "Integration tests: Test successful login with correct credentials, ensuring a valid JWT is returned. Test failed login with an incorrect password or a non-existent email. Decode a valid token in a test to assert its payload contains the correct user ID and 'exp' claim."
@@ -46,9 +42,7 @@
             "id": 4,
             "title": "Implement Middleware for Protected API Routes",
             "description": "Create server-side middleware to verify the JWT on incoming requests to secure specific endpoints.",
-            "dependencies": [
-              3
-            ],
+            "dependencies": [3],
             "details": "The middleware should extract the JWT from the 'Authorization: Bearer <token>' header. It must verify the token's signature and check for expiration. If the token is valid, attach the decoded user payload (e.g., user ID) to the request object for use by route handlers. If invalid, respond with a 401 Unauthorized error.",
             "status": "done",
             "testStrategy": "Unit test the middleware logic in isolation. Write integration tests for a sample protected endpoint: test with a valid token, an expired token, a malformed token, and no token, asserting the correct HTTP status code is returned for each case."
@@ -57,10 +51,7 @@
             "id": 5,
             "title": "Develop Frontend Registration and Login Forms",
             "description": "Build the UI components for the registration and login pages using a frontend framework.",
-            "dependencies": [
-              2,
-              3
-            ],
+            "dependencies": [2, 3],
             "details": "Create two separate forms with fields for email and password. Implement client-side validation. On submission, make API calls to the registration or login endpoints. On successful login, store the received JWT securely (e.g., in an HttpOnly cookie or local storage) and redirect the user to a protected area.",
             "status": "done",
             "testStrategy": "Use component tests to verify form validation and state management. Use end-to-end tests (e.g., with Cypress or Playwright) to simulate a user registering and then logging in, mocking the API responses to test UI behavior in success and error states."
@@ -69,10 +60,7 @@
             "id": 6,
             "title": "Create Protected User Profile Page",
             "description": "Build a user profile page that is only accessible to authenticated users and displays their information.",
-            "dependencies": [
-              4,
-              5
-            ],
+            "dependencies": [4, 5],
             "details": "Create a new frontend route (e.g., /profile) that is wrapped in a private route component. This component should check for a valid JWT; if none exists, it should redirect to the login page. The page should fetch user data from a new, protected backend endpoint (e.g., GET /api/users/me) which uses the authentication middleware.",
             "status": "done",
             "testStrategy": "End-to-end tests: 1) Attempt to access /profile directly without logging in and assert a redirect to the login page. 2) Log in, navigate to /profile, and assert that the user's data is fetched and displayed correctly. Test the logout functionality, ensuring the token is cleared and the user is redirected."
@@ -86,9 +74,7 @@
         "details": "Create profile pages for both roles. Mentee Profile: Education, interests, location, purpose of registration. Mentor Profile: Specialty/sub-specialty, workplace, availability status (static text). Ensure profiles can be updated by the user.",
         "testStrategy": "After logging in as a mentee/mentor, verify that the profile creation form is presented and can be submitted. Test editing and saving changes to the profile fields.",
         "priority": "high",
-        "dependencies": [
-          1
-        ],
+        "dependencies": [1],
         "status": "done",
         "subtasks": [
           {
@@ -145,9 +131,7 @@
         "details": "Create a form for mentors to submit opportunities. The form should capture details like title, description, location, and experience level. Submitted posts should be saved with a 'pending approval' status.",
         "testStrategy": "Log in as a Mentor. Verify the 'Post Opportunity' feature is available. Submit a new post and confirm it is saved to the database with a pending status.",
         "priority": "high",
-        "dependencies": [
-          2
-        ],
+        "dependencies": [2],
         "status": "done",
         "subtasks": []
       },
@@ -158,9 +142,7 @@
         "details": "Create a page to display a list of approved opportunities. Implement simple filters for Location and Experience Level. Develop the application flow, including CV upload to AWS S3. Mentees should be able to save opportunities to a personal list.",
         "testStrategy": "Log in as a Mentee. Verify that approved posts are visible on the board. Test filters to ensure results are narrowed correctly. Test the application process, including successful CV upload.",
         "priority": "high",
-        "dependencies": [
-          3
-        ],
+        "dependencies": [3],
         "status": "done",
         "subtasks": [
           {
@@ -176,9 +158,7 @@
             "id": 2,
             "title": "Develop User Registration API Endpoint",
             "description": "Create a public API endpoint (e.g., POST /api/auth/register) that allows new users to sign up.",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "The endpoint should accept user data (email, password) in the request body. It must validate the input (e.g., valid email format, password complexity). Before saving, hash the user's password using a strong algorithm like bcrypt. Return a success message or the newly created user object (without the password hash).",
             "status": "pending",
             "testStrategy": "Write integration tests. Test the happy path with valid data, ensuring a 201 Created status and correct user creation in the DB. Test failure cases: duplicate email, invalid email format, weak password, missing fields. Ensure the stored password is a hash."
@@ -196,10 +176,7 @@
             "id": 4,
             "title": "Develop User Login API Endpoint",
             "description": "Create a public API endpoint (e.g., POST /api/auth/login) for users to authenticate.",
-            "dependencies": [
-              1,
-              3
-            ],
+            "dependencies": [1, 3],
             "details": "The endpoint accepts user credentials (email, password). It should find the user by email in the database, compare the provided password against the stored hash using the bcrypt compare function. If credentials are valid, use the JWT service to generate a token and return it to the client.",
             "status": "pending",
             "testStrategy": "Write integration tests. Test the happy path with correct credentials, ensuring a 200 OK status and a valid JWT in the response. Test failure cases: user not found, incorrect password. Ensure no sensitive information is leaked in error messages."
@@ -208,9 +185,7 @@
             "id": 5,
             "title": "Create Authentication Middleware for Protected Routes",
             "description": "Implement a middleware that intercepts requests to protected API endpoints, validates the JWT from the Authorization header, and attaches the user's identity to the request object.",
-            "dependencies": [
-              3
-            ],
+            "dependencies": [3],
             "details": "The middleware should extract the token from the 'Authorization: Bearer <token>' header. Use the JWT service to verify the token. If valid, extract the user payload and attach it to the request context (e.g., `req.user`). If invalid or missing, return a 401 Unauthorized error.",
             "status": "pending",
             "testStrategy": "Write integration tests for a sample protected endpoint. Test with a valid token, ensuring the request proceeds and the endpoint receives user data. Test with no token, an expired token, and an invalid token, ensuring a 401 Unauthorized response is returned in all cases."
@@ -222,9 +197,7 @@
         "title": "Admin Dashboard: User & Content Moderation",
         "description": "Build the core admin dashboard for manual approval of new users and all posted content, featuring a complete UI overhaul using modern components.",
         "status": "done",
-        "dependencies": [
-          1
-        ],
+        "dependencies": [1],
         "priority": "high",
         "details": "Create an admin-only interface using a modern shadcn/ui design with a sidebar layout and data tables. The dashboard will be used to view lists of pending user registrations and submitted opportunities. Implement 'approve' and 'reject' actions for both users and content. Admins must also be able to remove flagged/inappropriate posts and assign user roles. The single admin user will log in via the standard OTP system.",
         "testStrategy": "Log in as the pre-configured Admin user via the standard OTP flow. Verify access to the dashboard and its modern layout. In the user management table, approve a pending user and confirm their status changes. In the content moderation table, reject a pending post and confirm it is handled correctly. Test table sorting and filtering.",
@@ -243,9 +216,7 @@
             "title": "Create Admin API Endpoints for User Management",
             "description": "Develop API endpoints for admins to manage users, including approving/rejecting pending accounts and changing user roles.",
             "status": "done",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "Implement endpoints like `POST /api/admin/users/{id}/approve`, `POST /api/admin/users/{id}/reject`, and `PUT /api/admin/users/{id}/role`. Also include an endpoint `GET /api/admin/users?status=pending` to list users awaiting approval. These endpoints must be protected by the admin RBAC middleware.",
             "testStrategy": ""
           },
@@ -254,9 +225,7 @@
             "title": "Create Admin API Endpoints for Content Moderation",
             "description": "Develop API endpoints for admins to moderate user-submitted content (opportunities), including approval, rejection, and deletion.",
             "status": "done",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "Implement endpoints like `POST /api/admin/opportunities/{id}/approve`, `POST /api/admin/opportunities/{id}/reject`, and `DELETE /api/admin/opportunities/{id}`. Include a `GET /api/admin/opportunities?status=pending` endpoint to fetch content awaiting moderation. Protect all endpoints with the admin RBAC middleware.",
             "testStrategy": ""
           },
@@ -265,9 +234,7 @@
             "title": "Build User Management UI with shadcn/ui Data Table",
             "description": "Implement the user management interface within the admin dashboard using shadcn/ui components, focusing on a data table for efficient user handling.",
             "status": "done",
-            "dependencies": [
-              2
-            ],
+            "dependencies": [2],
             "details": "Build the user management view using a shadcn/ui `<DataTable>`. This table should list all users and include columns for name, email, role, and status. Implement filtering (by status) and sorting capabilities. Integrate 'Approve'/'Reject' buttons for pending users and a modal/dropdown to change roles. Connect all UI actions to the user management API endpoints.\n<info added on 2025-07-19T09:19:29.829Z>\nThe implementation should emphasize a clean and professional presentation, ensuring the user data is displayed clearly and the action buttons (approve/reject, change role) are intuitive to use.\n</info added on 2025-07-19T09:19:29.829Z>",
             "testStrategy": ""
           },
@@ -276,9 +243,7 @@
             "title": "Build Content Moderation UI with shadcn/ui Data Table",
             "description": "Implement the content moderation interface within the admin dashboard using shadcn/ui components, featuring a data table for managing opportunities.",
             "status": "done",
-            "dependencies": [
-              3
-            ],
+            "dependencies": [3],
             "details": "Build the content moderation view using a shadcn/ui `<DataTable>`. The table will display submitted opportunities with columns like title, author, and status. Implement filtering by status (e.g., 'pending', 'approved') and sorting. Add 'Approve', 'Reject', and 'Delete' action buttons for each item. Connect all UI actions to the content moderation API endpoints.\n<info added on 2025-07-19T09:20:00.089Z>\nThe table should be presented in a clean and professional format.\n</info added on 2025-07-19T09:20:00.089Z>",
             "testStrategy": ""
           },
@@ -287,9 +252,7 @@
             "title": "Implement Core Admin Dashboard Layout with Sidebar",
             "description": "Create the foundational layout for the admin dashboard using shadcn/ui, including a persistent sidebar for navigation and a main content area.",
             "status": "done",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "Build the primary dashboard shell with a clean, professional aesthetic using shadcn/ui components. Implement a sidebar for navigating between 'User Management' and 'Content Moderation' sections. This layout will serve as the container for all other admin views and must be protected by the admin RBAC middleware.",
             "testStrategy": ""
           }
@@ -302,11 +265,8 @@
         "details": "Configure email triggers for: application submission (to mentor), admin approval of a post (to mentor), new user approval (to user), and custom announcements sent from the admin dashboard.",
         "testStrategy": "Trigger each event (e.g., apply for a job, approve a post) and verify that the correct email notification is sent to the intended recipient's inbox.",
         "priority": "medium",
-        "dependencies": [
-          4,
-          5
-        ],
-        "status": "pending",
+        "dependencies": [4, 5],
+        "status": "done",
         "subtasks": []
       },
       {
@@ -316,11 +276,8 @@
         "details": "Create a form for Mentees to submit external opportunities, which will enter the admin moderation queue. Implement a basic forum-like feature for creating and viewing case discussion threads.",
         "testStrategy": "As a Mentee, submit an opportunity and verify it appears in the admin moderation queue. Create a new discussion thread and verify it is visible to other users.",
         "priority": "medium",
-        "dependencies": [
-          4,
-          5
-        ],
-        "status": "pending",
+        "dependencies": [4, 5],
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -328,51 +285,43 @@
             "description": "Create the necessary database table(s) to store user information, including credentials and profile data.",
             "dependencies": [],
             "details": "The 'users' table should include columns for id (primary key), username (unique), email (unique), hashed_password, created_at, and updated_at. Use a migration script to create and version the schema. Ensure password storage is secure using a strong hashing algorithm like bcrypt.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify the table and columns are created correctly in the database. Write a unit test to ensure the migration script runs up and down successfully without errors."
           },
           {
             "id": 2,
             "title": "Implement User Registration API Endpoint",
             "description": "Create a public API endpoint (e.g., POST /api/auth/register) that allows new users to sign up.",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "The endpoint should accept username, email, and password. It must validate the input (e.g., password strength, valid email format), check for existing username/email, hash the password securely, and save the new user to the database. Return a success message or user object (without sensitive data) upon successful registration.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests to cover successful registration, registration with a duplicate email/username, and registration with invalid input (e.g., weak password, bad email format). Verify that the password stored in the database is properly hashed."
           },
           {
             "id": 3,
             "title": "Implement User Login API Endpoint",
             "description": "Create an API endpoint (e.g., POST /api/auth/login) for users to authenticate and receive an access token.",
-            "dependencies": [
-              1
-            ],
+            "dependencies": [1],
             "details": "The endpoint should accept an email/username and password. It will find the user in the database and compare the provided password with the stored hash. If credentials are valid, generate a JSON Web Token (JWT) containing the user ID and an expiration date. Return the JWT to the client.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests for successful login with correct credentials, failed login with an incorrect password, and failed login for a non-existent user. Verify the structure and signature of the returned JWT."
           },
           {
             "id": 4,
             "title": "Develop Authentication Middleware for Protected Routes",
             "description": "Create a middleware function that can be applied to API routes that require an authenticated user.",
-            "dependencies": [
-              3
-            ],
+            "dependencies": [3],
             "details": "The middleware should extract the JWT from the request's 'Authorization' header. It must verify the token's signature and expiration. If valid, it should decode the payload, identify the user, and attach the user object to the request for downstream handlers. If invalid, it should return a 401 Unauthorized error.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the middleware logic. Test cases should include a valid token, an expired token, an invalid/malformed token, and a missing token. Ensure it correctly passes control or returns a 401 status."
           },
           {
             "id": 5,
             "title": "Implement 'Get User Profile' Protected Endpoint",
             "description": "Create a protected API endpoint (e.g., GET /api/users/me) that returns the profile information of the currently authenticated user.",
-            "dependencies": [
-              4
-            ],
+            "dependencies": [4],
             "details": "This endpoint will be protected by the authentication middleware. It should use the user information attached to the request by the middleware to fetch the user's details (excluding sensitive data like the password hash) from the database and return them as a JSON object.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test that first logs in a user to get a token, then uses that token to successfully call this endpoint and verify the returned user data. Also, test that calling the endpoint without a valid token results in a 401 Unauthorized error."
           }
         ]
@@ -384,10 +333,8 @@
         "details": "Develop a search interface for Mentors to find Mentees based on profile criteria like interests and location. This complements the existing opportunity search for Mentees.",
         "testStrategy": "Log in as a Mentor. Use the search feature to filter mentees by location and interests. Verify that the search results are accurate based on existing mentee profiles.",
         "priority": "medium",
-        "dependencies": [
-          2
-        ],
-        "status": "pending",
+        "dependencies": [2],
+        "status": "done",
         "subtasks": []
       },
       {
@@ -397,9 +344,7 @@
         "details": "Add a section to the admin dashboard to display simple metrics like total user sign-ups and total number of posts. Implement a logging system to record key admin and user actions (e.g., user approved, post deleted, role changed).",
         "testStrategy": "As an Admin, view the analytics dashboard and confirm the counts are correct. Perform an action like approving a user, then check the audit log to ensure the action was recorded with the correct details.",
         "priority": "low",
-        "dependencies": [
-          5
-        ],
+        "dependencies": [5],
         "status": "pending",
         "subtasks": []
       },
@@ -410,11 +355,7 @@
         "details": "Ensure the entire application is mobile responsive. Implement the legal disclaimer and terms of service modal to be shown on first login. Create an admin function or script for initial content seeding (jobs/fellowships). Perform a final review of security practices, including encrypted storage for sensitive data.",
         "testStrategy": "Test the application on various screen sizes (desktop, tablet, mobile). Verify the legal disclaimer appears on first login and requires acceptance. Confirm initial content is seeded correctly and visible on the platform.",
         "priority": "high",
-        "dependencies": [
-          4,
-          5,
-          6
-        ],
+        "dependencies": [4, 5, 6],
         "status": "pending",
         "subtasks": [
           {
@@ -439,10 +380,7 @@
             "id": 3,
             "title": "Develop User Registration API Endpoint",
             "description": "Create a public API endpoint (e.g., POST /api/auth/register) for new users to create an account.",
-            "dependencies": [
-              1,
-              2
-            ],
+            "dependencies": [1, 2],
             "details": "The endpoint should accept user data (e.g., email, password) in the request body. Validate the input (e.g., check for valid email format, password complexity). Use the Password Hashing Service to hash the password before storing the new user record in the database. Return a success message or a newly created user object (without the password hash).",
             "status": "pending",
             "testStrategy": "Write integration tests. Test the happy path with valid data, ensuring a 201 Created status and a new user in the DB. Test failure cases: duplicate email, invalid email format, weak password, missing fields. Ensure the stored password is a hash, not plaintext."
@@ -451,10 +389,7 @@
             "id": 4,
             "title": "Develop User Login API Endpoint",
             "description": "Create a public API endpoint (e.g., POST /api/auth/login) for existing users to authenticate.",
-            "dependencies": [
-              1,
-              2
-            ],
+            "dependencies": [1, 2],
             "details": "The endpoint should accept user credentials (email, password). Find the user by email in the database. Use the Password Hashing Service to compare the provided password with the stored hash. If they match, generate a JSON Web Token (JWT) containing the user's ID and role. Return the JWT to the client.",
             "status": "pending",
             "testStrategy": "Write integration tests. Test successful login with correct credentials, ensuring a 200 OK status and a valid JWT is returned. Test failed login attempts with incorrect password or non-existent email, ensuring an appropriate error status (e.g., 401 Unauthorized)."
@@ -463,9 +398,7 @@
             "id": 5,
             "title": "Create Authentication Middleware for Protected Routes",
             "description": "Implement middleware to verify the JWT on incoming requests to secure specific API endpoints.",
-            "dependencies": [
-              4
-            ],
+            "dependencies": [4],
             "details": "The middleware should extract the JWT from the 'Authorization' header (e.g., 'Bearer <token>'). It must then verify the token's signature and expiration. If valid, decode the payload to identify the user and attach the user information to the request object for use in subsequent handlers. If invalid, it should return a 401 Unauthorized or 403 Forbidden error.",
             "status": "pending",
             "testStrategy": "Write integration tests for a sample protected endpoint. Test that a request with a valid token is allowed to proceed. Test that requests with no token, an invalid token, or an expired token are rejected with the correct HTTP status code."
@@ -475,7 +408,7 @@
     ],
     "metadata": {
       "created": "2025-07-18T05:40:25.172Z",
-      "updated": "2025-07-19T09:29:44.142Z",
+      "updated": "2025-07-20T13:41:53.037Z",
       "description": "Tasks for master context"
     }
   }

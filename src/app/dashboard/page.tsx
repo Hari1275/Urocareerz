@@ -124,9 +124,13 @@ export default function DashboardPage() {
         throw new Error("Failed to accept terms");
       }
 
-      // Update user state to reflect terms acceptance
-      setUser((prev) => (prev ? { ...prev, termsAccepted: true } : null));
+      const data = await response.json();
+
+      // Update user state with the response data
+      setUser(data.user);
       setShowLegalModal(false);
+
+      // No need to refresh the page - state update is sufficient
     } catch (error) {
       console.error("Error accepting terms:", error);
       alert("Failed to accept terms. Please try again.");
@@ -134,8 +138,9 @@ export default function DashboardPage() {
   };
 
   const handleDeclineTerms = () => {
-    // Log out the user if they decline terms
-    handleLogout();
+    // Just close the modal and let user continue browsing
+    // They can accept terms later when they're ready
+    setShowLegalModal(false);
   };
 
   if (loading) {
@@ -187,6 +192,7 @@ export default function DashboardPage() {
           user={user}
           profile={profile}
           onLogout={handleLogout}
+          onShowLegalModal={() => setShowLegalModal(true)}
         />
         <LegalDisclaimerModal
           open={showLegalModal}
@@ -338,10 +344,12 @@ function MenteeDashboard({
   user,
   profile,
   onLogout,
+  onShowLegalModal,
 }: {
   user: User;
   profile: Profile | null;
   onLogout: () => void;
+  onShowLegalModal: () => void;
 }) {
   const router = useRouter();
   return (
@@ -359,22 +367,63 @@ function MenteeDashboard({
             <p className="mt-2 text-gray-600">
               Discover opportunities and connect with mentors in urology
             </p>
+            {!user.termsAccepted && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-blue-800">
+                      Please review and accept our Terms of Service to unlock
+                      all features
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={onShowLegalModal}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Review Terms
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Opportunity Board Card */}
-            <Card className="glass-card hover:shadow-lg transition-shadow">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Submit Opportunity Card */}
+            <Card
+              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() =>
+                router.push("/dashboard/mentee/submit-opportunity")
+              }
+            >
               <CardHeader>
-                <CardTitle>Browse Opportunities</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  📝 Submit Opportunity
+                </CardTitle>
                 <div className="text-sm text-gray-600">
-                  Find fellowships, jobs, and research positions
+                  Share opportunities you&apos;ve found with the community
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-40 flex items-center justify-center bg-primary-50 rounded-md">
+                <div className="h-40 flex items-center justify-center bg-blue-50 rounded-md">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-primary-400"
+                    className="h-12 w-12 text-blue-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -383,34 +432,31 @@ function MenteeDashboard({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                     />
                   </svg>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full btn-primary"
-                  onClick={() => router.push("/opportunities")}
-                >
-                  Explore Opportunities
-                </Button>
-              </CardFooter>
             </Card>
 
-            {/* My Applications Card */}
-            <Card className="glass-card hover:shadow-lg transition-shadow">
+            {/* Discussions Card */}
+            <Card
+              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/discussions")}
+            >
               <CardHeader>
-                <CardTitle>My Applications</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  💬 Discussions
+                </CardTitle>
                 <div className="text-sm text-gray-600">
-                  View and track your applications
+                  Join discussions and share knowledge with the community
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-40 flex items-center justify-center bg-secondary-50 rounded-md">
+                <div className="h-40 flex items-center justify-center bg-purple-50 rounded-md">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-secondary-400"
+                    className="h-12 w-12 text-purple-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -419,64 +465,24 @@ function MenteeDashboard({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                   </svg>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full btn-secondary"
-                  onClick={() => router.push("/applications")}
-                >
-                  View Applications
-                </Button>
-              </CardFooter>
             </Card>
 
-            {/* Find Mentors Card */}
-            <Card className="glass-card hover:shadow-lg transition-shadow">
+            {/* Browse Opportunities Card */}
+            <Card
+              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/opportunities")}
+            >
               <CardHeader>
-                <CardTitle>Find Mentors</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  🔍 Browse Opportunities
+                </CardTitle>
                 <div className="text-sm text-gray-600">
-                  Connect with experienced urologists
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-40 flex items-center justify-center bg-accent-50 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-accent-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  disabled={!profile}
-                >
-                  Browse Mentors
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {/* Resources Card */}
-            <Card className="glass-card hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Learning Resources</CardTitle>
-                <div className="text-sm text-gray-600">
-                  Access educational materials and guides
+                  Explore and apply for opportunities posted by mentors
                 </div>
               </CardHeader>
               <CardContent>
@@ -492,16 +498,110 @@ function MenteeDashboard({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                   </svg>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button className="w-full" variant="outline">
-                  Browse Resources
-                </Button>
-              </CardFooter>
+            </Card>
+
+            {/* My Applications Card */}
+            <Card
+              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/applications")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  📄 My Applications
+                </CardTitle>
+                <div className="text-sm text-gray-600">
+                  View and track your applications
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-40 flex items-center justify-center bg-orange-50 rounded-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-12 w-12 text-orange-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* My Submitted Opportunities Card */}
+            <Card
+              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/submissions")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  📊 My Submissions
+                </CardTitle>
+                <div className="text-sm text-gray-600">
+                  Track opportunities you&apos;ve submitted for review
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-40 flex items-center justify-center bg-teal-50 rounded-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-12 w-12 text-teal-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Profile Card */}
+            <Card
+              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/profile")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  👤 My Profile
+                </CardTitle>
+                <div className="text-sm text-gray-600">
+                  Update your profile and preferences
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-40 flex items-center justify-center bg-indigo-50 rounded-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-12 w-12 text-indigo-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+              </CardContent>
             </Card>
           </div>
 
@@ -514,14 +614,22 @@ function MenteeDashboard({
               <CardContent className="p-6">
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">
-                    Ready to take the next step in your career?
+                    Ready to contribute to the community?
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button
                       className="btn-primary"
-                      onClick={() => router.push("/opportunities")}
+                      onClick={() =>
+                        router.push("/dashboard/mentee/submit-opportunity")
+                      }
                     >
-                      Browse Opportunities
+                      Submit Opportunity
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/discussions/new")}
+                    >
+                      Start Discussion
                     </Button>
                     <Button
                       variant="outline"

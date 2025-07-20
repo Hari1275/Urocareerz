@@ -37,6 +37,15 @@ model User {
   
   // Applications relationship (for mentees)
   applications Application[]
+  
+  // Mentee opportunity submissions
+  menteeOpportunities MenteeOpportunity[]
+  
+  // Discussion threads (created by user)
+  discussionThreads DiscussionThread[]
+  
+  // Discussion comments (created by user)
+  discussionComments DiscussionComment[]
 }
 
 model Profile {
@@ -106,6 +115,87 @@ model Opportunity {
   updatedAt         DateTime @updatedAt
 }
 
+// New model for mentee opportunity submissions
+model MenteeOpportunity {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  title             String
+  description       String
+  location          String?
+  experienceLevel   String?
+  opportunityTypeId String   @db.ObjectId
+  opportunityType   OpportunityType @relation(fields: [opportunityTypeId], references: [id])
+  status            MenteeOpportunityStatus @default(PENDING)
+  menteeId          String   @db.ObjectId
+  mentee            User     @relation(fields: [menteeId], references: [id], onDelete: Cascade)
+  
+  // Additional fields
+  requirements      String?
+  benefits          String?
+  duration          String?
+  compensation      String?
+  applicationDeadline DateTime?
+  sourceUrl         String?  // URL to the original opportunity
+  sourceName        String?  // Name of the source (e.g., "LinkedIn", "Company Website")
+  
+  // Admin feedback
+  adminFeedback     String?
+  adminNotes        String?
+  
+  // Soft delete field
+  deletedAt         DateTime?
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// New model for discussion threads
+model DiscussionThread {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  category    DiscussionCategory @default(GENERAL)
+  status      DiscussionStatus @default(ACTIVE)
+  authorId    String   @db.ObjectId
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Thread metadata
+  tags        String[]
+  isPinned    Boolean  @default(false)
+  viewCount   Int      @default(0)
+  
+  // Soft delete field
+  deletedAt   DateTime?
+  
+  // Relationships
+  comments    DiscussionComment[]
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// New model for discussion comments
+model DiscussionComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  authorId  String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  threadId  String   @db.ObjectId
+  thread    DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  
+  // Comment metadata
+  isEdited  Boolean  @default(false)
+  editedAt  DateTime?
+  
+  // Soft delete field
+  deletedAt DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model OpportunityType {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String   @unique
@@ -117,6 +207,7 @@ model OpportunityType {
 
   // Relations
   opportunities Opportunity[]
+  menteeOpportunities MenteeOpportunity[]
 
   @@map("opportunityTypes")
 }
@@ -126,6 +217,28 @@ enum OpportunityStatus {
   APPROVED
   REJECTED
   CLOSED
+}
+
+enum MenteeOpportunityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CONVERTED  // Converted to a regular opportunity
+}
+
+enum DiscussionCategory {
+  GENERAL
+  CASE_DISCUSSION
+  CAREER_ADVICE
+  TECHNICAL
+  NETWORKING
+  RESOURCES
+}
+
+enum DiscussionStatus {
+  ACTIVE
+  CLOSED
+  ARCHIVED
 }
 
 model SavedOpportunity {

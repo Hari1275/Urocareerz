@@ -1,0 +1,314 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
+interface DiscussionThread {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  status: string;
+  tags: string[];
+  isPinned: boolean;
+  viewCount: number;
+  createdAt: string;
+  author: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: string;
+  };
+  _count: {
+    comments: number;
+  };
+}
+
+interface DiscussionThreadsListProps {
+  threads: DiscussionThread[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  onRefresh: () => void;
+}
+
+const categoryLabels = {
+  GENERAL: "General",
+  CASE_DISCUSSION: "Case Discussion",
+  CAREER_ADVICE: "Career Advice",
+  TECHNICAL: "Technical",
+  NETWORKING: "Networking",
+  RESOURCES: "Resources",
+};
+
+const categoryColors = {
+  GENERAL: "bg-gray-100 text-gray-800",
+  CASE_DISCUSSION: "bg-blue-100 text-blue-800",
+  CAREER_ADVICE: "bg-green-100 text-green-800",
+  TECHNICAL: "bg-purple-100 text-purple-800",
+  NETWORKING: "bg-orange-100 text-orange-800",
+  RESOURCES: "bg-pink-100 text-pink-800",
+};
+
+export default function DiscussionThreadsList({
+  threads,
+  pagination,
+  onRefresh,
+}: DiscussionThreadsListProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [selectedStatus, setSelectedStatus] = useState<string>("ACTIVE");
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    const params = new URLSearchParams();
+    if (category && category !== "ALL") {
+      params.set("category", category);
+    }
+    if (selectedStatus && selectedStatus !== "ACTIVE") {
+      params.set("status", selectedStatus);
+    }
+    router.push(`/discussions?${params.toString()}`);
+  };
+
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    const params = new URLSearchParams();
+    if (selectedCategory && selectedCategory !== "ALL") {
+      params.set("category", selectedCategory);
+    }
+    if (status && status !== "ACTIVE") {
+      params.set("status", status);
+    }
+    router.push(`/discussions?${params.toString()}`);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const truncateContent = (content: string, maxLength: number = 150) => {
+    if (content.length <= maxLength) return content;
+    return content.substring(0, maxLength) + "...";
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Discussion Forums</CardTitle>
+          <CardDescription>
+            Connect with the community through discussions and case studies
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Select
+                value={selectedCategory}
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Categories</SelectItem>
+                  {Object.entries(categoryLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">🟢 Active</SelectItem>
+                  <SelectItem value="CLOSED">🔒 Closed</SelectItem>
+                  <SelectItem value="ARCHIVED">📁 Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={() => router.push("/discussions/new")}>
+              Start New Discussion
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Threads List */}
+      <div className="space-y-4">
+        {threads.map((thread) => (
+          <Card key={thread.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    {thread.isPinned && (
+                      <Badge variant="secondary" className="text-xs">
+                        📌 Pinned
+                      </Badge>
+                    )}
+                    <Badge
+                      className={`text-xs ${
+                        categoryColors[
+                          thread.category as keyof typeof categoryColors
+                        ] || categoryColors.GENERAL
+                      }`}
+                    >
+                      {categoryLabels[
+                        thread.category as keyof typeof categoryLabels
+                      ] || thread.category}
+                    </Badge>
+                    {thread.tags.length > 0 && (
+                      <div className="flex space-x-1">
+                        {thread.tags.slice(0, 3).map((tag, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            #{tag}
+                          </Badge>
+                        ))}
+                        {thread.tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{thread.tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <h3
+                    className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600"
+                    onClick={() => router.push(`/discussions/${thread.id}`)}
+                  >
+                    {thread.title}
+                  </h3>
+
+                  <p className="text-gray-600 mb-4">
+                    {truncateContent(thread.content)}
+                  </p>
+
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center space-x-4">
+                      <span>
+                        By {thread.author.firstName} {thread.author.lastName}
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {thread.author.role}
+                        </Badge>
+                      </span>
+                      <span>{formatDate(thread.createdAt)}</span>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <span>👁️ {thread.viewCount} views</span>
+                      <span>💬 {thread._count.comments} comments</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {threads.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="text-gray-500 mb-4">
+              <div className="text-4xl mb-2">💬</div>
+              <h3 className="text-lg font-medium mb-2">No discussions found</h3>
+              <p className="text-sm">
+                {selectedCategory
+                  ? `No discussions in the "${
+                      categoryLabels[
+                        selectedCategory as keyof typeof categoryLabels
+                      ]
+                    }" category yet.`
+                  : "Be the first to start a discussion!"}
+              </p>
+            </div>
+            <Button onClick={() => router.push("/discussions/new")}>
+              Start First Discussion
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pagination */}
+      {pagination.pages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {pagination.total} discussions
+          </div>
+
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pagination.page === 1}
+              onClick={() => {
+                const params = new URLSearchParams();
+                params.set("page", String(pagination.page - 1));
+                if (selectedCategory) params.set("category", selectedCategory);
+                router.push(`/discussions?${params.toString()}`);
+              }}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pagination.page === pagination.pages}
+              onClick={() => {
+                const params = new URLSearchParams();
+                params.set("page", String(pagination.page + 1));
+                if (selectedCategory) params.set("category", selectedCategory);
+                router.push(`/discussions?${params.toString()}`);
+              }}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
