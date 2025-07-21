@@ -17,6 +17,10 @@ import {
   MessageSquare,
   Activity,
   ClipboardList,
+  RefreshCw,
+  TrendingUp,
+  Briefcase,
+  Calendar,
 } from "lucide-react";
 import UserManagementTable from "@/components/UserManagementTable";
 import OpportunityManagementTable from "@/components/OpportunityManagementTable";
@@ -25,7 +29,10 @@ import OpportunityTypeManagement from "@/components/OpportunityTypeManagement";
 import DiscussionManagementTable from "@/components/DiscussionManagementTable";
 import { AnnouncementForm } from "@/components/AnnouncementForm";
 import AuditLogsTable from "@/components/AuditLogsTable";
-import EnhancedAnalytics from "@/components/EnhancedAnalytics";
+// Removed: import EnhancedAnalytics from "@/components/EnhancedAnalytics";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart, PieChart, Pie, Cell } from 'recharts';
 
 interface User {
   id: string;
@@ -55,13 +62,49 @@ interface Opportunity {
   };
 }
 
+// Add analytics state and fetch logic
+interface AnalyticsData {
+  overview: {
+    totalUsers: number;
+    pendingUsers: number;
+    totalOpportunities: number;
+    pendingOpportunities: number;
+    totalMenteeOpportunities: number;
+    pendingMenteeOpportunities: number;
+    totalDiscussions: number;
+    totalApplications: number;
+  };
+  trends: {
+    userRegistrationsByDate: Array<{ date: string; count: number }>;
+    opportunitySubmissionsByDate: Array<{ date: string; count: number }>;
+  };
+  distributions: {
+    userRoles: Array<{ role: string; count: number }>;
+    opportunityTypes: Array<{ typeId: string; typeName: string; count: number }>;
+  };
+  recentActivity: Array<{
+    id: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    createdAt: string;
+    user: {
+      id: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+      role: string;
+    };
+  }>;
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "opportunities" | "content" | "types" | "discussions" | "analytics" | "audit-logs"
+    "overview" | "users" | "opportunities" | "content" | "types" | "discussions" | "audit-logs"
   >("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [, setUsers] = useState<User[]>([]);
@@ -72,6 +115,52 @@ export default function AdminDashboardPage() {
     totalOpportunities: 0,
     pendingOpportunities: 0,
   });
+
+  // Add analytics state and fetch logic
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
+
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+    try {
+      const params = new URLSearchParams();
+      if (dateRange.startDate) params.append("startDate", dateRange.startDate);
+      if (dateRange.endDate) params.append("endDate", dateRange.endDate);
+      const response = await fetch(`/api/admin/analytics?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch analytics");
+      const data = await response.json();
+      setAnalyticsData(data);
+    } catch (err) {
+      setAnalyticsError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAnalytics(); }, [dateRange.startDate, dateRange.endDate]);
+
+  const getActionColor = (action: string) => {
+    if (action.includes("APPROVED")) return "bg-green-100 text-green-800";
+    if (action.includes("REJECTED") || action.includes("DELETED")) return "bg-red-100 text-red-800";
+    if (action.includes("CHANGED")) return "bg-blue-100 text-blue-800";
+    if (action.includes("REGISTERED") || action.includes("LOGIN")) return "bg-purple-100 text-purple-800";
+    return "bg-gray-100 text-gray-800";
+  };
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toISOString().replace('T', ' ').substring(0, 19);
+  };
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "ADMIN": return "bg-red-100 text-red-800";
+      case "MENTOR": return "bg-blue-100 text-blue-800";
+      case "MENTEE": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -183,6 +272,13 @@ export default function AdminDashboardPage() {
   if (!user) {
     return null;
   }
+
+  // Add color palettes for pie charts
+  const ROLE_COLORS = ['#2563eb', '#059669', '#f59e42', '#e11d48', '#6366f1'];
+  const TYPE_COLORS = ['#059669', '#2563eb', '#f59e42', '#e11d48', '#6366f1'];
+
+  // Add a helper function for pie chart labels:
+  const getPieLabel = (entry: any) => `${entry["role"] || entry["typeName"]}: ${entry["percent"] ? Math.round(entry["percent"] * 100) : 0}%`;
 
   return (
     <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
@@ -317,17 +413,6 @@ export default function AdminDashboardPage() {
                 Discussions
               </Button>
               <Button
-                variant={activeTab === "analytics" ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => {
-                  setActiveTab("analytics");
-                  setSidebarOpen(false);
-                }}
-              >
-                <Activity className="h-4 w-4 mr-3" />
-                Analytics
-              </Button>
-              <Button
                 variant={activeTab === "audit-logs" ? "default" : "ghost"}
                 className="w-full justify-start"
                 onClick={() => {
@@ -346,79 +431,304 @@ export default function AdminDashboardPage() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-full overflow-hidden">
           {activeTab === "overview" && (
             <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Dashboard Overview
-                </h2>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+                  <p className="text-gray-600">All platform metrics, trends, and recent activity</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-36">
+                    <DatePicker
+                      date={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
+                      onChange={date => setDateRange(prev => ({ ...prev, startDate: date ? date.toISOString().split('T')[0] : "" }))}
+                      placeholder="Start Date"
+                    />
+                  </div>
+                  <div className="w-36">
+                    <DatePicker
+                      date={dateRange.endDate ? new Date(dateRange.endDate) : undefined}
+                      onChange={date => setDateRange(prev => ({ ...prev, endDate: date ? date.toISOString().split('T')[0] : "" }))}
+                      placeholder="End Date"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={fetchAnalytics}
+                    disabled={analyticsLoading}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Users
-                    </CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {stats.pendingUsers} pending approval
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Opportunities
-                    </CardTitle>
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {stats.totalOpportunities}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {stats.pendingOpportunities} pending approval
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Pending Users
-                    </CardTitle>
-                    <UserCheck className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {stats.pendingUsers}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Require admin approval
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Pending Content
-                    </CardTitle>
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {stats.pendingOpportunities}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Require moderation
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              {analyticsLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin text-gray-500" />
+                  <span className="ml-2 text-gray-500">Loading analytics...</span>
+                </div>
+              )}
+              {analyticsError && (
+                <Card><CardContent><div className="text-center py-8"><p className="text-red-500 mb-4">{analyticsError}</p><Button onClick={fetchAnalytics}><RefreshCw className="h-4 w-4 mr-2" />Retry</Button></div></CardContent></Card>
+              )}
+              {analyticsData && (
+                <>
+                  {/* Metrics Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{analyticsData.overview.totalUsers}</div>
+                        <p className="text-xs text-muted-foreground">{analyticsData.overview.pendingUsers} pending approval</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Opportunities</CardTitle>
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{analyticsData.overview.totalOpportunities}</div>
+                        <p className="text-xs text-muted-foreground">{analyticsData.overview.pendingOpportunities} pending approval</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Mentee Submissions</CardTitle>
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{analyticsData.overview.totalMenteeOpportunities}</div>
+                        <p className="text-xs text-muted-foreground">{analyticsData.overview.pendingMenteeOpportunities} pending approval</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{analyticsData.overview.totalApplications}</div>
+                        <p className="text-xs text-muted-foreground">Across all opportunities</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  {/* Premium Analytics Graphs */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card className="bg-white rounded-xl shadow-lg p-4">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg font-bold"><TrendingUp className="h-5 w-5" />User Registrations (Last 30 Days)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={260}>
+                          <AreaChart data={analyticsData.trends.userRegistrationsByDate} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorReg" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.7}/>
+                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                            <XAxis dataKey="date" fontSize={13} tick={{ fill: '#64748b' }} />
+                            <YAxis allowDecimals={false} fontSize={13} tick={{ fill: '#64748b' }} />
+                            <Tooltip contentStyle={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001', border: 'none' }} labelStyle={{ color: '#2563eb', fontWeight: 600 }} />
+                            <Area type="monotone" dataKey="count" stroke="#2563eb" fillOpacity={1} fill="url(#colorReg)" strokeWidth={3} dot={{ r: 5, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }} name="Registrations" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white rounded-xl shadow-lg p-4">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg font-bold"><Calendar className="h-5 w-5" />Opportunity Submissions (Last 30 Days)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={260}>
+                          <AreaChart data={analyticsData.trends.opportunitySubmissionsByDate} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorSub" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#059669" stopOpacity={0.7}/>
+                                <stop offset="95%" stopColor="#059669" stopOpacity={0.05}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                            <XAxis dataKey="date" fontSize={13} tick={{ fill: '#64748b' }} />
+                            <YAxis allowDecimals={false} fontSize={13} tick={{ fill: '#64748b' }} />
+                            <Tooltip contentStyle={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001', border: 'none' }} labelStyle={{ color: '#059669', fontWeight: 600 }} />
+                            <Area type="monotone" dataKey="count" stroke="#059669" fillOpacity={1} fill="url(#colorSub)" strokeWidth={3} dot={{ r: 5, fill: '#059669', stroke: '#fff', strokeWidth: 2 }} name="Submissions" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  {/* Distribution Charts as Pie Charts */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />User Role Distribution</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {analyticsData.distributions.userRoles.length > 0 ? (
+                          <div className="w-full h-[280px] flex items-center justify-center">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={analyticsData.distributions.userRoles}
+                                  dataKey="count"
+                                  nameKey="role"
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius="70%"
+                                  innerRadius="20%"
+                                  paddingAngle={2}
+                                >
+                                  {analyticsData.distributions.userRoles.map((entry, idx) => (
+                                    <Cell key={`cell-role-${idx}`} fill={ROLE_COLORS[idx % ROLE_COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  contentStyle={{ 
+                                    backgroundColor: '#fff', 
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    padding: '8px 12px'
+                                  }}
+                                  formatter={(value, name) => [`${value} users`, name]}
+                                />
+                                <Legend 
+                                  verticalAlign="bottom" 
+                                  height={36}
+                                  iconType="circle"
+                                  wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No user role data</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />Opportunity Type Distribution</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {analyticsData.distributions.opportunityTypes.length > 0 ? (
+                          <div className="w-full h-[280px] flex items-center justify-center">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={analyticsData.distributions.opportunityTypes}
+                                  dataKey="count"
+                                  nameKey="typeName"
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius="70%"
+                                  innerRadius="20%"
+                                  paddingAngle={2}
+                                >
+                                  {analyticsData.distributions.opportunityTypes.map((entry, idx) => (
+                                    <Cell key={`cell-type-${idx}`} fill={TYPE_COLORS[idx % TYPE_COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  contentStyle={{ 
+                                    backgroundColor: '#fff', 
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    padding: '8px 12px'
+                                  }}
+                                  formatter={(value, name) => [`${value} opportunities`, name]}
+                                />
+                                <Legend 
+                                  verticalAlign="bottom" 
+                                  height={36}
+                                  iconType="circle"
+                                  wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No opportunity type data</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                  {/* Trends - show only last 7 days in table */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />User Registration Trends (Last 7 Days)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {analyticsData.trends.userRegistrationsByDate.length > 0 ? (
+                          <div className="space-y-2">
+                            {analyticsData.trends.userRegistrationsByDate.slice(-7).map((item) => (
+                              <div key={item.date} className="flex items-center justify-between">
+                                <span className="text-sm">{item.date}</span>
+                                <span className="font-semibold">{item.count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No registration data available</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5" />Opportunity Submission Trends (Last 7 Days)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {analyticsData.trends.opportunitySubmissionsByDate.length > 0 ? (
+                          <div className="space-y-2">
+                            {analyticsData.trends.opportunitySubmissionsByDate.slice(-7).map((item) => (
+                              <div key={item.date} className="flex items-center justify-between">
+                                <span className="text-sm">{item.date}</span>
+                                <span className="font-semibold">{item.count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No submission data available</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                  {/* Recent Activity */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Recent Activity</CardTitle>
+                      <p className="text-sm text-muted-foreground">Latest platform actions and events</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {analyticsData.recentActivity.length > 0 ? (
+                          analyticsData.recentActivity.map((activity) => (
+                            <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <Badge className={getActionColor(activity.action)}>{activity.action.replace(/_/g, " ")}</Badge>
+                                <div>
+                                  <p className="text-sm font-medium">{activity.user.firstName && activity.user.lastName ? `${activity.user.firstName} ${activity.user.lastName}` : activity.user.email}</p>
+                                  <p className="text-xs text-gray-500">{activity.entityType} • {activity.user.role}</p>
+                                </div>
+                              </div>
+                              <span className="text-xs text-gray-500">{formatDate(activity.createdAt)}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No recent activity</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
@@ -566,12 +876,6 @@ export default function AdminDashboardPage() {
               </div>
 
               <DiscussionManagementTable />
-            </div>
-          )}
-
-          {activeTab === "analytics" && (
-            <div className="space-y-6">
-              <EnhancedAnalytics />
             </div>
           )}
 

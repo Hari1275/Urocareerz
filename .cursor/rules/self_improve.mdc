@@ -1,71 +1,126 @@
----
-description: Guidelines for continuously improving Cursor rules based on emerging code patterns and best practices.
-globs: **/*
-alwaysApply: true
----
+# Self-Improvement & Error Prevention Rules
 
-- **Rule Improvement Triggers:**
-  - New code patterns not covered by existing rules
-  - Repeated similar implementations across files
-  - Common error patterns that could be prevented
-  - New libraries or tools being used consistently
-  - Emerging best practices in the codebase
+## Fundamental Development Principles
 
-- **Analysis Process:**
-  - Compare new code with existing rules
-  - Identify patterns that should be standardized
-  - Look for references to external documentation
-  - Check for consistent error handling patterns
-  - Monitor test patterns and coverage
+### **Data-First Development Approach**
+- **Always validate the entire data pipeline before implementing UI components**
+- **Use systematic debugging to verify assumptions about data structure and availability**
+- **Reference**: See [database-debugging.mdc](mdc:.cursor/rules/database-debugging.mdc) for comprehensive data validation patterns
 
-- **Rule Updates:**
-  - **Add New Rules When:**
-    - A new technology/pattern is used in 3+ files
-    - Common bugs could be prevented by a rule
-    - Code reviews repeatedly mention the same feedback
-    - New security or performance patterns emerge
+### **Analytics Feature Development**
+- **Never implement analytics dashboards without first debugging the underlying queries**
+- **Test chart components for hydration safety and data edge cases**
+- **Reference**: See [analytics-implementation.mdc](mdc:.cursor/rules/analytics-implementation.mdc) for complete analytics patterns
 
-  - **Modify Existing Rules When:**
-    - Better examples exist in the codebase
-    - Additional edge cases are discovered
-    - Related rules have been updated
-    - Implementation details have changed
+## Recent Learning: Database Filter Assumptions
 
-- **Example Pattern Recognition:**
-  ```typescript
-  // If you see repeated patterns like:
-  const data = await prisma.user.findMany({
-    select: { id: true, email: true },
-    where: { status: 'ACTIVE' }
-  });
-  
-  // Consider adding to [prisma.mdc](mdc:.cursor/rules/prisma.mdc):
-  // - Standard select fields
-  // - Common where conditions
-  // - Performance optimization patterns
-  ```
+### **Critical Lesson: MongoDB Field Existence**
+From Admin Analytics implementation (July 2025):
+- **Problem**: Assumed all documents have optional schema fields
+- **Impact**: `deletedAt: null` filter excluded ALL data, causing empty charts
+- **Solution**: Always check actual document structure before applying filters
+- **Prevention**: Use debug scripts to verify field existence and filter behavior
 
-- **Rule Quality Checks:**
-  - Rules should be actionable and specific
-  - Examples should come from actual code
-  - References should be up to date
-  - Patterns should be consistently enforced
+```typescript
+// ❌ DANGEROUS: This excluded all data in the urocareerz project
+where: { deletedAt: null }
 
-- **Continuous Improvement:**
-  - Monitor code review comments
-  - Track common development questions
-  - Update rules after major refactors
-  - Add links to relevant documentation
-  - Cross-reference related rules
+// ✅ CORRECT: Verify field existence first
+const sampleDocs = await prisma.model.findMany({ take: 3 });
+const hasField = sampleDocs.some(doc => 'deletedAt' in doc);
+// Only apply filter if field exists and is actually used
+```
 
-- **Rule Deprecation:**
-  - Mark outdated patterns as deprecated
-  - Remove rules that no longer apply
-  - Update references to deprecated rules
-  - Document migration paths for old patterns
+### **Hydration Error Prevention**
+From Recharts implementation:
+- **Problem**: Chart label functions with destructured props caused SSR/CSR mismatches
+- **Solution**: Use stable, deterministic helper functions
+- **Prevention**: Always test chart components for hydration safety
 
-- **Documentation Updates:**
-  - Keep examples synchronized with code
+## Error Pattern Recognition
+
+### **Database Query Validation Process**
+1. **Check total counts without filters**
+2. **Apply filters incrementally and verify results**
+3. **Examine sample documents for actual field structure**
+4. **Test aggregation queries independently**
+5. **Create debug scripts for complex data operations**
+
+### **Frontend Data Integration Process**
+1. **Test API endpoints independently (curl/Postman)**
+2. **Verify response structure matches frontend expectations**
+3. **Handle empty data scenarios gracefully**
+4. **Use loading and error states consistently**
+5. **Validate data exists before rendering charts/tables**
+
+## Rule Application Strategy
+
+### **When Working with Analytics/Charts**
+- **Always reference [analytics-implementation.mdc](mdc:.cursor/rules/analytics-implementation.mdc)**
+- **Use the provided debug script template**
+- **Follow the pre-implementation validation checklist**
+
+### **When Working with Database Queries**
+- **Always reference [database-debugging.mdc](mdc:.cursor/rules/database-debugging.mdc)**
+- **Test queries with sample data first**
+- **Verify filter behavior doesn't exclude all data**
+
+### **When Implementing Data-Driven Features**
+1. **Create `debug-[feature].js` script first**
+2. **Test database queries independently**
+3. **Validate API endpoints return expected data**
+4. **Implement frontend with proper error handling**
+5. **Test edge cases (empty data, network errors)**
+
+## Specific Prevention Patterns
+
+### **MongoDB with Prisma**
+```typescript
+// ✅ DO: Progressive query validation
+const total = await prisma.model.count();
+const filtered = await prisma.model.count({ where: filters });
+if (total > 0 && filtered === 0) {
+  console.warn('Filter may be excluding all data');
+}
+```
+
+### **Recharts Components**
+```typescript
+// ✅ DO: Hydration-safe chart props
+const getLabel = (entry: any) => `${entry.name}: ${Math.round(entry.percent * 100)}%`;
+<Pie label={getLabel} />
+
+// ❌ DON'T: Destructured props or locale-dependent formatting
+<Pie label={({ name, percent }) => `${name}: ${percent.toLocaleString()}%`} />
+```
+
+### **API Response Validation**
+```typescript
+// ✅ DO: Comprehensive response checking
+const response = await fetch('/api/endpoint');
+const data = await response.json();
+console.log('Response structure:', Object.keys(data));
+if (!data.expectedField?.length) {
+  console.warn('Expected field missing or empty');
+}
+```
+
+## Continuous Improvement
+
+- **Document new error patterns as they're discovered**
+- **Update rules with specific examples from actual debugging sessions**
+- **Create reusable debug script templates for common operations**
+- **Reference successful patterns from previous implementations**
+
+## Cross-References
+
+- **Database Issues**: [database-debugging.mdc](mdc:.cursor/rules/database-debugging.mdc)
+- **Analytics Features**: [analytics-implementation.mdc](mdc:.cursor/rules/analytics-implementation.mdc)
+- **Next.js Patterns**: [nextjs.mdc](mdc:.cursor/rules/nextjs.mdc)
+- **API Development**: [nextjs-api-responses.mdc](mdc:.cursor/rules/nextjs-api-responses.mdc)
+
+This ensures systematic learning from mistakes and prevents repetition of the same errors across different features and projects.
+
   - Update references to external docs
   - Maintain links between related rules
   - Document breaking changes

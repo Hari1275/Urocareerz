@@ -31,6 +31,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { useOpportunityFilters } from "@/hooks/use-opportunity-filters";
+import { usePagination } from "@/hooks/use-pagination";
+import { TablePagination } from "./TablePagination";
 import {
   CheckCircle,
   XCircle,
@@ -74,6 +76,7 @@ export default function OpportunityManagementTable() {
   const { toast } = useToast();
   const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
   const { statuses, getStatusBadge } = useOpportunityFilters();
+  const pagination = usePagination({ initialPageSize: 10 });
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -112,6 +115,19 @@ export default function OpportunityManagementTable() {
   useEffect(() => {
     fetchOpportunities();
   }, [statusFilter, typeFilter, debouncedSearchQuery]);
+
+  // Filtering logic (move to top, before rendering)
+  const filteredOpportunities = opportunities.filter((opportunity) => {
+    if (statusFilter !== "all" && opportunity.status !== statusFilter) return false;
+    if (typeFilter !== "all" && opportunity.opportunityType.name !== typeFilter) return false;
+    if (debouncedSearchQuery && !opportunity.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) return false;
+    return true;
+  });
+  // Update pagination when filtered data changes
+  useEffect(() => {
+    pagination.actions.setTotalItems(filteredOpportunities.length);
+  }, [filteredOpportunities, pagination.actions]);
+  const paginatedOpportunities = pagination.paginateData(filteredOpportunities);
 
   const fetchOpportunities = async () => {
     try {
@@ -328,6 +344,9 @@ export default function OpportunityManagementTable() {
     );
   }
 
+  // Paginate the opportunities data
+  // const paginatedOpportunities = pagination.paginateData(opportunities);
+
   return (
     <>
       <Card>
@@ -415,7 +434,7 @@ export default function OpportunityManagementTable() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {opportunities.length === 0 ? (
+                  {paginatedOpportunities.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={7}
@@ -425,7 +444,7 @@ export default function OpportunityManagementTable() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    opportunities.map((opportunity) => (
+                    paginatedOpportunities.map((opportunity) => (
                       <TableRow key={opportunity.id}>
                         <TableCell className="max-w-xs">
                           <div>
@@ -574,12 +593,12 @@ export default function OpportunityManagementTable() {
 
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-4">
-            {opportunities.length === 0 ? (
+            {paginatedOpportunities.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No opportunities found
               </div>
             ) : (
-              opportunities.map((opportunity) => (
+              paginatedOpportunities.map((opportunity) => (
                 <Card key={opportunity.id} className="p-4">
                   <div className="space-y-3">
                     <div className="space-y-2">
@@ -712,6 +731,15 @@ export default function OpportunityManagementTable() {
                 </Card>
               ))
             )}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between space-x-6 py-4">
+            <TablePagination 
+              pagination={pagination}
+              showPageSizeSelector={true}
+              showPageInfo={true}
+            />
           </div>
         </CardContent>
       </Card>

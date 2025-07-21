@@ -26,6 +26,8 @@ async function getAnalytics(request: NextRequest) {
       }
     }
 
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
     // Fetch comprehensive analytics data
     const [
       totalUsers,
@@ -45,7 +47,6 @@ async function getAnalytics(request: NextRequest) {
       // Total users
       prisma.user.count({
         where: {
-          deletedAt: null,
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
@@ -55,7 +56,6 @@ async function getAnalytics(request: NextRequest) {
       // Pending users (users with OTP secret - not yet verified)
       prisma.user.count({
         where: {
-          deletedAt: null,
           otpSecret: { not: null },
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
@@ -66,7 +66,6 @@ async function getAnalytics(request: NextRequest) {
       // Total opportunities
       prisma.opportunity.count({
         where: {
-          deletedAt: null,
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
@@ -76,7 +75,6 @@ async function getAnalytics(request: NextRequest) {
       // Pending opportunities
       prisma.opportunity.count({
         where: {
-          deletedAt: null,
           status: "PENDING",
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
@@ -87,7 +85,6 @@ async function getAnalytics(request: NextRequest) {
       // Total mentee opportunities
       prisma.menteeOpportunity.count({
         where: {
-          deletedAt: null,
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
@@ -97,7 +94,6 @@ async function getAnalytics(request: NextRequest) {
       // Pending mentee opportunities
       prisma.menteeOpportunity.count({
         where: {
-          deletedAt: null,
           status: "PENDING",
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
@@ -124,46 +120,28 @@ async function getAnalytics(request: NextRequest) {
         },
       }),
       
-      // User registrations by date (last 30 days)
-      prisma.user.groupBy({
-        by: ['createdAt'],
+      // User registrations in last 30 days (fetch all, aggregate in JS)
+      prisma.user.findMany({
         where: {
-          deletedAt: null,
           createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            gte: thirtyDaysAgo,
           },
         },
-        _count: {
-          id: true,
-        },
-        orderBy: {
-          createdAt: 'asc',
-        },
+        select: { createdAt: true },
       }),
-      
-      // Opportunity submissions by date (last 30 days)
-      prisma.opportunity.groupBy({
-        by: ['createdAt'],
+      // Opportunity submissions in last 30 days (fetch all, aggregate in JS)
+      prisma.opportunity.findMany({
         where: {
-          deletedAt: null,
           createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            gte: thirtyDaysAgo,
           },
         },
-        _count: {
-          id: true,
-        },
-        orderBy: {
-          createdAt: 'asc',
-        },
+        select: { createdAt: true },
       }),
       
       // User role distribution
       prisma.user.groupBy({
         by: ['role'],
-        where: {
-          deletedAt: null,
-        },
         _count: {
           id: true,
         },
@@ -172,9 +150,6 @@ async function getAnalytics(request: NextRequest) {
       // Opportunity type distribution
       prisma.opportunity.groupBy({
         by: ['opportunityTypeId'],
-        where: {
-          deletedAt: null,
-        },
         _count: {
           id: true,
         },
@@ -219,6 +194,35 @@ async function getAnalytics(request: NextRequest) {
       count: item._count.id,
     }));
 
+    // After fetching userRegistrationsByDate and opportunitySubmissionsByDate as arrays of objects with createdAt
+    // Aggregate counts per day in JS
+    function aggregateByDay(records: { createdAt: Date | string }[]) {
+      const counts: Record<string, number> = {};
+      for (const rec of records) {
+        const dateObj = typeof rec.createdAt === 'string' ? new Date(rec.createdAt) : rec.createdAt;
+        const date = dateObj.toISOString().split('T')[0];
+        counts[date] = (counts[date] || 0) + 1;
+      }
+      return counts;
+    }
+    const userRegistrationsCounts = aggregateByDay(userRegistrationsByDate);
+    const opportunitySubmissionsCounts = aggregateByDay(opportunitySubmissionsByDate);
+    function getLast30Days() {
+      const days = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d.toISOString().split('T')[0]);
+      }
+      return days;
+    }
+    const last30Days = getLast30Days();
+    function fillTrendDataFromCounts(counts: Record<string, number>) {
+      return last30Days.map(date => ({ date, count: counts[date] || 0 }));
+    }
+    const userRegistrationsTrend = fillTrendDataFromCounts(userRegistrationsCounts);
+    const opportunitySubmissionsTrend = fillTrendDataFromCounts(opportunitySubmissionsCounts);
+
     return NextResponse.json({
       overview: {
         totalUsers,
@@ -231,14 +235,8 @@ async function getAnalytics(request: NextRequest) {
         totalApplications,
       },
       trends: {
-        userRegistrationsByDate: userRegistrationsByDate.map((item: { createdAt: Date; _count: { id: number } }) => ({
-          date: item.createdAt.toISOString().split('T')[0],
-          count: item._count.id,
-        })),
-        opportunitySubmissionsByDate: opportunitySubmissionsByDate.map((item: { createdAt: Date; _count: { id: number } }) => ({
-          date: item.createdAt.toISOString().split('T')[0],
-          count: item._count.id,
-        })),
+        userRegistrationsByDate: userRegistrationsTrend,
+        opportunitySubmissionsByDate: opportunitySubmissionsTrend,
       },
       distributions: {
         userRoles: userRoleDistribution.map((item: { role: string; _count: { id: number } }) => ({

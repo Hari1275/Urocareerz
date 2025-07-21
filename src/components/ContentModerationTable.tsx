@@ -27,6 +27,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { useOpportunityFilters } from "@/hooks/use-opportunity-filters";
+import { usePagination } from "@/hooks/use-pagination";
+import { TablePagination } from "./TablePagination";
 import {
   CheckCircle,
   XCircle,
@@ -34,6 +36,7 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
+import React from "react";
 
 interface Opportunity {
   id: string;
@@ -62,6 +65,7 @@ interface Opportunity {
 export default function ContentModerationTable() {
   const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
   const { getStatusBadge } = useOpportunityFilters();
+  const pagination = usePagination({ initialPageSize: 10 });
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +76,11 @@ export default function ContentModerationTable() {
   useEffect(() => {
     fetchOpportunities();
   }, []);
+
+  useEffect(() => {
+    pagination.actions.setTotalItems(opportunities.length);
+  }, [opportunities, pagination.actions]);
+  const paginatedOpportunities = pagination.paginateData(opportunities);
 
   const fetchOpportunities = async () => {
     try {
@@ -171,14 +180,6 @@ export default function ContentModerationTable() {
       setActionLoading(null);
     }
   };
-
-  const filteredOpportunities = opportunities.filter((opportunity) => {
-    if (statusFilter !== "all" && opportunity.status !== statusFilter)
-      return false;
-    if (typeFilter !== "all" && opportunity.opportunityType.name !== typeFilter)
-      return false;
-    return true;
-  });
 
   if (loading) {
     return (
@@ -283,7 +284,7 @@ export default function ContentModerationTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOpportunities.length === 0 ? (
+              {paginatedOpportunities.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={7}
@@ -293,7 +294,7 @@ export default function ContentModerationTable() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredOpportunities.map((opportunity) => (
+                paginatedOpportunities.map((opportunity) => (
                   <TableRow key={opportunity.id}>
                     <TableCell>
                       <div>
@@ -432,12 +433,12 @@ export default function ContentModerationTable() {
 
         {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
-          {filteredOpportunities.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No opportunities found
-            </div>
-          ) : (
-            filteredOpportunities.map((opportunity) => (
+                      {paginatedOpportunities.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No opportunities found
+              </div>
+            ) : (
+              paginatedOpportunities.map((opportunity) => (
               <Card key={opportunity.id} className="p-4">
                 <div className="space-y-3">
                   <div className="space-y-2">
@@ -571,6 +572,15 @@ export default function ContentModerationTable() {
               </Card>
             ))
           )}
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between space-x-6 py-4">
+          <TablePagination 
+            pagination={pagination}
+            showPageSizeSelector={true}
+            showPageInfo={true}
+          />
         </div>
       </CardContent>
     </Card>

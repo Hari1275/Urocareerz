@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, Filter, RefreshCw } from "lucide-react";
+import { usePagination } from "@/hooks/use-pagination";
+import { TablePagination } from "./TablePagination";
 
 interface AuditLog {
   id: string;
@@ -188,13 +190,12 @@ export default function AuditLogsTable() {
       </CardHeader>
       <CardContent>
         {/* Filters */}
-        <div className="mb-6 space-y-4">
-          <div className="flex items-center gap-2">
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
             <Filter className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">Filters</span>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <Select
               value={filters.action}
               onValueChange={(value) => handleFilterChange("action", value)}
@@ -202,7 +203,7 @@ export default function AuditLogsTable() {
               <SelectTrigger>
                 <SelectValue placeholder="Action" defaultValue="all" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[50vh] overflow-auto mt-2">
                 <SelectItem value="all">All Actions</SelectItem>
                 <SelectItem value="USER_APPROVED">User Approved</SelectItem>
                 <SelectItem value="USER_REJECTED">User Rejected</SelectItem>
@@ -218,7 +219,6 @@ export default function AuditLogsTable() {
                 <SelectItem value="USER_LOGIN">User Login</SelectItem>
               </SelectContent>
             </Select>
-
             <Select
               value={filters.entityType}
               onValueChange={(value) => handleFilterChange("entityType", value)}
@@ -226,7 +226,7 @@ export default function AuditLogsTable() {
               <SelectTrigger>
                 <SelectValue placeholder="Entity Type" defaultValue="all" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[50vh] overflow-auto mt-2">
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="User">User</SelectItem>
                 <SelectItem value="Opportunity">Opportunity</SelectItem>
@@ -234,27 +234,23 @@ export default function AuditLogsTable() {
                 <SelectItem value="Discussion">Discussion</SelectItem>
               </SelectContent>
             </Select>
-
             <Input
               placeholder="User ID"
               value={filters.userId}
               onChange={(e) => handleFilterChange("userId", e.target.value)}
             />
-
             <Input
               type="date"
               placeholder="Start Date"
               value={filters.startDate}
               onChange={(e) => handleFilterChange("startDate", e.target.value)}
             />
-
             <Input
               type="date"
               placeholder="End Date"
               value={filters.endDate}
               onChange={(e) => handleFilterChange("endDate", e.target.value)}
             />
-
             <Button
               variant="outline"
               onClick={clearFilters}

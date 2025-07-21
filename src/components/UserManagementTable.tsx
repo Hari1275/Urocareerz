@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useUserFilters } from "@/hooks/use-user-filters";
+import { usePagination } from "@/hooks/use-pagination";
+import { TablePagination } from "./TablePagination";
 import {
   CheckCircle,
   XCircle,
@@ -62,6 +64,7 @@ interface User {
 export default function UserManagementTable() {
   const { toast } = useToast();
   const { roles, statuses, getRoleLabel, getStatusBadge } = useUserFilters();
+  const pagination = usePagination({ initialPageSize: 10 });
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -98,6 +101,11 @@ export default function UserManagementTable() {
   useEffect(() => {
     fetchUsers();
   }, [statusFilter, roleFilter, debouncedSearchQuery]);
+
+  // Update pagination when users change
+  useEffect(() => {
+    pagination.actions.setTotalItems(users.length);
+  }, [users, pagination.actions]);
 
   const fetchUsers = async () => {
     try {
@@ -379,6 +387,7 @@ export default function UserManagementTable() {
   };
 
   const filteredUsers = users; // Server-side filtering now
+  const paginatedUsers = pagination.paginateData(filteredUsers);
 
   if (loading) {
     return (
@@ -510,7 +519,7 @@ export default function UserManagementTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length === 0 ? (
+                {paginatedUsers.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
@@ -520,7 +529,7 @@ export default function UserManagementTable() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  paginatedUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <div>
@@ -667,12 +676,12 @@ export default function UserManagementTable() {
 
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-4">
-            {filteredUsers.length === 0 ? (
+            {paginatedUsers.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No users found
               </div>
             ) : (
-              filteredUsers.map((user) => (
+              paginatedUsers.map((user) => (
                 <Card key={user.id} className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -812,6 +821,13 @@ export default function UserManagementTable() {
               ))
             )}
           </div>
+
+          {/* Pagination */}
+          <TablePagination 
+            pagination={pagination}
+            showPageSizeSelector={true}
+            showPageInfo={true}
+          />
         </CardContent>
       </Card>
 

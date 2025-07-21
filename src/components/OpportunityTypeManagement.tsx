@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -38,6 +38,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { Plus, Edit, Trash2, Palette } from "lucide-react";
+import { usePagination } from "@/hooks/use-pagination";
+import { TablePagination } from "./TablePagination";
 
 interface OpportunityTypeFormData {
   name: string;
@@ -57,6 +59,12 @@ export default function OpportunityTypeManagement() {
     color: "blue",
   });
   const [loading, setLoading] = useState(false);
+
+  const pagination = usePagination({ initialPageSize: 10 });
+  useEffect(() => {
+    pagination.actions.setTotalItems(opportunityTypes.length);
+  }, [opportunityTypes, pagination.actions]);
+  const paginatedOpportunityTypes = pagination.paginateData(opportunityTypes);
 
   const colorOptions = [
     { value: "blue", label: "Blue", class: "bg-blue-100 text-blue-800" },
@@ -193,7 +201,7 @@ export default function OpportunityTypeManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {opportunityTypes.length === 0 ? (
+                {paginatedOpportunityTypes.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={5}
@@ -203,7 +211,7 @@ export default function OpportunityTypeManagement() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  opportunityTypes.map((type) => (
+                  paginatedOpportunityTypes.map((type) => (
                     <TableRow key={type.id}>
                       <TableCell className="font-medium">{type.name}</TableCell>
                       <TableCell className="text-gray-600">
@@ -247,6 +255,14 @@ export default function OpportunityTypeManagement() {
                 )}
               </TableBody>
             </Table>
+          </div>
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between space-x-6 py-4">
+            <TablePagination 
+              pagination={pagination}
+              showPageSizeSelector={true}
+              showPageInfo={true}
+            />
           </div>
         </CardContent>
       </Card>
