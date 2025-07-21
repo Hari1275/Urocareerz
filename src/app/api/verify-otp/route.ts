@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateEdgeToken } from '@/lib/edge-auth';
+import { AuditLogger } from '@/lib/audit-logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -107,6 +108,18 @@ export async function POST(req: NextRequest) {
       path: '/',
       maxAge: 24 * 60 * 60, // 24 hours for development
     });
+
+    // Log the audit event
+    await AuditLogger.logUserLogin(
+      user.id,
+      {
+        email: user.email,
+        role: user.role,
+        loginMethod: 'OTP',
+      },
+      req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined,
+      req.headers.get("user-agent") || undefined
+    );
 
     console.log('Verify-OTP: Cookie set in response');
     console.log('Verify-OTP: Response cookies:', response.cookies.getAll());

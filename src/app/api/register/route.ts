@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateOTP } from "@/lib/auth";
 import { sendOTPEmail, isValidEmail } from "@/lib/email";
+import { AuditLogger } from "@/lib/audit-logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,6 +70,19 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Log the audit event
+    await AuditLogger.logUserRegistration(
+      user.id,
+      {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
+      req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined,
+      req.headers.get("user-agent") || undefined
+    );
 
     // For development, also return OTP in response
     const response: Record<string, unknown> = {

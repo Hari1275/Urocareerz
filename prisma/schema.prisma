@@ -46,6 +46,9 @@ model User {
   
   // Discussion comments (created by user)
   discussionComments DiscussionComment[]
+  
+  // Audit logs (actions performed by user)
+  auditLogs AuditLog[]
 }
 
 model Profile {
@@ -274,4 +277,27 @@ enum ApplicationStatus {
   ACCEPTED
   REJECTED
   WITHDRAWN
+}
+
+// Audit Log model for tracking admin and user actions
+model AuditLog {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  action      String      // e.g., "USER_APPROVED", "OPPORTUNITY_DELETED", "ROLE_CHANGED"
+  entityType  String      // e.g., "User", "Opportunity", "Discussion"
+  entityId    String      // ID of the affected entity
+  userId      String      @db.ObjectId // ID of the user who performed the action
+  user        User        @relation(fields: [userId], references: [id])
+  
+  // Additional context
+  details     String?     // JSON string with additional details
+  ipAddress   String?     // IP address of the user
+  userAgent   String?     // User agent string
+  
+  // Timestamps
+  createdAt   DateTime    @default(now())
+  
+  @@index([action])
+  @@index([entityType])
+  @@index([userId])
+  @@index([createdAt])
 }

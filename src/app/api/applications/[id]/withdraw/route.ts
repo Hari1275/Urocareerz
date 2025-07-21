@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Verify authentication
@@ -22,7 +22,7 @@ export async function POST(
     }
 
     const decoded = await verifyEdgeToken(token, secret);
-    const { id } = await params;
+    const { id } = params;
 
     // Get the application
     const application = await prisma.application.findUnique({

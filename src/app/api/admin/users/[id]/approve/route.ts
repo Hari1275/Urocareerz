@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAdminAuth } from "@/lib/admin-auth";
+import { withAdminAuth, getAdminUser } from "@/lib/admin-auth";
 import { sendUserApprovalEmail } from "@/lib/email";
+import { AuditLogger } from "@/lib/audit-logger";
 
 // POST /api/admin/users/[id]/approve - Approve a user
 export const POST = withAdminAuth(
-  async (req: NextRequest, context?: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, context?: { params: Promise<{ [key: string]: string }> }) => {
     try {
       const params = await context?.params;
       const userId = params?.id;
@@ -15,6 +16,12 @@ export const POST = withAdminAuth(
           { error: "User ID is required" },
           { status: 400 }
         );
+      }
+
+      // Get admin user for audit logging
+      const adminUser = getAdminUser(req);
+      if (!adminUser) {
+        return NextResponse.json({ error: "Admin user not found" }, { status: 401 });
       }
 
       // Find the user
@@ -73,6 +80,21 @@ export const POST = withAdminAuth(
         console.error("Error sending user approval email:", emailError);
         // Don't fail the request if email fails, just log it
       }
+
+      // Log the audit event
+      await AuditLogger.logUserAction(
+        "USER_APPROVED",
+        userId,
+        userId,
+        adminUser.userId,
+        {
+          userEmail: updatedUser.email,
+          userRole: updatedUser.role,
+          adminEmail: adminUser.email,
+        },
+        req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined,
+        req.headers.get("user-agent") || undefined
+      );
 
       return NextResponse.json({
         message: "User approved successfully",

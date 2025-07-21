@@ -4,10 +4,10 @@ import { verifyEdgeToken } from "@/lib/edge-auth";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id: discussionId } = await params;
+    const { id: discussionId } = params;
 
     const token = request.cookies.get("token")?.value;
     if (!token) {

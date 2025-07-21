@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAdminAuth } from "@/lib/admin-auth";
+import { withAdminAuth, getAdminUser } from "@/lib/admin-auth";
 import { sendOpportunityApprovalEmail } from "@/lib/email";
+import { AuditLogger } from "@/lib/audit-logger";
 
 // POST /api/admin/opportunities/[id]/approve - Approve an opportunity
 export const POST = withAdminAuth(
-  async (req: NextRequest, context?: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, context?: { params: Promise<{ [key: string]: string }> }) => {
     try {
       const params = await context?.params;
       const opportunityId = params?.id;
@@ -15,6 +16,12 @@ export const POST = withAdminAuth(
           { error: "Opportunity ID is required" },
           { status: 400 }
         );
+      }
+
+      // Get admin user for audit logging
+      const adminUser = getAdminUser(req);
+      if (!adminUser) {
+        return NextResponse.json({ error: "Admin user not found" }, { status: 401 });
       }
 
       // Find the opportunity
@@ -73,6 +80,20 @@ export const POST = withAdminAuth(
         console.error("Error sending opportunity approval email:", emailError);
         // Don't fail the request if email fails, just log it
       }
+
+      // Log the audit event
+      await AuditLogger.logOpportunityAction(
+        "OPPORTUNITY_APPROVED",
+        opportunityId,
+        adminUser.userId,
+        {
+          opportunityTitle: updatedOpportunity.title,
+          mentorEmail: updatedOpportunity.mentor.email,
+          adminEmail: adminUser.email,
+        },
+        req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined,
+        req.headers.get("user-agent") || undefined
+      );
 
       return NextResponse.json({
         message: "Opportunity approved successfully",

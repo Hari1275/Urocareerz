@@ -1,0 +1,221 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import ApplicationForm from "@/components/ApplicationForm";
+
+interface Opportunity {
+  id: string;
+  title: string;
+  description: string;
+  opportunityType: {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+  };
+  location?: string;
+  experienceLevel?: string;
+  requirements?: string;
+  benefits?: string;
+  duration?: string;
+  compensation?: string;
+  applicationDeadline?: string;
+  status: string;
+  createdAt: string;
+  mentor: {
+    firstName: string;
+    lastName: string;
+    specialty?: string;
+  };
+}
+
+interface User {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: string;
+}
+
+export default function ApplyPageClient({
+  opportunityId,
+}: {
+  opportunityId: string;
+}) {
+  const router = useRouter();
+  console.log("ApplyPageClient - opportunityId:", opportunityId);
+
+  if (!opportunityId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-red-500">Error</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Invalid opportunity ID. Please go back and try again.
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push("/opportunities")}>
+              Back to Opportunities
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch user data
+        const userResponse = await fetch("/api/user");
+        if (!userResponse.ok) {
+          if (userResponse.status === 401) {
+            router.push("/login");
+            return;
+          }
+          throw new Error("Failed to fetch user data");
+        }
+
+        const userData = await userResponse.json();
+        console.log("User data:", userData);
+        setUser(userData.user);
+
+        // Verify user is a mentee
+        if (userData.user.role !== "MENTEE") {
+          setError("Only mentees can apply for opportunities");
+          setLoading(false);
+          return;
+        }
+
+        // Fetch opportunity details
+        console.log("Fetching opportunity with ID:", opportunityId);
+        const opportunityResponse = await fetch(`/api/opportunities/${opportunityId}`);
+        if (!opportunityResponse.ok) {
+          if (opportunityResponse.status === 404) {
+            setError("Opportunity not found");
+          } else {
+            throw new Error("Failed to fetch opportunity details");
+          }
+          setLoading(false);
+          return;
+        }
+
+        const opportunityData = await opportunityResponse.json();
+        console.log("Opportunity API response:", opportunityData);
+
+        // Check if opportunity exists and has required properties
+        if (!opportunityData.opportunity) {
+          console.error("API returned success but opportunity data is missing");
+          setError("Invalid opportunity data received from server");
+          setLoading(false);
+          return;
+        }
+
+        // Check if opportunity is approved
+        if (opportunityData.opportunity.status !== "APPROVED") {
+          setError("This opportunity is not available for applications");
+          setLoading(false);
+          return;
+        }
+
+        // Transform the opportunity data to match the expected interface
+        try {
+          const transformedOpportunity = {
+            ...opportunityData.opportunity,
+            opportunityType: {
+              id: opportunityData.opportunity.opportunityType?.id || "unknown",
+              name: opportunityData.opportunity.opportunityType?.name || "Unknown",
+              description: opportunityData.opportunity.opportunityType?.description,
+              color: opportunityData.opportunity.opportunityType?.color,
+            },
+            mentor: {
+              firstName: opportunityData.opportunity.mentor?.firstName || "",
+              lastName: opportunityData.opportunity.mentor?.lastName || "",
+              specialty: opportunityData.opportunity.mentor?.profile?.specialty,
+            },
+          };
+          console.log("Transformed opportunity:", transformedOpportunity);
+          setOpportunity(transformedOpportunity);
+        } catch (transformError) {
+          console.error("Error transforming opportunity data:", transformError);
+          setError("Error processing opportunity data");
+        }
+      } catch (err: any) {
+        console.error("Fetch error:", err);
+        setError(err.message || "An unknown error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [opportunityId, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary-600" />
+              <p className="text-gray-600">Loading opportunity details...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-red-500">Error</CardTitle>
+            <div className="text-sm text-muted-foreground">{error}</div>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push("/opportunities")}>Back to Opportunities</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!opportunity) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-gray-600">Opportunity not found</p>
+              <Button onClick={() => router.push("/opportunities")} className="mt-4">
+                Back to Opportunities
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  console.log("Rendering ApplicationForm with opportunity:", opportunity);
+  return <ApplicationForm opportunity={opportunity} />;
+} 

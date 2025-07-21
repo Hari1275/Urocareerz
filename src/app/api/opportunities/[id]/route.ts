@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { verifyEdgeToken } from "@/lib/edge-auth";
-
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Verify authentication
@@ -20,14 +18,22 @@ export async function GET(
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { id: opportunityId } = await params;
+    // Get the ID from params
+    const opportunityId = params.id;
+    if (!opportunityId) {
+      return NextResponse.json({ error: "Missing opportunity id" }, { status: 400 });
+    }
+
+    console.log("API route: Fetching opportunity with ID:", opportunityId);
 
     // Get the opportunity with mentor details
     const opportunity = await prisma.opportunity.findUnique({
       where: { id: opportunityId },
       include: {
+        opportunityType: true,
         mentor: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             profile: {
@@ -41,17 +47,25 @@ export async function GET(
     });
 
     if (!opportunity) {
+      console.log("API route: Opportunity not found with ID:", opportunityId);
       return NextResponse.json(
         { error: "Opportunity not found" },
         { status: 404 }
       );
     }
 
+    console.log("API route: Found opportunity:", {
+      id: opportunity.id,
+      title: opportunity.title,
+      hasOpportunityType: !!opportunity.opportunityType,
+      hasMentor: !!opportunity.mentor
+    });
+
     return NextResponse.json({ opportunity });
   } catch (error) {
     console.error("Error fetching opportunity:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }

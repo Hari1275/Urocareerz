@@ -15,6 +15,8 @@ import {
   Menu,
   X,
   MessageSquare,
+  Activity,
+  ClipboardList,
 } from "lucide-react";
 import UserManagementTable from "@/components/UserManagementTable";
 import OpportunityManagementTable from "@/components/OpportunityManagementTable";
@@ -22,6 +24,8 @@ import ContentModerationTable from "@/components/ContentModerationTable";
 import OpportunityTypeManagement from "@/components/OpportunityTypeManagement";
 import DiscussionManagementTable from "@/components/DiscussionManagementTable";
 import { AnnouncementForm } from "@/components/AnnouncementForm";
+import AuditLogsTable from "@/components/AuditLogsTable";
+import EnhancedAnalytics from "@/components/EnhancedAnalytics";
 
 interface User {
   id: string;
@@ -57,7 +61,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "opportunities" | "content" | "types" | "discussions"
+    "overview" | "users" | "opportunities" | "content" | "types" | "discussions" | "analytics" | "audit-logs"
   >("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [, setUsers] = useState<User[]>([]);
@@ -181,7 +185,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -311,6 +315,28 @@ export default function AdminDashboardPage() {
               >
                 <MessageSquare className="h-4 w-4 mr-3" />
                 Discussions
+              </Button>
+              <Button
+                variant={activeTab === "analytics" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  setActiveTab("analytics");
+                  setSidebarOpen(false);
+                }}
+              >
+                <Activity className="h-4 w-4 mr-3" />
+                Analytics
+              </Button>
+              <Button
+                variant={activeTab === "audit-logs" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  setActiveTab("audit-logs");
+                  setSidebarOpen(false);
+                }}
+              >
+                <ClipboardList className="h-4 w-4 mr-3" />
+                Audit Logs
               </Button>
             </div>
           </nav>
@@ -540,6 +566,27 @@ export default function AdminDashboardPage() {
               </div>
 
               <DiscussionManagementTable />
+            </div>
+          )}
+
+          {activeTab === "analytics" && (
+            <div className="space-y-6">
+              <EnhancedAnalytics />
+            </div>
+          )}
+
+          {activeTab === "audit-logs" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Audit Logs
+                </h2>
+                <p className="text-gray-600">
+                  Track all platform activities and administrative actions
+                </p>
+              </div>
+
+              <AuditLogsTable />
             </div>
           )}
         </main>

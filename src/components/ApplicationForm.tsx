@@ -53,6 +53,33 @@ interface ApplicationFormProps {
 }
 
 export default function ApplicationForm({ opportunity }: ApplicationFormProps) {
+  console.log("ApplicationForm received opportunity:", opportunity);
+  
+  // Safety check to prevent "Cannot read properties of undefined"
+  if (!opportunity || !opportunity.id) {
+    console.error("ApplicationForm: Invalid opportunity data", opportunity);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-red-500">Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Invalid opportunity data. Please try again later.</p>
+              <Button 
+                onClick={() => window.location.href = "/opportunities"}
+                className="mt-4"
+              >
+                Back to Opportunities
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+  
   const router = useRouter();
   const { getTypeBadge } = useOpportunityTypes();
   const [isSubmitting, setIsSubmitting] = useState(false);
