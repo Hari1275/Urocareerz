@@ -13,6 +13,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePagination } from "@/hooks/use-pagination";
 import { LegalDisclaimerModal } from "@/components/LegalDisclaimerModal";
 
 interface Profile {
@@ -232,15 +243,16 @@ function DashboardHeader({
   };
 
   return (
-    <header className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/dashboard" className="flex-shrink-0 flex items-center">
-              <h1 className="text-2xl font-bold gradient-text">UroCareerz</h1>
+    <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo - Responsive sizing */}
+          <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
             </Link>
-          </div>
-          <div className="flex items-center space-x-4">
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-4">
             <div className="flex items-center space-x-3">
               {getAvatarUrl() ? (
                 <img
@@ -265,22 +277,28 @@ function DashboardHeader({
                   </svg>
                 </div>
               )}
-              <span className="text-sm text-gray-500">
-                Welcome, {user.firstName || user.email}
-              </span>
+              <span className="text-sm text-gray-500 font-medium">Welcome, {user.firstName || user.email}</span>
             </div>
-            <Link
-              href="/profile"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Profile
-            </Link>
+            <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
+            <Button variant="outline" onClick={onLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden flex items-center justify-end">
+            {/* Mobile Menu Button - Clean logout only */}
             <Button
-              variant="outline"
-              onClick={onLogout}
-              className="text-gray-700 hover:text-red-600 transition-colors"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                // Simple mobile menu - you can expand this with a proper mobile menu component
+                const shouldLogout = confirm("Would you like to logout?");
+                if (shouldLogout) onLogout();
+              }}
+              className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
             >
-              Logout
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
             </Button>
           </div>
         </div>
@@ -352,295 +370,280 @@ function MenteeDashboard({
   onShowLegalModal: () => void;
 }) {
   const router = useRouter();
+  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Pagination hook
+  const opportunitiesPagination = usePagination({ initialPageSize: 10 });
+
+  const fetchMenteeOpportunities = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/mentee-opportunities");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch opportunities");
+      }
+
+      const data = await response.json();
+      const opportunitiesData = data.opportunities || [];
+      setOpportunities(opportunitiesData);
+      opportunitiesPagination.actions.setTotalItems(opportunitiesData.length);
+    } catch (error) {
+      console.error("Error fetching opportunities:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMenteeOpportunities();
+  }, []);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return <Badge variant="secondary">Pending Review</Badge>;
+      case "APPROVED":
+        return <Badge variant="default" className="bg-green-100 text-green-800">Approved</Badge>;
+      case "REJECTED":
+        return <Badge variant="destructive">Rejected</Badge>;
+      case "CONVERTED":
+        return <Badge variant="outline">Converted</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#f1f5f9] font-sans">
       <DashboardHeader user={user} profile={profile} onLogout={onLogout} />
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <main className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 pb-20 sm:pb-32 lg:pb-40">
           <ProfileCompletionBanner user={user} profile={profile} />
 
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {user.firstName}!
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Discover opportunities and connect with mentors in urology
-            </p>
+        <div className="mb-6 sm:mb-8 lg:mb-10">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Welcome back, {user.firstName}!</h1>
+          <p className="text-base sm:text-lg text-gray-600">Discover opportunities and connect with mentors in urology</p>
             {!user.termsAccepted && (
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
+                    <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <span className="text-sm text-blue-800">
-                      Please review and accept our Terms of Service to unlock
-                      all features
-                    </span>
+                  <span className="text-sm text-blue-800">Please review and accept our Terms of Service to unlock all features</span>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={onShowLegalModal}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Review Terms
-                  </Button>
+                <Button size="sm" onClick={onShowLegalModal} className="bg-blue-600 hover:bg-blue-700 text-white">Review Terms</Button>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Modern Card Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-10 lg:mb-12">
             {/* Submit Opportunity Card */}
-            <Card
-              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() =>
-                router.push("/dashboard/mentee/submit-opportunity")
-              }
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  📝 Submit Opportunity
-                </CardTitle>
-                <div className="text-sm text-gray-600">
-                  Share opportunities you&apos;ve found with the community
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-40 flex items-center justify-center bg-blue-50 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
+          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/dashboard/mentee/submit-opportunity")}>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-green-400 to-blue-400 text-white text-3xl shadow-lg mb-2 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Discussions Card */}
-            <Card
-              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push("/discussions")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  💬 Discussions
-                </CardTitle>
-                <div className="text-sm text-gray-600">
-                  Join discussions and share knowledge with the community
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-40 flex items-center justify-center bg-purple-50 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-purple-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Browse Opportunities Card */}
-            <Card
-              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push("/opportunities")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  🔍 Browse Opportunities
-                </CardTitle>
-                <div className="text-sm text-gray-600">
-                  Explore and apply for opportunities posted by mentors
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-40 flex items-center justify-center bg-green-50 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-green-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* My Applications Card */}
-            <Card
-              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push("/applications")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  📄 My Applications
-                </CardTitle>
-                <div className="text-sm text-gray-600">
-                  View and track your applications
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-40 flex items-center justify-center bg-orange-50 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-orange-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* My Submitted Opportunities Card */}
-            <Card
-              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push("/submissions")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  📊 My Submissions
-                </CardTitle>
-                <div className="text-sm text-gray-600">
-                  Track opportunities you&apos;ve submitted for review
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-40 flex items-center justify-center bg-teal-50 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-teal-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Profile Card */}
-            <Card
-              className="glass-card hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push("/profile")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  👤 My Profile
-                </CardTitle>
-                <div className="text-sm text-gray-600">
-                  Update your profile and preferences
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-40 flex items-center justify-center bg-indigo-50 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 text-indigo-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-              </CardContent>
-            </Card>
+            <h3 className="text-lg font-bold text-gray-900 text-center">Submit Opportunity</h3>
+            <p className="text-sm text-gray-500 text-center">Share opportunities you've found with the community</p>
           </div>
 
-          {/* Quick Actions */}
-          <div className="mt-10">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Quick Actions
-            </h2>
-            <Card className="glass-card">
-              <CardContent className="p-6">
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">
-                    Ready to contribute to the community?
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {/* Discussions Card */}
+          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/discussions")}>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-purple-400 to-indigo-400 text-white text-3xl shadow-lg mb-2 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+            <h3 className="text-lg font-bold text-gray-900 text-center">Discussions</h3>
+            <p className="text-sm text-gray-500 text-center">Join discussions and share knowledge with the community</p>
+          </div>
+
+            {/* Browse Opportunities Card */}
+          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/opportunities")}>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-blue-400 to-cyan-400 text-white text-3xl shadow-lg mb-2 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+            <h3 className="text-lg font-bold text-gray-900 text-center">Browse Opportunities</h3>
+            <p className="text-sm text-gray-500 text-center">Explore and apply for opportunities posted by mentors</p>
+          </div>
+
+            {/* My Applications Card */}
+          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/applications")}>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-orange-400 to-red-400 text-white text-3xl shadow-lg mb-2 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+            <h3 className="text-lg font-bold text-gray-900 text-center">My Applications</h3>
+            <p className="text-sm text-gray-500 text-center">View and track your applications</p>
+          </div>
+        </div>
+
+        {/* Submitted Opportunities Section with Pagination */}
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Submitted Opportunities</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>Show:</span>
+                <Select
+                  value={opportunitiesPagination.state.pageSize.toString()}
+                  onValueChange={(value) => opportunitiesPagination.actions.setPageSize(parseInt(value))}
+                >
+                  <SelectTrigger className="w-20 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span>per page</span>
+                </div>
+                </div>
+          </div>
+          
+          <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <span className="text-gray-500">Loading...</span>
+                </div>
+            ) : opportunities.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">📝</div>
+                <h3 className="text-lg font-medium mb-2">No opportunities submitted yet</h3>
+                <p className="text-gray-600 mb-4">Start contributing to the community by submitting opportunities you've found.</p>
+                <Button className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" onClick={() => router.push("/dashboard/mentee/submit-opportunity")}>Submit Your First Opportunity</Button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 text-sm text-gray-600">
+                  Showing {opportunitiesPagination.state.startIndex + 1} to {opportunitiesPagination.state.endIndex} of {opportunitiesPagination.state.totalItems} opportunities
+                </div>
+                {/* Table Layout */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50/80">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white/50 divide-y divide-gray-200/50">
+                      {opportunitiesPagination.paginateData(opportunities).map((opportunity) => (
+                        <tr key={opportunity.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <div className="text-sm font-medium text-gray-900 truncate max-w-xs">{opportunity.title}</div>
+                              <div className="text-sm text-gray-500 line-clamp-2 max-w-xs">{opportunity.description}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant="outline" style={{ borderColor: opportunity.opportunityType.color || undefined, color: opportunity.opportunityType.color || undefined }}>
+                              {opportunity.opportunityType.name}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {getStatusBadge(opportunity.status)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDate(opportunity.createdAt)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {opportunity.adminFeedback ? (
+                              <div className="text-sm text-blue-600 font-medium">Available</div>
+                            ) : (
+                              <div className="text-sm text-gray-400">None</div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {opportunitiesPagination.state.totalPages > 1 && (
+                  <div className="mt-6 flex justify-center">
+                    <Pagination>
+                      <PaginationContent className="flex flex-wrap justify-center gap-1 sm:gap-2">
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={opportunitiesPagination.actions.previousPage}
+                            className={!opportunitiesPagination.state.hasPreviousPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        
+                        {opportunitiesPagination.getPageNumbers().map((pageNumber, index) => (
+                          <PaginationItem key={index}>
+                            {pageNumber === -1 ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                onClick={() => opportunitiesPagination.actions.setCurrentPage(pageNumber)}
+                                isActive={pageNumber === opportunitiesPagination.state.currentPage}
+                                className="cursor-pointer min-w-[2rem] sm:min-w-[2.5rem]"
+                              >
+                                {pageNumber}
+                              </PaginationLink>
+                            )}
+                          </PaginationItem>
+                        ))}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={opportunitiesPagination.actions.nextPage}
+                            className={!opportunitiesPagination.state.hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                </div>
+                )}
+              </>
+            )}
+          </div>
+          </div>
+
+        {/* Quick Actions - integrated into main flow */}
+        <div className="mt-8 px-4">
+          <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <span className="text-lg font-semibold text-gray-800 text-center sm:text-left whitespace-nowrap">Ready to take action?</span>
+              <div className="flex flex-wrap items-center gap-3 justify-center sm:justify-end">
                     <Button
-                      className="btn-primary"
-                      onClick={() =>
-                        router.push("/dashboard/mentee/submit-opportunity")
-                      }
-                    >
-                      Submit Opportunity
+                  onClick={() => router.push("/opportunities")}
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                >
+                  Browse Opportunities
                     </Button>
                     <Button
-                      variant="outline"
-                      onClick={() => router.push("/discussions/new")}
-                    >
-                      Start Discussion
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => router.push("/profile")}
-                    >
-                      Update Profile
+                  onClick={() => router.push("/dashboard/mentee/submit-opportunity")}
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                >
+                  Submit Opportunity
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
