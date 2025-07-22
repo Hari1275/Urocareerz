@@ -1,8 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { verifyEdgeToken } from "@/lib/edge-auth";
 
-const prisma = new PrismaClient();
+// Define the type for the application object
+type ApplicationWithRelations = {
+  id: string;
+  opportunityId: string;
+  menteeId: string;
+  status: string;
+  coverLetter: string | null;
+  createdAt: Date;
+  mentee: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    profile?: {
+      resume: string | null;
+    } | null;
+  };
+  opportunity: {
+    title: string;
+  };
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +52,7 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     });
 
-    const opportunityIds = mentorOpportunities.map((opp) => opp.id);
+    const opportunityIds = mentorOpportunities.map((opp: { id: string }) => opp.id);
 
     if (opportunityIds.length === 0) {
       return NextResponse.json({ applications: [] });
@@ -67,7 +86,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform the data to match the frontend interface
-    const transformedApplications = applications.map((app) => ({
+    const transformedApplications = applications.map((app: ApplicationWithRelations) => ({
       id: app.id,
       opportunityId: app.opportunityId,
       menteeId: app.menteeId,

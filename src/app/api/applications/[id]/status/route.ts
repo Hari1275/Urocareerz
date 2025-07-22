@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { verifyEdgeToken } from "@/lib/edge-auth";
 import { sendApplicationStatusEmail } from "@/lib/email";
-
-const prisma = new PrismaClient();
 
 export async function PATCH(
   request: NextRequest,
