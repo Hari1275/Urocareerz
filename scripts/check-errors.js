@@ -19,17 +19,7 @@ function checkFile(filePath) {
   const content = fs.readFileSync(filePath, "utf8");
   const errors = [];
 
-  // Check 1: Prisma Client Import
-  if (content.includes('import { PrismaClient } from "@prisma/client"')) {
-    errors.push({
-      type: "Prisma Client Import",
-      message: 'Use "@/generated/prisma" instead of "@prisma/client"',
-      line:
-        content
-          .split("\n")
-          .findIndex((line) => line.includes("@prisma/client")) + 1,
-    });
-  }
+  // Check 1: Prisma Client Import (removed - using standard @prisma/client)
 
   // Check 2: Empty Select Values
   const emptySelectRegex = /<SelectItem\s+value=["']{2}/g;
