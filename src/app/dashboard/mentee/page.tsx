@@ -165,7 +165,7 @@ export default function MenteeDashboardPage() {
             Welcome back, <span className="bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent">{user.firstName || "Mentee"}</span>!
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Ready to explore opportunities and contribute to the community? Let's get started!
+            Ready to explore opportunities and contribute to the community? Let&apos;s get started!
           </p>
         </div>
 
@@ -179,7 +179,7 @@ export default function MenteeDashboardPage() {
               </svg>
             </div>
             <h3 className="text-lg font-bold text-gray-900 text-center">Submit Opportunity</h3>
-            <p className="text-sm text-gray-500 text-center">Share opportunities you've found with the community</p>
+            <p className="text-sm text-gray-500 text-center">Share opportunities you&apos;ve found with the community</p>
           </div>
 
           {/* Discussions Card */}
@@ -223,7 +223,7 @@ export default function MenteeDashboardPage() {
               </svg>
             </div>
             <h3 className="text-lg font-bold text-gray-900 text-center">My Submissions</h3>
-            <p className="text-sm text-gray-500 text-center">Track opportunities you've submitted for review</p>
+            <p className="text-sm text-gray-500 text-center">Track opportunities you&apos;ve submitted for review</p>
           </div>
 
           {/* My Profile Card */}
@@ -274,7 +274,7 @@ export default function MenteeDashboardPage() {
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">📝</div>
                 <h3 className="text-lg font-medium mb-2">No opportunities submitted yet</h3>
-                <p className="text-gray-600 mb-4">Start contributing to the community by submitting opportunities you've found.</p>
+                <p className="text-gray-600 mb-4">Start contributing to the community by submitting opportunities you&apos;ve found.</p>
                 <Button className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" onClick={() => router.push("/dashboard/mentee/submit-opportunity")}>Submit Your First Opportunity</Button>
               </div>
             ) : (

@@ -232,7 +232,7 @@ export default function OpportunityDetailPage() {
             </CardHeader>
             <CardContent>
               <p>
-                The opportunity you're looking for doesn't exist or has been
+                The opportunity you&apos;re looking for doesn&apos;t exist or has been
                 removed.
               </p>
             </CardContent>

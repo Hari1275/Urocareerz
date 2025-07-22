@@ -40,8 +40,7 @@ export interface UsePaginationReturn {
 export function usePagination(options: PaginationOptions = {}): UsePaginationReturn {
   const {
     initialPage = 1,
-    initialPageSize = 10,
-    pageSizeOptions = [5, 10, 20, 50, 100]
+    initialPageSize = 10
   } = options;
 
   const [currentPage, setCurrentPage] = useState(initialPage);

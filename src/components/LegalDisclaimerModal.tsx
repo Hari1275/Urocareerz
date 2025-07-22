@@ -215,7 +215,7 @@ export function LegalDisclaimerModal({
             onClick={onDecline}
             className="w-full sm:w-auto order-2 sm:order-1 hover:bg-gray-50 hover:text-gray-700 hover:border-gray-300 text-sm"
           >
-            I'll Read Later
+                            I&apos;ll Read Later
           </Button>
           <Button
             onClick={handleAccept}

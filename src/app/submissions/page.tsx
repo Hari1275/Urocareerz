@@ -125,7 +125,7 @@ export default function SubmissionsPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Submissions</h1>
             <p className="text-gray-600 mt-2">
-              Track opportunities you've submitted for admin review
+              Track opportunities you&apos;ve submitted for admin review
             </p>
           </div>
           <Button
@@ -229,7 +229,7 @@ export default function SubmissionsPage() {
               No submissions yet
             </h3>
             <p className="text-gray-600 mb-6">
-              You haven't submitted any opportunities yet. Start contributing to
+              You haven&apos;t submitted any opportunities yet. Start contributing to
               the community!
             </p>
             <Button

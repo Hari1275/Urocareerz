@@ -208,7 +208,7 @@ export default function DiscussionThreadPage() {
             Thread Not Found
           </h1>
           <p className="text-gray-600 mb-6">
-            This discussion thread may have been deleted or doesn't exist.
+            This discussion thread may have been deleted or doesn&apos;t exist.
           </p>
           <Button onClick={() => router.push("/discussions")}>
             Back to Discussions

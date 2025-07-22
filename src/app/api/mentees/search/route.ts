@@ -44,86 +44,70 @@ export async function GET(request: NextRequest) {
     console.log("Search params:", { interests, location, search, limit, page });
 
     // Build the where clause
-    let where: any = {
+    const where: any = {
       role: "MENTEE",
-    };
-
-    // Add search filters if provided
-    if (location || interests || search) {
-      where.AND = [];
-
-      // Add profile existence check
-      where.AND.push({
-        profile: {
-          isNot: null,
-        },
-      });
-
-      // Add location filter (case-insensitive, partial match)
-      if (location && location.trim()) {
-        where.AND.push({
-          profile: {
-            location: {
-              contains: location.trim(),
-              mode: "insensitive",
+      ...(location || interests || search ? {
+        AND: [
+          {
+            profile: {
+              isNot: null,
             },
           },
-        });
-      }
-
-      // Add interests filter (array contains any of the provided interests)
-      if (interests && interests.trim()) {
-        const interestArray = interests
-          .split(",")
-          .map((interest) => interest.trim())
-          .filter((interest) => interest.length > 0);
-
-        if (interestArray.length > 0) {
-          where.AND.push({
+          ...(location && location.trim() ? [{
             profile: {
-              interests: {
-                hasSome: interestArray,
+              location: {
+                contains: location.trim(),
+                mode: "insensitive",
               },
             },
-          });
-        }
-      }
-
-      // Add general search filter (searches across multiple fields)
-      if (search && search.trim()) {
-        const searchTerm = search.trim();
-        where.AND.push({
-          OR: [
-            { firstName: { contains: searchTerm, mode: "insensitive" } },
-            { lastName: { contains: searchTerm, mode: "insensitive" } },
-            { email: { contains: searchTerm, mode: "insensitive" } },
-            {
+          }] : []),
+          ...(interests && interests.trim() ? (() => {
+            const interestArray = interests
+              .split(",")
+              .map((interest) => interest.trim())
+              .filter((interest) => interest.length > 0);
+            
+            return interestArray.length > 0 ? [{
               profile: {
-                bio: { contains: searchTerm, mode: "insensitive" },
-              },
-            },
-            {
-              profile: {
-                location: { contains: searchTerm, mode: "insensitive" },
-              },
-            },
-            {
-              profile: {
-                education: { contains: searchTerm, mode: "insensitive" },
-              },
-            },
-            {
-              profile: {
-                purposeOfRegistration: {
-                  contains: searchTerm,
-                  mode: "insensitive",
+                interests: {
+                  hasSome: interestArray,
                 },
               },
-            },
-          ],
-        });
-      }
-    }
+            }] : [];
+          })() : []),
+          ...(search && search.trim() ? [{
+            OR: [
+              { firstName: { contains: search.trim(), mode: "insensitive" } },
+              { lastName: { contains: search.trim(), mode: "insensitive" } },
+              { email: { contains: search.trim(), mode: "insensitive" } },
+              {
+                profile: {
+                  bio: { contains: search.trim(), mode: "insensitive" },
+                },
+              },
+              {
+                profile: {
+                  location: { contains: search.trim(), mode: "insensitive" },
+                },
+              },
+              {
+                profile: {
+                  education: { contains: search.trim(), mode: "insensitive" },
+                },
+              },
+              {
+                profile: {
+                  purposeOfRegistration: {
+                    contains: search.trim(),
+                    mode: "insensitive",
+                  },
+                },
+              },
+            ],
+          }] : []),
+        ],
+      } : {}),
+    };
 
     console.log("Final where clause:", JSON.stringify(where, null, 2));
 

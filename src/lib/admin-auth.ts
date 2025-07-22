@@ -9,15 +9,9 @@ export interface AdminUser {
 
 // Admin authentication middleware for API routes
 export function withAdminAuth(
-  handler: (
-    req: NextRequest,
-    context?: { params: Promise<{ [key: string]: string }> }
-  ) => Promise<NextResponse>
+  handler: (req: NextRequest, context?: any) => Promise<NextResponse>
 ) {
-  return async (
-    req: NextRequest,
-    context?: { params: Promise<{ [key: string]: string }> }
-  ) => {
+  return async (req: NextRequest, context?: any) => {
     try {
       // Get token from cookies
       const token = req.cookies.get("token")?.value;

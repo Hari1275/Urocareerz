@@ -5,7 +5,7 @@ export interface AuditLogData {
   entityType: string;
   entityId: string;
   userId: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
 }
@@ -41,7 +41,7 @@ export class AuditLogger {
     userId: string,
     targetUserId: string,
     adminId: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<void> {
@@ -63,7 +63,7 @@ export class AuditLogger {
     action: "OPPORTUNITY_APPROVED" | "OPPORTUNITY_REJECTED" | "OPPORTUNITY_DELETED",
     opportunityId: string,
     adminId: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<void> {
@@ -85,7 +85,7 @@ export class AuditLogger {
     action: "MENTEE_OPPORTUNITY_APPROVED" | "MENTEE_OPPORTUNITY_REJECTED" | "MENTEE_OPPORTUNITY_DELETED",
     menteeOpportunityId: string,
     adminId: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<void> {
@@ -107,7 +107,7 @@ export class AuditLogger {
     action: "DISCUSSION_APPROVED" | "DISCUSSION_REJECTED" | "DISCUSSION_DELETED" | "DISCUSSION_STATUS_CHANGED",
     discussionId: string,
     adminId: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<void> {
@@ -127,7 +127,7 @@ export class AuditLogger {
    */
   static async logUserRegistration(
     userId: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<void> {
@@ -147,7 +147,7 @@ export class AuditLogger {
    */
   static async logUserLogin(
     userId: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<void> {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import DiscussionThreadsList from "@/components/DiscussionThreadsList";
 
@@ -25,7 +25,7 @@ interface DiscussionThread {
   };
 }
 
-export default function DiscussionsPage() {
+function DiscussionsContent() {
   const searchParams = useSearchParams();
   const [threads, setThreads] = useState<DiscussionThread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,5 +127,22 @@ export default function DiscussionsPage() {
         onRefresh={fetchThreads}
       />
     </div>
+  );
+}
+
+export default function DiscussionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex items-center justify-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading discussions...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <DiscussionsContent />
+    </Suspense>
   );
 }

@@ -65,7 +65,7 @@ export function OTPDisplay({
       <CardHeader>
         <CardTitle className="text-center">Enter OTP</CardTitle>
         <p className="text-sm text-gray-600 text-center">
-          We've sent a 6-digit code to <strong>{email}</strong>
+                      We&apos;ve sent a 6-digit code to <strong>{email}</strong>
         </p>
       </CardHeader>
       <CardContent>
@@ -127,7 +127,7 @@ export function OTPDisplay({
               disabled={isResending}
               className="text-sm"
             >
-              {isResending ? 'Resending...' : "Didn't receive code? Resend"}
+              {isResending ? 'Resending...' : "Didn&apos;t receive code? Resend"}
             </Button>
           </div>
         </form>

@@ -53,11 +53,11 @@ export async function generateEdgeToken(
 export async function verifyEdgeToken(
   token: string,
   secret: string
-): Promise<JWTPayload> {
+): Promise<JWTPayload | null> {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) {
-      throw new Error("Invalid token format");
+      return null;
     }
 
     const [headerB64, payloadB64, signatureB64] = parts;
@@ -68,7 +68,7 @@ export async function verifyEdgeToken(
 
     // Check if token is expired
     if (payload.exp && Date.now() >= payload.exp * 1000) {
-      throw new Error("Token expired");
+      return null;
     }
 
     // Verify signature using Web Crypto API
@@ -90,12 +90,12 @@ export async function verifyEdgeToken(
     const isValid = await crypto.subtle.verify("HMAC", key, signature, data);
 
     if (!isValid) {
-      throw new Error("Invalid signature");
+      return null;
     }
 
     return payload;
-  } catch (error) {
-    throw new Error("Invalid token");
+  } catch {
+    return null;
   }
 }
 
@@ -116,7 +116,7 @@ export function decodeToken(token: string): {
     const payload = JSON.parse(atob(payloadB64));
 
     return { header, payload };
-  } catch (error) {
+  } catch {
     throw new Error("Invalid token format");
   }
 }

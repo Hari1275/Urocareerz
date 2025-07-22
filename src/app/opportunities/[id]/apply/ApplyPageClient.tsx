@@ -2,15 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ApplicationForm from "@/components/ApplicationForm";
 
 interface Opportunity {
@@ -53,28 +46,6 @@ export default function ApplyPageClient({
   opportunityId: string;
 }) {
   const router = useRouter();
-  console.log("ApplyPageClient - opportunityId:", opportunityId);
-
-  if (!opportunityId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-            <div className="text-sm text-muted-foreground">
-              Invalid opportunity ID. Please go back and try again.
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push("/opportunities")}>
-              Back to Opportunities
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,12 +141,12 @@ export default function ApplyPageClient({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
           <CardContent className="p-6">
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary-600" />
-              <p className="text-gray-600">Loading opportunity details...</p>
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading opportunity...</span>
             </div>
           </CardContent>
         </Card>
@@ -185,14 +156,16 @@ export default function ApplyPageClient({
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-            <div className="text-sm text-muted-foreground">{error}</div>
+            <CardTitle className="text-red-600">Error</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push("/opportunities")}>Back to Opportunities</Button>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">{error}</p>
+            <Button onClick={() => router.push("/opportunities")} className="w-full">
+              Back to Opportunities
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -201,21 +174,21 @@ export default function ApplyPageClient({
 
   if (!opportunity) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-gray-600">Opportunity not found</p>
-              <Button onClick={() => router.push("/opportunities")} className="mt-4">
-                Back to Opportunities
-              </Button>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Error</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">Opportunity not found</p>
+            <Button onClick={() => router.push("/opportunities")} className="w-full">
+              Back to Opportunities
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  console.log("Rendering ApplicationForm with opportunity:", opportunity);
   return <ApplicationForm opportunity={opportunity} />;
 } 
