@@ -17,6 +17,9 @@ const config: Config = {
         "2xl": "1400px",
       },
     },
+    fontFamily: {
+      sans: ['Manrope', 'sans-serif'],
+    },
     extend: {
       colors: {
         // Primary colors - Professional medical blue shades
