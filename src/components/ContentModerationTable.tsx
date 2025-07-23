@@ -25,6 +25,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { useOpportunityFilters } from "@/hooks/use-opportunity-filters";
 import { usePagination } from "@/hooks/use-pagination";
@@ -35,8 +42,19 @@ import {
   MoreHorizontal,
   Trash2,
   Eye,
+  Users,
+  Bookmark,
 } from "lucide-react";
 import React from "react";
+
+interface Mentee {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  role: string;
+  createdAt: string;
+}
 
 interface Opportunity {
   id: string;
@@ -72,6 +90,14 @@ export default function ContentModerationTable() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // New state for mentee details
+  const [applications, setApplications] = useState<Record<string, Mentee[]>>({});
+  const [savedMentees, setSavedMentees] = useState<Record<string, Mentee[]>>({});
+  const [loadingMentees, setLoadingMentees] = useState<Record<string, boolean>>({});
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [showApplications, setShowApplications] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
     fetchOpportunities();
@@ -96,6 +122,58 @@ export default function ContentModerationTable() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchApplications = async (opportunityId: string) => {
+    if (applications[opportunityId]) return; // Already loaded
+    
+    try {
+      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-applications`]: true }));
+      const response = await fetch(`/api/admin/opportunities/${opportunityId}/applications`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch applications");
+      }
+      const data = await response.json();
+      console.log('Applications data:', data); // Debug log
+      setApplications(prev => ({ ...prev, [opportunityId]: data.applications }));
+    } catch (err: any) {
+      console.error("Error fetching applications:", err);
+    } finally {
+      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-applications`]: false }));
+    }
+  };
+
+  const fetchSavedMentees = async (opportunityId: string) => {
+    if (savedMentees[opportunityId]) return; // Already loaded
+    
+    try {
+      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-saved`]: true }));
+      const response = await fetch(`/api/admin/opportunities/${opportunityId}/saved`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch saved mentees");
+      }
+      const data = await response.json();
+      console.log('Saved mentees data:', data); // Debug log
+      setSavedMentees(prev => ({ ...prev, [opportunityId]: data.savedMentees }));
+    } catch (err: any) {
+      console.error("Error fetching saved mentees:", err);
+    } finally {
+      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-saved`]: false }));
+    }
+  };
+
+  const handleShowApplications = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setShowApplications(true);
+    setShowSaved(false);
+    fetchApplications(opportunity.id);
+  };
+
+  const handleShowSaved = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setShowSaved(true);
+    setShowApplications(false);
+    fetchSavedMentees(opportunity.id);
   };
 
   const handleApproveOpportunity = async (opportunityId: string) => {
@@ -228,7 +306,7 @@ export default function ContentModerationTable() {
       <CardHeader>
         <CardTitle>Content Moderation</CardTitle>
         <div className="text-sm text-muted-foreground">
-          Review and moderate submitted opportunities. Total opportunities:{" "}
+          Review and moderate submitted opportunities with engagement metrics. Click on application/saved counts to see mentee details. Total opportunities:{" "}
           {opportunities.length}
         </div>
       </CardHeader>
@@ -278,7 +356,8 @@ export default function ContentModerationTable() {
                 <TableHead>Type</TableHead>
                 <TableHead>Author</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Applications</TableHead>
+                <TableHead className="text-center">Applications</TableHead>
+                <TableHead className="text-center">Saved</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -287,7 +366,7 @@ export default function ContentModerationTable() {
               {paginatedOpportunities.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="text-center py-8 text-gray-500"
                   >
                     No opportunities found
@@ -348,15 +427,43 @@ export default function ContentModerationTable() {
                         );
                       })()}
                     </TableCell>
-                    <TableCell>
-                      <div className="text-center">
-                        <div className="font-medium">
-                          {opportunity._count.applications}
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleShowApplications(opportunity)}
+                        className="h-auto p-2 hover:bg-blue-50"
+                        disabled={opportunity._count.applications === 0}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div className="font-semibold text-lg text-blue-600 flex items-center gap-1">
+                            {opportunity._count.applications}
+                            <Users className="h-4 w-4" />
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            applied
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {opportunity._count.savedOpportunities} saved
+                      </Button>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleShowSaved(opportunity)}
+                        className="h-auto p-2 hover:bg-green-50"
+                        disabled={opportunity._count.savedOpportunities === 0}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div className="font-semibold text-lg text-green-600 flex items-center gap-1">
+                            {opportunity._count.savedOpportunities}
+                            <Bookmark className="h-4 w-4" />
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            saved
+                          </div>
                         </div>
-                      </div>
+                      </Button>
                     </TableCell>
                     <TableCell>
                       {new Date(opportunity.createdAt).toLocaleDateString()}
@@ -493,13 +600,41 @@ export default function ContentModerationTable() {
                   </div>
 
                   <div className="flex justify-between items-center text-sm">
-                    <div className="text-center">
-                      <div className="font-medium">
-                        {opportunity._count.applications} applications
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {opportunity._count.savedOpportunities} saved
-                      </div>
+                    <div className="flex gap-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleShowApplications(opportunity)}
+                        className="h-auto p-2 hover:bg-blue-50"
+                        disabled={opportunity._count.applications === 0}
+                      >
+                        <div className="text-center">
+                          <div className="font-semibold text-lg text-blue-600 flex items-center gap-1">
+                            {opportunity._count.applications}
+                            <Users className="h-4 w-4" />
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            applied
+                          </div>
+                        </div>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleShowSaved(opportunity)}
+                        className="h-auto p-2 hover:bg-green-50"
+                        disabled={opportunity._count.savedOpportunities === 0}
+                      >
+                        <div className="text-center">
+                          <div className="font-semibold text-lg text-green-600 flex items-center gap-1">
+                            {opportunity._count.savedOpportunities}
+                            <Bookmark className="h-4 w-4" />
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            saved
+                          </div>
+                        </div>
+                      </Button>
                     </div>
                     <div className="text-gray-600">
                       {new Date(opportunity.createdAt).toLocaleDateString()}
@@ -583,6 +718,134 @@ export default function ContentModerationTable() {
           />
         </div>
       </CardContent>
+
+      {/* Mentee Details Dialog */}
+      <Dialog open={showApplications || showSaved} onOpenChange={(open) => {
+        if (!open) {
+          setShowApplications(false);
+          setShowSaved(false);
+          setSelectedOpportunity(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {showApplications && <Users className="h-5 w-5 text-blue-600" />}
+              {showSaved && <Bookmark className="h-5 w-5 text-green-600" />}
+              {selectedOpportunity?.title}
+            </DialogTitle>
+            <div className="text-sm text-gray-600">
+              {showApplications && `${selectedOpportunity?._count.applications} mentees applied`}
+              {showSaved && `${selectedOpportunity?._count.savedOpportunities} mentees saved this opportunity`}
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {loadingMentees[`${selectedOpportunity?.id}-${showApplications ? 'applications' : 'saved'}`] ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">
+                  Loading {showApplications ? 'applications' : 'saved mentees'}...
+                </span>
+              </div>
+            ) : (
+              <>
+                {showApplications && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg text-blue-600 flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Applied Mentees
+                    </h3>
+                    {!applications[selectedOpportunity?.id || ''] || applications[selectedOpportunity?.id || ''].length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">No applications yet</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {applications[selectedOpportunity?.id || ''].map((mentee) => {
+                          const displayName = mentee.firstName && mentee.lastName 
+                            ? `${mentee.firstName} ${mentee.lastName}`
+                            : mentee.firstName || mentee.lastName || 'No name provided';
+                          
+                          const formattedDate = (() => {
+                            try {
+                              return new Date(mentee.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              });
+                            } catch {
+                              return 'Unknown date';
+                            }
+                          })();
+
+                          return (
+                            <div key={mentee.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <div className="font-medium">
+                                  {displayName}
+                                </div>
+                                <div className="text-sm text-gray-500">{mentee.email}</div>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                Applied: {formattedDate}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {showSaved && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg text-green-600 flex items-center gap-2">
+                      <Bookmark className="h-5 w-5" />
+                      Saved by Mentees
+                    </h3>
+                    {!savedMentees[selectedOpportunity?.id || ''] || savedMentees[selectedOpportunity?.id || ''].length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">No saves yet</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {savedMentees[selectedOpportunity?.id || ''].map((mentee) => {
+                          const displayName = mentee.firstName && mentee.lastName 
+                            ? `${mentee.firstName} ${mentee.lastName}`
+                            : mentee.firstName || mentee.lastName || 'No name provided';
+                          
+                          const formattedDate = (() => {
+                            try {
+                              return new Date(mentee.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              });
+                            } catch {
+                              return 'Unknown date';
+                            }
+                          })();
+
+                          return (
+                            <div key={mentee.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <div className="font-medium">
+                                  {displayName}
+                                </div>
+                                <div className="text-sm text-gray-500">{mentee.email}</div>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                Saved: {formattedDate}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

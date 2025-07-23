@@ -17,7 +17,6 @@ import {
   Briefcase,
   Calendar,
   Clock,
-  DollarSign,
   User,
   Bookmark,
   BookmarkCheck,
@@ -100,25 +99,22 @@ export default function OpportunityDetailPage() {
         if (!opportunityResponse.ok) {
           if (opportunityResponse.status === 404) {
             setError("Opportunity not found");
-            return;
+          } else {
+            throw new Error("Failed to fetch opportunity details");
           }
-          throw new Error("Failed to fetch opportunity details");
+        } else {
+          const opportunityData = await opportunityResponse.json();
+          setOpportunity(opportunityData.opportunity);
         }
-
-        const opportunityData = await opportunityResponse.json();
-        setOpportunity(opportunityData.opportunity);
 
         // Check if opportunity is saved
-        const savedResponse = await fetch("/api/saved-opportunities");
+        const savedResponse = await fetch(`/api/saved-opportunities`);
         if (savedResponse.ok) {
           const savedData = await savedResponse.json();
-          const savedOpportunities = savedData.savedOpportunities || [];
-          setIsSaved(
-            savedOpportunities.some((saved: any) => saved.opportunityId === id)
-          );
+          setIsSaved(savedData.savedOpportunities.some((saved: any) => saved.opportunityId === id));
         }
       } catch (err: any) {
-        setError(err.message);
+        setError(err.message || "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -130,12 +126,10 @@ export default function OpportunityDetailPage() {
   const handleSaveOpportunity = async () => {
     if (!opportunity) return;
 
+    setSaving(true);
     try {
-      setSaving(true);
-      const method = isSaved ? "DELETE" : "POST";
-
       const response = await fetch("/api/saved-opportunities", {
-        method,
+        method: isSaved ? "DELETE" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -146,7 +140,7 @@ export default function OpportunityDetailPage() {
         setIsSaved(!isSaved);
       }
     } catch (err) {
-      console.error("Failed to save opportunity:", err);
+      console.error("Error saving opportunity:", err);
     } finally {
       setSaving(false);
     }
@@ -159,18 +153,13 @@ export default function OpportunityDetailPage() {
   };
 
   const getExperienceLevelLabel = (level: string) => {
-    switch (level?.toLowerCase()) {
-      case "entry":
-        return "Entry Level";
-      case "mid":
-        return "Mid-Career";
-      case "senior":
-        return "Senior Level";
-      case "expert":
-        return "Expert Level";
-      default:
-        return level || "Not specified";
-    }
+    const labels: { [key: string]: string } = {
+      BEGINNER: "Beginner",
+      INTERMEDIATE: "Intermediate",
+      ADVANCED: "Advanced",
+      EXPERT: "Expert",
+    };
+    return labels[level] || level;
   };
 
   const formatDate = (dateString: string) => {
@@ -183,15 +172,22 @@ export default function OpportunityDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
-        <div className="max-w-4xl mx-auto py-8 px-4">
-          <div className="animate-pulse">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="max-w-6xl mx-auto py-8 px-4">
+          <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-            <div className="space-y-4">
-              <div className="h-64 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="h-64 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+              <div className="space-y-6">
+                <div className="h-48 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -201,136 +197,143 @@ export default function OpportunityDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
-        <div className="max-w-4xl mx-auto py-8 px-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-red-500">Error</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{error}</p>
-            </CardContent>
-            <CardContent>
-              <Button onClick={() => router.push("/opportunities")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Opportunities
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-red-500">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={() => router.push("/opportunities")} className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Opportunities
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (!opportunity) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
-        <div className="max-w-4xl mx-auto py-8 px-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Opportunity Not Found</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>
-                The opportunity you&apos;re looking for doesn&apos;t exist or has been
-                removed.
-              </p>
-            </CardContent>
-            <CardContent>
-              <Button onClick={() => router.push("/opportunities")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Opportunities
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader>
+            <CardTitle>Opportunity Not Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              The opportunity you&apos;re looking for doesn&apos;t exist or has been
+              removed.
+            </p>
+            <Button onClick={() => router.push("/opportunities")} className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Opportunities
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
-      <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="max-w-6xl mx-auto py-8 px-4">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-8">
           <Button
             variant="ghost"
             onClick={() => router.push("/opportunities")}
-            className="mb-4"
+            className="mb-6 hover:bg-blue-100"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Opportunities
           </Button>
 
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {opportunity.title}
-              </h1>
-              <div className="flex items-center gap-4 text-gray-600 mb-4">
-                {opportunity.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>{opportunity.location}</span>
+          <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    {getTypeBadge(opportunity.opportunityType.name) && (
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs font-medium bg-green-100 text-green-800 border-green-200"
+                      >
+                        {getTypeBadge(opportunity.opportunityType.name)?.name || opportunity.opportunityType.name}
+                      </Badge>
+                    )}
+                    {opportunity.status === "PENDING" && (
+                      <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                        Pending Approval
+                      </Badge>
+                    )}
                   </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Briefcase className="h-4 w-4" />
-                  <span>
-                    {(() => {
-                      const typeInfo = getTypeBadge(
-                        opportunity.opportunityType.name
-                      );
-                      return typeInfo
-                        ? typeInfo.name
-                        : opportunity.opportunityType.name;
-                    })()}
-                  </span>
+                  
+                  <CardTitle className="text-3xl font-bold text-gray-900 mb-3">
+                    {opportunity.title}
+                  </CardTitle>
+                  
+                  <div className="flex flex-wrap items-center gap-4 text-gray-600 text-sm">
+                    {opportunity.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>{opportunity.location}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Posted {formatDate(opportunity.createdAt)}</span>
+                    </div>
+                    {opportunity.experienceLevel && (
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        <span>{getExperienceLevelLabel(opportunity.experienceLevel)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Posted {formatDate(opportunity.createdAt)}</span>
+
+                <div className="flex gap-3 ml-6">
+                  <Button
+                    variant="outline"
+                    onClick={handleSaveOpportunity}
+                    disabled={saving}
+                    className="hover:bg-blue-50 border-blue-200 text-blue-700"
+                  >
+                    {isSaved ? (
+                      <>
+                        <BookmarkCheck className="h-4 w-4 mr-2" />
+                        Saved
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark className="h-4 w-4 mr-2" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                  <Button onClick={handleApply} className="bg-blue-600 hover:bg-blue-700">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Apply Now
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handleSaveOpportunity}
-                disabled={saving}
-              >
-                {isSaved ? (
-                  <>
-                    <BookmarkCheck className="h-4 w-4 mr-2" />
-                    Saved
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="h-4 w-4 mr-2" />
-                    Save
-                  </>
-                )}
-              </Button>
-              <Button onClick={handleApply} className="btn-primary">
-                <FileText className="h-4 w-4 mr-2" />
-                Apply Now
-              </Button>
-            </div>
-          </div>
+            </CardHeader>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Description */}
-            <Card>
+            <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Description</CardTitle>
+                <CardTitle className="text-xl font-semibold text-gray-900">Description</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">
+                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {opportunity.description}
                   </p>
                 </div>
@@ -339,13 +342,13 @@ export default function OpportunityDetailPage() {
 
             {/* Requirements */}
             {opportunity.requirements && (
-              <Card>
+              <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Requirements</CardTitle>
+                  <CardTitle className="text-xl font-semibold text-gray-900">Requirements</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="text-gray-700 whitespace-pre-wrap">
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {opportunity.requirements}
                     </p>
                   </div>
@@ -355,13 +358,13 @@ export default function OpportunityDetailPage() {
 
             {/* Benefits */}
             {opportunity.benefits && (
-              <Card>
+              <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Benefits</CardTitle>
+                  <CardTitle className="text-xl font-semibold text-gray-900">Benefits</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="text-gray-700 whitespace-pre-wrap">
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {opportunity.benefits}
                     </p>
                   </div>
@@ -373,16 +376,16 @@ export default function OpportunityDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Info */}
-            <Card>
+            <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Quick Info</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">Quick Info</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {opportunity.experienceLevel && (
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-gray-400" />
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <User className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium">Experience Level</p>
+                      <p className="text-sm font-medium text-gray-900">Experience Level</p>
                       <p className="text-sm text-gray-600">
                         {getExperienceLevelLabel(opportunity.experienceLevel)}
                       </p>
@@ -391,10 +394,10 @@ export default function OpportunityDetailPage() {
                 )}
 
                 {opportunity.duration && (
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-gray-400" />
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Clock className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium">Duration</p>
+                      <p className="text-sm font-medium text-gray-900">Duration</p>
                       <p className="text-sm text-gray-600">
                         {opportunity.duration}
                       </p>
@@ -403,10 +406,10 @@ export default function OpportunityDetailPage() {
                 )}
 
                 {opportunity.compensation && (
-                  <div className="flex items-center gap-3">
-                    <DollarSign className="h-5 w-5 text-gray-400" />
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="h-5 w-5 text-blue-600 font-bold text-lg">₹</div>
                     <div>
-                      <p className="text-sm font-medium">Compensation</p>
+                      <p className="text-sm font-medium text-gray-900">Compensation</p>
                       <p className="text-sm text-gray-600">
                         {opportunity.compensation}
                       </p>
@@ -415,10 +418,10 @@ export default function OpportunityDetailPage() {
                 )}
 
                 {opportunity.applicationDeadline && (
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Calendar className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-medium text-gray-900">
                         Application Deadline
                       </p>
                       <p className="text-sm text-gray-600">
@@ -431,17 +434,17 @@ export default function OpportunityDetailPage() {
             </Card>
 
             {/* Mentor Info */}
-            <Card>
+            <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Posted by</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">Posted by</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
-                    <User className="h-6 w-6 text-primary-600" />
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium">
+                    <p className="font-semibold text-gray-900">
                       Dr. {opportunity.mentor.firstName}{" "}
                       {opportunity.mentor.lastName}
                     </p>
@@ -451,15 +454,14 @@ export default function OpportunityDetailPage() {
                       </p>
                     )}
                     {opportunity.mentor.profile?.workplace && (
-                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                      <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
                         <Building className="h-3 w-3" />
                         {opportunity.mentor.profile.workplace}
                       </p>
                     )}
                     {opportunity.mentor.profile?.yearsOfExperience && (
-                      <p className="text-sm text-gray-600">
-                        {opportunity.mentor.profile.yearsOfExperience} years
-                        experience
+                      <p className="text-sm text-gray-600 mt-1">
+                        {opportunity.mentor.profile.yearsOfExperience} years experience
                       </p>
                     )}
                   </div>
@@ -468,16 +470,16 @@ export default function OpportunityDetailPage() {
             </Card>
 
             {/* Apply CTA */}
-            <Card className="bg-primary-50 border-primary-200">
+            <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <h3 className="font-semibold text-primary-900 mb-2">
+                  <h3 className="font-semibold text-blue-900 mb-2">
                     Ready to Apply?
                   </h3>
-                  <p className="text-sm text-primary-700 mb-4">
+                  <p className="text-sm text-blue-700 mb-4">
                     Submit your application for this opportunity
                   </p>
-                  <Button onClick={handleApply} className="w-full btn-primary">
+                  <Button onClick={handleApply} className="w-full bg-blue-600 hover:bg-blue-700">
                     <FileText className="h-4 w-4 mr-2" />
                     Apply Now
                   </Button>

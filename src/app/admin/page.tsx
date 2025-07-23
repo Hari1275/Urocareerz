@@ -702,24 +702,45 @@ export default function AdminDashboardPage() {
                   {/* Recent Activity */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
-                      <p className="text-sm text-muted-foreground">Latest platform actions and events</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Recent Activity</CardTitle>
+                          <p className="text-sm text-muted-foreground">Platform actions and events from the last 7 days</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setActiveTab("audit-logs")}
+                          className="text-xs"
+                        >
+                          View All
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         {analyticsData.recentActivity.length > 0 ? (
-                          analyticsData.recentActivity.map((activity) => (
-                            <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <Badge className={getActionColor(activity.action)}>{activity.action.replace(/_/g, " ")}</Badge>
-                                <div>
-                                  <p className="text-sm font-medium">{activity.user.firstName && activity.user.lastName ? `${activity.user.firstName} ${activity.user.lastName}` : activity.user.email}</p>
-                                  <p className="text-xs text-gray-500">{activity.entityType} • {activity.user.role}</p>
+                          <>
+                            {analyticsData.recentActivity.slice(0, 10).map((activity) => (
+                              <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <Badge className={getActionColor(activity.action)}>{activity.action.replace(/_/g, " ")}</Badge>
+                                  <div>
+                                    <p className="text-sm font-medium">{activity.user.firstName && activity.user.lastName ? `${activity.user.firstName} ${activity.user.lastName}` : activity.user.email}</p>
+                                    <p className="text-xs text-gray-500">{activity.entityType} • {activity.user.role}</p>
+                                  </div>
                                 </div>
+                                <span className="text-xs text-gray-500">{formatDate(activity.createdAt)}</span>
                               </div>
-                              <span className="text-xs text-gray-500">{formatDate(activity.createdAt)}</span>
-                            </div>
-                          ))
+                            ))}
+                            {analyticsData.recentActivity.length > 10 && (
+                              <div className="text-center pt-2">
+                                <p className="text-xs text-gray-500">
+                                  Showing 10 of {analyticsData.recentActivity.length} recent activities
+                                </p>
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <p className="text-gray-500 text-center py-4">No recent activity</p>
                         )}

@@ -333,54 +333,104 @@ export default function ProfilePage() {
         {/* Profile Content */}
         <div className="max-w-4xl mx-auto">
           {isEditing ? (
-            <ProfileForm
-              profile={combinedProfile}
-              onSubmit={handleSubmitProfile}
-              isSubmitting={isSubmitting}
-            />
+            <div className="space-y-6">
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-100 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-400 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
+                </div>
+                <ProfileForm
+                  profile={combinedProfile}
+                  onSubmit={handleSubmitProfile}
+                  isSubmitting={isSubmitting}
+                  onCancel={handleCancelEdit}
+                />
+              </div>
+            </div>
           ) : (
-            <ProfileDisplay
-              profile={combinedProfile}
-              onEdit={() => setIsEditing(true)}
-            />
-          )}
-
-          {/* Account Security Section */}
-          {!isEditing && (
-            <Card className="mt-8 bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-gray-900">Account Security</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-gray-100">
-                  <div>
-                    <h3 className="font-medium text-gray-900">Email Address</h3>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+            <div className="space-y-6">
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-green-400 to-blue-400 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Profile Information</h2>
                   </div>
-                  <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200">
-                    Change Email
+                  <Button 
+                    onClick={() => setIsEditing(true)}
+                    className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                  >
+                    Edit Profile
                   </Button>
                 </div>
+                <ProfileDisplay
+                  profile={combinedProfile}
+                  onEdit={() => setIsEditing(true)}
+                />
+              </div>
 
-                <div className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-gray-100">
-                  <div>
-                    <h3 className="font-medium text-gray-900">Account Role</h3>
-                    <p className="text-sm text-gray-600">
-                      {user.role === "MENTOR"
-                        ? "Mentor"
-                        : user.role === "MENTEE"
-                        ? "Mentee"
-                        : user.role === "ADMIN"
-                        ? "Administrator"
-                        : user.role}
-                    </p>
+              {/* Account Security Section */}
+              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-100 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-400 to-pink-400 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                   </div>
-                  <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200">
-                    Contact Support
-                  </Button>
+                  <h2 className="text-xl font-bold text-gray-900">Account Security</h2>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-gray-100 hover:bg-white/70 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Email Address</h3>
+                        <p className="text-sm text-gray-600">{user.email}</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200 text-gray-400">
+                      Change Email
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-gray-100 hover:bg-white/70 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Account Role</h3>
+                        <p className="text-sm text-gray-600">
+                          {user.role === "MENTOR"
+                            ? "Mentor"
+                            : user.role === "MENTEE"
+                            ? "Mentee"
+                            : user.role === "ADMIN"
+                            ? "Administrator"
+                            : user.role}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200 text-gray-400">
+                      Contact Support
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </main>

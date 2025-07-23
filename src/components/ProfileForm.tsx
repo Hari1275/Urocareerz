@@ -29,12 +29,14 @@ interface ProfileFormProps {
   profile: any;
   onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
+  onCancel: () => void;
 }
 
 export default function ProfileForm({
   profile,
   onSubmit,
   isSubmitting,
+  onCancel,
 }: ProfileFormProps) {
   const [formData, setFormData] = useState({
     bio: "",
@@ -451,277 +453,331 @@ export default function ProfileForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Avatar Upload Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Profile Picture
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FileUpload
-            type="avatar"
-            onFileSelect={setSelectedAvatarFile}
-            onFileUpload={handleAvatarUpload}
-            onFileDelete={handleAvatarDelete}
-            selectedFile={selectedAvatarFile}
-            uploadedFileUrl={getAvatarUrl()}
-            uploadedFileName={formData.avatarFileName}
-            isUploading={isUploadingAvatar}
-            isDeleting={isDeletingAvatar}
-            maxSize={2}
-            className="max-w-md"
-          />
-        </CardContent>
-      </Card>
-
-      {/* Resume Upload Section - Mentee Only */}
-      {profile?.user?.role === "MENTEE" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
-              Resume
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FileUpload
-              type="resume"
-              onFileSelect={setSelectedResumeFile}
-              onFileUpload={handleResumeUpload}
-              onFileDelete={handleResumeDelete}
-              selectedFile={selectedResumeFile}
-              uploadedFileUrl={getResumeUrl()}
-              uploadedFileName={formData.resumeFileName}
-              isUploading={isUploadingResume}
-              isDeleting={isDeletingResume}
-              maxSize={5}
-              className="max-w-md"
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => handleInputChange("bio", e.target.value)}
-                placeholder="Tell us about yourself..."
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) =>
-                    handleInputChange("location", e.target.value)
-                  }
-                  placeholder="City, Country"
-                  className="pl-10"
-                />
-              </div>
-            </div>
+    <div className="space-y-6">
+      {/* Basic Information Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+            <User className="w-4 h-4 text-blue-600" />
           </div>
-        </CardContent>
-      </Card>
+          <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
+            <Input
+              id="firstName"
+              value={profile?.user?.firstName || ""}
+              disabled
+              className="input-primary h-11 bg-gray-50"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
+            <Input
+              id="lastName"
+              value={profile?.user?.lastName || ""}
+              disabled
+              className="input-primary h-11 bg-gray-50"
+            />
+          </div>
+        </div>
 
-      {/* Mentee-specific fields */}
-      {profile?.user?.role === "MENTEE" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Mentee Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="education">Education</Label>
-              <Input
-                id="education"
-                value={formData.education}
-                onChange={(e) => handleInputChange("education", e.target.value)}
-                placeholder="Your educational background"
-              />
+        <div className="space-y-2">
+          <Label htmlFor="bio" className="text-sm font-medium text-gray-700">Bio</Label>
+          <Textarea
+            id="bio"
+            value={formData.bio}
+            onChange={(e) => handleInputChange("bio", e.target.value)}
+            placeholder="Tell us about yourself..."
+            className="input-primary min-h-[100px] resize-none"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => handleInputChange("location", e.target.value)}
+              placeholder="City, Country"
+              className="input-primary h-11 pl-10"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Role-specific Information */}
+      {profile?.user?.role === "MENTEE" ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-green-600" />
             </div>
+            <h3 className="text-lg font-semibold text-gray-900">Education & Interests</h3>
+          </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="education" className="text-sm font-medium text-gray-700">Education</Label>
+            <Input
+              id="education"
+              value={formData.education}
+              onChange={(e) => handleInputChange("education", e.target.value)}
+              placeholder="Your educational background"
+              className="input-primary h-11"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="purposeOfRegistration" className="text-sm font-medium text-gray-700">Purpose of Registration</Label>
+            <Textarea
+              id="purposeOfRegistration"
+              value={formData.purposeOfRegistration}
+              onChange={(e) => handleInputChange("purposeOfRegistration", e.target.value)}
+              placeholder="Why are you joining our platform?"
+              className="input-primary min-h-[100px] resize-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">Interests</Label>
             <div className="space-y-2">
-              <Label>Interests</Label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {formData.interests.map((interest, index) => (
-                  <Badge key={index} variant="secondary" className="gap-1">
-                    {interest}
-                    <button
-                      type="button"
-                      onClick={() => handleInterestRemove(interest)}
-                      className="ml-1 hover:text-red-500"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                ))}
-              </div>
               <div className="flex gap-2">
                 <Input
                   value={newInterest}
                   onChange={(e) => setNewInterest(e.target.value)}
                   placeholder="Add an interest"
-                  onKeyPress={(e: React.KeyboardEvent) =>
-                    e.key === "Enter" &&
-                    (e.preventDefault(), handleInterestAdd())
-                  }
+                  className="input-primary h-11 flex-1"
+                  onKeyPress={(e) => e.key === "Enter" && handleInterestAdd()}
                 />
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={handleInterestAdd}
+                  disabled={!newInterest.trim()}
+                  className="bg-gradient-to-tr from-green-600 to-blue-600 text-white font-semibold shadow-md hover:from-green-700 hover:to-blue-700 h-11 px-4"
                 >
                   Add
                 </Button>
               </div>
+              {formData.interests.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.interests.map((interest, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    >
+                      {interest}
+                      <button
+                        type="button"
+                        onClick={() => handleInterestRemove(interest)}
+                        className="ml-1 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+              <Award className="w-4 h-4 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Professional Information</h3>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="purposeOfRegistration">
-                Purpose of Registration
-              </Label>
-              <Textarea
-                id="purposeOfRegistration"
-                value={formData.purposeOfRegistration}
-                onChange={(e) =>
-                  handleInputChange("purposeOfRegistration", e.target.value)
-                }
-                placeholder="Why are you seeking mentorship?"
-                rows={3}
+              <Label htmlFor="specialty" className="text-sm font-medium text-gray-700">Specialty</Label>
+              <Input
+                id="specialty"
+                value={formData.specialty}
+                onChange={(e) => handleInputChange("specialty", e.target.value)}
+                placeholder="Your specialty"
+                className="input-primary h-11"
               />
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Mentor-specific fields */}
-      {profile?.user?.role === "MENTOR" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              Mentor Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="specialty">Specialty</Label>
-                <Input
-                  id="specialty"
-                  value={formData.specialty}
-                  onChange={(e) =>
-                    handleInputChange("specialty", e.target.value)
-                  }
-                  placeholder="Your main specialty"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subSpecialty">Sub-specialty</Label>
-                <Input
-                  id="subSpecialty"
-                  value={formData.subSpecialty}
-                  onChange={(e) =>
-                    handleInputChange("subSpecialty", e.target.value)
-                  }
-                  placeholder="Your sub-specialty (optional)"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="workplace">Workplace</Label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="workplace"
-                    value={formData.workplace}
-                    onChange={(e) =>
-                      handleInputChange("workplace", e.target.value)
-                    }
-                    placeholder="Company/Institution"
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="yearsOfExperience">Years of Experience</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="yearsOfExperience"
-                    type="number"
-                    value={formData.yearsOfExperience}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleInputChange("yearsOfExperience", e.target.value)
-                    }
-                    placeholder="Number of years"
-                    className="pl-10"
-                    min="0"
-                    max="50"
-                  />
-                </div>
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label htmlFor="availabilityStatus">Availability Status</Label>
-              <Select
-                value={formData.availabilityStatus}
-                onValueChange={(value) =>
-                  handleInputChange("availabilityStatus", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select availability status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Available">Available</SelectItem>
-                  <SelectItem value="Busy">Busy</SelectItem>
-                  <SelectItem value="Unavailable">Unavailable</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="subSpecialty" className="text-sm font-medium text-gray-700">Sub-specialty</Label>
+              <Input
+                id="subSpecialty"
+                value={formData.subSpecialty}
+                onChange={(e) => handleInputChange("subSpecialty", e.target.value)}
+                placeholder="Your sub-specialty"
+                className="input-primary h-11"
+              />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="workplace" className="text-sm font-medium text-gray-700">Workplace</Label>
+              <div className="relative">
+                <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  id="workplace"
+                  value={formData.workplace}
+                  onChange={(e) => handleInputChange("workplace", e.target.value)}
+                  placeholder="Hospital/Institution"
+                  className="input-primary h-11 pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="yearsOfExperience" className="text-sm font-medium text-gray-700">Years of Experience</Label>
+              <Input
+                id="yearsOfExperience"
+                type="number"
+                value={formData.yearsOfExperience}
+                onChange={(e) => handleInputChange("yearsOfExperience", e.target.value)}
+                placeholder="Number of years"
+                className="input-primary h-11"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="availabilityStatus" className="text-sm font-medium text-gray-700">Availability Status</Label>
+            <Select
+              value={formData.availabilityStatus}
+              onValueChange={(value) => handleInputChange("availabilityStatus", value)}
+            >
+              <SelectTrigger className="input-primary h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Available">Available</SelectItem>
+                <SelectItem value="Limited">Limited</SelectItem>
+                <SelectItem value="Unavailable">Unavailable</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       )}
 
-      {/* Submit Button */}
-      <div className="flex justify-end">
+      {/* File Upload Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
+            <Target className="w-4 h-4 text-orange-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">Files & Documents</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Avatar Upload */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-gray-700">Profile Picture</Label>
+            <div className="space-y-3">
+              {getAvatarUrl() && (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-green-800">Avatar uploaded</p>
+                    <p className="text-xs text-green-600">{formData.avatarFileName || "Profile picture"}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAvatarDelete}
+                    disabled={isDeletingAvatar}
+                    className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                  >
+                    {isDeletingAvatar ? "Deleting..." : "Remove"}
+                  </Button>
+                </div>
+              )}
+              <FileUpload
+                onFileSelect={setSelectedAvatarFile}
+                onFileUpload={handleAvatarUpload}
+                selectedFile={selectedAvatarFile}
+                uploadedFileUrl={getAvatarUrl()}
+                uploadedFileName={formData.avatarFileName}
+                isUploading={isUploadingAvatar}
+                isDeleting={isDeletingAvatar}
+                accept="image/*"
+                maxSize={5}
+                type="avatar"
+              />
+            </div>
+          </div>
+
+          {/* Resume Upload */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-gray-700">Resume/CV</Label>
+            <div className="space-y-3">
+              {getResumeUrl() && (
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800">Resume uploaded</p>
+                    <p className="text-xs text-blue-600">{formData.resumeFileName || "Resume document"}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResumeDelete}
+                    disabled={isDeletingResume}
+                    className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                  >
+                    {isDeletingResume ? "Deleting..." : "Remove"}
+                  </Button>
+                </div>
+              )}
+              <FileUpload
+                onFileSelect={setSelectedResumeFile}
+                onFileUpload={handleResumeUpload}
+                selectedFile={selectedResumeFile}
+                uploadedFileUrl={getResumeUrl()}
+                uploadedFileName={formData.resumeFileName}
+                isUploading={isUploadingResume}
+                isDeleting={isDeletingResume}
+                accept=".pdf,.doc,.docx"
+                maxSize={10}
+                type="resume"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
         <Button
           type="submit"
-          disabled={
-            isSubmitting ||
-            !!selectedAvatarFile ||
-            !!selectedResumeFile ||
-            isUploadingAvatar ||
-            isUploadingResume
-          }
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="flex-1 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600 h-12"
         >
           {isSubmitting ? "Saving..." : "Save Profile"}
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </Button>
       </div>
-    </form>
+    </div>
   );
 }

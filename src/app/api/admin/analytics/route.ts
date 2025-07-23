@@ -155,9 +155,9 @@ async function getAnalytics(request: NextRequest) {
         },
       }),
       
-      // Recent activity (last 10 audit logs)
+      // Recent activity (last 50 audit logs for better data consistency)
       prisma.auditLog.findMany({
-        take: 10,
+        take: 50,
         include: {
           user: {
             select: {
@@ -171,6 +171,12 @@ async function getAnalytics(request: NextRequest) {
         },
         orderBy: {
           createdAt: 'desc',
+        },
+        where: {
+          // Show activity from the last 7 days for more relevant recent data
+          createdAt: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+          },
         },
       }),
     ]);
