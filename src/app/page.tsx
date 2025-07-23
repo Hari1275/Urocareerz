@@ -29,18 +29,18 @@ export default function Home() {
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xl font-extrabold bg-gradient-to-tr from-blue-700 to-indigo-600 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
           </Link>
+          
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
             <Link href="/login" className="text-gray-700 hover:text-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-all">Log in</Link>
             <Link href="/register" className="premium-button bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-800 hover:to-indigo-700 text-white shadow-md shadow-blue-500/10 text-sm">Get Started</Link>
           </div>
           
-          {/* Mobile menu button */}
+          {/* Mobile Navigation */}
           <div className="md:hidden">
-            <button className="p-2 rounded-md text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            <Link href="/register" className="premium-button bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-800 hover:to-indigo-700 text-white shadow-md shadow-blue-500/10 text-sm px-4 py-2 rounded-lg">
+              Join Now
+            </Link>
           </div>
         </div>
       </nav>
