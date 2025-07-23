@@ -19,6 +19,10 @@ export async function POST(request: NextRequest) {
     }
 
     const decoded = await verifyEdgeToken(token, secret);
+    
+    if (!decoded) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
 
     // Get user and verify they are a mentor
     const user = await prisma.user.findUnique({
@@ -117,6 +121,10 @@ export async function GET(request: NextRequest) {
     }
 
     const decoded = await verifyEdgeToken(token, secret);
+    
+    if (!decoded) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
 
     // Get user
     const user = await prisma.user.findUnique({

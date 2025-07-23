@@ -16,7 +16,6 @@ async function getAuditLogs(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const action = searchParams.get("action");
     const entityType = searchParams.get("entityType");
-    const userId = searchParams.get("userId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
@@ -32,10 +31,6 @@ async function getAuditLogs(request: NextRequest) {
     
     if (entityType) {
       where.entityType = entityType;
-    }
-    
-    if (userId) {
-      where.userId = userId;
     }
     
     if (startDate || endDate) {

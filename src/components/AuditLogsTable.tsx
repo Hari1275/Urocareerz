@@ -7,9 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, Filter, RefreshCw } from "lucide-react";
+import { Filter, RefreshCw, Calendar } from "lucide-react";
 import { usePagination } from "@/hooks/use-pagination";
 import { TablePagination } from "./TablePagination";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface AuditLog {
   id: string;
@@ -29,18 +33,10 @@ interface AuditLog {
   };
 }
 
-interface Pagination {
-  page: number;
-  limit: number;
-  totalCount: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
+
 
 export default function AuditLogsTable() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -48,13 +44,15 @@ export default function AuditLogsTable() {
   const [filters, setFilters] = useState({
     action: "all",
     entityType: "all",
-    userId: "",
-    startDate: "",
-    endDate: "",
+    startDate: null as Date | null,
+    endDate: null as Date | null,
   });
   
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(50);
+  // Use the proper pagination hook
+  const pagination = usePagination({
+    initialPage: 1,
+    initialPageSize: 50,
+  });
 
   const fetchAuditLogs = async (page: number = 1) => {
     setLoading(true);
@@ -63,12 +61,11 @@ export default function AuditLogsTable() {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: pageSize.toString(),
+        limit: pagination.state.pageSize.toString(),
         ...(filters.action && filters.action !== "all" && { action: filters.action }),
         ...(filters.entityType && filters.entityType !== "all" && { entityType: filters.entityType }),
-        ...(filters.userId && { userId: filters.userId }),
-        ...(filters.startDate && { startDate: filters.startDate }),
-        ...(filters.endDate && { endDate: filters.endDate }),
+        ...(filters.startDate && { startDate: filters.startDate.toISOString().split('T')[0] }),
+        ...(filters.endDate && { endDate: filters.endDate.toISOString().split('T')[0] }),
       });
 
       const response = await fetch(`/api/admin/audit-logs?${params}`);
@@ -79,7 +76,8 @@ export default function AuditLogsTable() {
 
       const data = await response.json();
       setAuditLogs(data.auditLogs);
-      setPagination(data.pagination);
+      pagination.actions.setTotalItems(data.pagination.totalCount);
+      pagination.actions.setCurrentPage(data.pagination.page);
     } catch (err) {
       console.error("Error fetching audit logs:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -89,23 +87,29 @@ export default function AuditLogsTable() {
   };
 
   useEffect(() => {
-    fetchAuditLogs(currentPage);
-  }, [currentPage, filters]);
+    fetchAuditLogs(pagination.state.currentPage);
+  }, [pagination.state.currentPage, filters]);
 
-  const handleFilterChange = (key: string, value: string) => {
+  // Handle page size changes
+  useEffect(() => {
+    if (pagination.state.pageSize !== 50) { // Only refetch if page size changed from default
+      fetchAuditLogs(1); // Reset to first page when page size changes
+    }
+  }, [pagination.state.pageSize]);
+
+  const handleFilterChange = (key: string, value: string | Date | null) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setCurrentPage(1); // Reset to first page when filters change
+    pagination.actions.setCurrentPage(1); // Reset to first page when filters change
   };
 
   const clearFilters = () => {
     setFilters({
       action: "all",
       entityType: "all",
-      userId: "",
-      startDate: "",
-      endDate: "",
+      startDate: null,
+      endDate: null,
     });
-    setCurrentPage(1);
+    pagination.actions.setCurrentPage(1);
   };
 
   const getActionColor = (action: string) => {
@@ -162,7 +166,7 @@ export default function AuditLogsTable() {
         <CardContent>
           <div className="text-center py-8">
             <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={() => fetchAuditLogs(currentPage)}>
+            <Button onClick={() => fetchAuditLogs(pagination.state.currentPage)}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -180,7 +184,7 @@ export default function AuditLogsTable() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchAuditLogs(currentPage)}
+            onClick={() => fetchAuditLogs(pagination.state.currentPage)}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -195,7 +199,7 @@ export default function AuditLogsTable() {
             <Filter className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">Filters</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <Select
               value={filters.action}
               onValueChange={(value) => handleFilterChange("action", value)}
@@ -234,23 +238,51 @@ export default function AuditLogsTable() {
                 <SelectItem value="Discussion">Discussion</SelectItem>
               </SelectContent>
             </Select>
-            <Input
-              placeholder="User ID"
-              value={filters.userId}
-              onChange={(e) => handleFilterChange("userId", e.target.value)}
-            />
-            <Input
-              type="date"
-              placeholder="Start Date"
-              value={filters.startDate}
-              onChange={(e) => handleFilterChange("startDate", e.target.value)}
-            />
-            <Input
-              type="date"
-              placeholder="End Date"
-              value={filters.endDate}
-              onChange={(e) => handleFilterChange("endDate", e.target.value)}
-            />
+            
+            {/* Start Date Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !filters.startDate && "text-muted-foreground"
+                  )}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {filters.startDate ? format(filters.startDate, "PPP") : <span>Start Date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  selected={filters.startDate || undefined}
+                  onSelect={(date) => handleFilterChange("startDate", date || null)}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* End Date Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !filters.endDate && "text-muted-foreground"
+                  )}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {filters.endDate ? format(filters.endDate, "PPP") : <span>End Date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  selected={filters.endDate || undefined}
+                  onSelect={(date) => handleFilterChange("endDate", date || null)}
+                />
+              </PopoverContent>
+            </Popover>
+
             <Button
               variant="outline"
               onClick={clearFilters}
@@ -337,41 +369,13 @@ export default function AuditLogsTable() {
         </div>
 
         {/* Pagination */}
-        {pagination && (
-          <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-gray-500">
-              Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
-              {Math.min(pagination.page * pagination.limit, pagination.totalCount)} of{" "}
-              {pagination.totalCount} results
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={!pagination.hasPrevPage}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              
-              <span className="text-sm">
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={!pagination.hasNextPage}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+        <TablePagination 
+          pagination={pagination}
+          pageSizeOptions={[10, 25, 50, 100]}
+          showPageSizeSelector={true}
+          showPageInfo={true}
+          className="mt-6"
+        />
       </CardContent>
     </Card>
   );
