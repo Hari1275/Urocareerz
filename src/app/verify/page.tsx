@@ -46,15 +46,14 @@ function VerifyContent() {
         body: JSON.stringify({ userId, otp }),
       });
 
-      const data = await response.json();
+      const data = await response.json(); // Read once
 
-      if (!response.ok) {
+      if (response.ok) {
+        // Redirect to dashboard (which will handle role-based routing)
+        router.push("/dashboard");
+      } else {
         throw new Error(data.error || "Verification failed");
       }
-
-      // If verification is successful, redirect to dashboard
-      router.push("/dashboard");
-      router.refresh();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -170,7 +169,7 @@ function VerifyContent() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 border-t pt-4">
-            <p className="text-sm text-gray-500">Didn&apos;t receive a code?</p>
+            <p className="text-sm text-gray-500">Didn't receive a code?</p>
             <Button
               variant="link"
               className="p-0 h-auto text-primary-600"

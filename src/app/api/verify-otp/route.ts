@@ -98,6 +98,17 @@ export async function POST(req: NextRequest) {
       maxAge: 24 * 60 * 60, // 24 hours for development
     });
 
+    // Set a 'name' cookie for instant display in the frontend header
+    response.cookies.set({
+      name: 'name',
+      value: user.firstName || user.email,
+      httpOnly: false,
+      secure: false, // Set to true in production
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60, // 24 hours for development
+    });
+
     // Also set a non-httpOnly cookie for debugging
     response.cookies.set({
       name: 'token_debug',

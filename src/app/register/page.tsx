@@ -65,13 +65,16 @@ function RegisterContent() {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (response.ok) {
+        // Redirect to dashboard (which will handle role-based routing)
+        router.push("/dashboard");
+        
+        // If registration is successful, store the user ID and show OTP verification
+        setUserId(data.userId);
+        setOtpSent(true);
+      } else {
         throw new Error(data.error || "Registration failed");
       }
-
-      // If registration is successful, store the user ID and show OTP verification
-      setUserId(data.userId);
-      setOtpSent(true);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -101,19 +104,13 @@ function RegisterContent() {
       }
 
       // If verification is successful, user is automatically logged in
-      // Redirect to appropriate dashboard based on user role
+      // Redirect to dashboard (which will handle role-based routing)
       console.log(
         "Register: OTP verification successful, user data:",
         data.user
       );
 
-      if (data.user && data.user.role === "MENTOR") {
-        console.log("Register: Redirecting mentor to /dashboard/mentor");
-        router.push("/dashboard/mentor");
-      } else {
-        console.log("Register: Redirecting user to /dashboard");
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -171,7 +168,7 @@ function RegisterContent() {
           <div className="mt-4 text-center">
             <Button
               variant="link"
-              className="text-primary-600"
+              className="text-primary-600 hover:text-primary-700"
               onClick={() => setOtpSent(false)}
             >
               Back to registration
@@ -186,7 +183,7 @@ function RegisterContent() {
     <div className="auth-layout">
       <div className="w-full max-w-md fade-in">
         <Card className="glass-card">
-          <CardHeader className="space-y-1">
+          <CardHeader className="space-y-3">
             <div className="flex justify-center mb-2">
               <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
                 <svg
@@ -208,38 +205,40 @@ function RegisterContent() {
             <CardTitle className="text-2xl font-bold text-center">
               Create an Account
             </CardTitle>
-            <div className="text-sm text-muted-foreground text-center">
+            <div className="text-sm text-muted-foreground text-center px-2">
               Enter your information to create a new account
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
                   <Input
                     id="firstName"
                     name="firstName"
                     placeholder="John"
                     value={formData.firstName}
                     onChange={handleChange}
-                    className="input-primary"
+                    className="input-primary h-12"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName" className="text-sm font-medium">Last Name</Label>
                   <Input
                     id="lastName"
                     name="lastName"
                     placeholder="Doe"
                     value={formData.lastName}
                     onChange={handleChange}
-                    className="input-primary"
+                    className="input-primary h-12"
+                    required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="email"
                   name="email"
@@ -248,16 +247,16 @@ function RegisterContent() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="input-primary"
+                  className="input-primary h-12"
                 />
                 <p className="text-xs text-gray-500">
                   We&apos;ll send a verification code to this email
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role">I want to join as</Label>
+                <Label htmlFor="role" className="text-sm font-medium">I want to join as</Label>
                 <Select value={formData.role} onValueChange={handleRoleChange}>
-                  <SelectTrigger className="input-primary">
+                  <SelectTrigger className="input-primary h-12">
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -273,7 +272,7 @@ function RegisterContent() {
               )}
               <Button
                 type="submit"
-                className="w-full btn-primary"
+                className="w-full btn-primary h-12"
                 disabled={loading}
               >
                 {loading ? "Creating Account..." : "Create Account"}
@@ -281,11 +280,11 @@ function RegisterContent() {
             </form>
           </CardContent>
           <CardFooter className="flex justify-center border-t pt-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 text-center">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="text-primary-600 hover:underline font-medium"
+                className="text-primary-600 hover:text-primary-700 underline font-medium"
               >
                 Log in
               </Link>

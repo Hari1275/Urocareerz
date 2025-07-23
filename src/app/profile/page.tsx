@@ -2,9 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ProfileForm from "@/components/ProfileForm";
 import ProfileDisplay from "@/components/ProfileDisplay";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { User } from "lucide-react";
 
 interface Profile {
   id?: string;
@@ -31,6 +36,14 @@ interface User {
   firstName: string | null;
   lastName: string | null;
   role: string;
+}
+
+// Utility to read a cookie value by name (client-side only)
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
 }
 
 export default function ProfilePage() {
@@ -159,18 +172,48 @@ export default function ProfilePage() {
       resume: combined.resume,
       avatarFileName: (combined as any).avatarFileName,
       resumeFileName: (combined as any).resumeFileName,
-      hasPlaceholderAvatar: combined.avatar === "https://example.com",
-      hasPlaceholderResume: combined.resume === "https://example.com",
+      hasPlaceholderAvatar:
+        (combined as any).avatar === "https://example.com",
+      hasPlaceholderResume:
+        (combined as any).resume === "https://example.com",
     });
     return combined;
   }, [profile, user]);
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/logout", { method: "POST" });
+      if (response.ok) {
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading profile...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -178,11 +221,34 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Error</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">
+              <div className="text-4xl mb-2">⚠️</div>
+              <h3 className="text-lg font-medium mb-2">Error Loading Profile</h3>
+              <p className="text-sm text-gray-600">{error}</p>
+            </div>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+            >
+              Try Again
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -193,77 +259,131 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <div className="flex gap-2">
-          {!isEditing && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (user.role === "MENTOR") {
-                  router.push("/dashboard/mentor");
-                } else {
-                  router.push("/dashboard");
-                }
-              }}
-            >
-              Back to Dashboard
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {isEditing ? (
-        <ProfileForm
-          profile={combinedProfile}
-          onSubmit={handleSubmitProfile}
-          isSubmitting={isSubmitting}
-        />
-      ) : (
-        <ProfileDisplay
-          profile={combinedProfile}
-          onEdit={() => setIsEditing(true)}
-        />
-      )}
-
-      {/* Account Security Section */}
-      {!isEditing && (
-        <div className="mt-8">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4">Account Security</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h3 className="font-medium">Email Address</h3>
-                  <p className="text-sm text-gray-600">{user.email}</p>
-                </div>
-                <Button variant="outline" size="sm" disabled>
-                  Change Email
-                </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Unified Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-4">
+              <span className="text-sm text-gray-600 font-medium">
+                Welcome, <span className="text-gray-900 font-semibold">{user?.firstName || user?.email}</span>
+              </span>
+              <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</Link>
+              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
+            </div>
+            <div className="md:hidden flex items-center justify-end gap-2 w-full">
+              <div className="flex flex-row items-center gap-x-1 min-w-0 max-w-xs flex-shrink overflow-hidden">
+                {user === null ? (
+                  <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
+                ) : (
+                  <>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">Welcome,</span>
+                    <span className="text-sm text-gray-900 font-medium truncate max-w-[6rem] ml-1">
+                      {user?.firstName || user?.email || getCookie('name') || "User"}
+                    </span>
+                  </>
+                )}
               </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h3 className="font-medium">Account Role</h3>
-                  <p className="text-sm text-gray-600">
-                    {user.role === "MENTOR"
-                      ? "Mentor"
-                      : user.role === "MENTEE"
-                      ? "Mentee"
-                      : user.role === "ADMIN"
-                      ? "Administrator"
-                      : user.role}
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" disabled>
-                  Contact Support
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const shouldLogout = confirm("Would you like to logout?");
+                  if (shouldLogout) handleLogout();
+                }}
+                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
+                aria-label="Logout"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </Button>
             </div>
           </div>
         </div>
-      )}
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+              Dashboard
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">Profile</span>
+          </nav>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              My <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">Profile</span>
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Manage your professional profile and account settings.
+            </p>
+          </div>
+        </div>
+
+        {/* Profile Content */}
+        <div className="max-w-4xl mx-auto">
+          {isEditing ? (
+            <ProfileForm
+              profile={combinedProfile}
+              onSubmit={handleSubmitProfile}
+              isSubmitting={isSubmitting}
+            />
+          ) : (
+            <ProfileDisplay
+              profile={combinedProfile}
+              onEdit={() => setIsEditing(true)}
+            />
+          )}
+
+          {/* Account Security Section */}
+          {!isEditing && (
+            <Card className="mt-8 bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-gray-900">Account Security</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-gray-100">
+                  <div>
+                    <h3 className="font-medium text-gray-900">Email Address</h3>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                  </div>
+                  <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200">
+                    Change Email
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-gray-100">
+                  <div>
+                    <h3 className="font-medium text-gray-900">Account Role</h3>
+                    <p className="text-sm text-gray-600">
+                      {user.role === "MENTOR"
+                        ? "Mentor"
+                        : user.role === "MENTEE"
+                        ? "Mentee"
+                        : user.role === "ADMIN"
+                        ? "Administrator"
+                        : user.role}
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200">
+                    Contact Support
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

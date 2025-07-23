@@ -121,12 +121,12 @@ export default function DiscussionThreadsList({
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <Card>
+      {/* Filters and Actions */}
+      <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
         <CardHeader>
-          <CardTitle>Discussion Forums</CardTitle>
+          <CardTitle className="text-xl font-bold text-gray-900">Discussion Filters</CardTitle>
           <CardDescription>
-            Connect with the community through discussions and case studies
+            Filter discussions by category and status to find relevant conversations
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -136,7 +136,7 @@ export default function DiscussionThreadsList({
                 value={selectedCategory}
                 onValueChange={handleCategoryChange}
               >
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 bg-white/80">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -150,7 +150,7 @@ export default function DiscussionThreadsList({
               </Select>
 
               <Select value={selectedStatus} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 bg-white/80">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,7 +161,10 @@ export default function DiscussionThreadsList({
               </Select>
             </div>
 
-            <Button onClick={() => router.push("/discussions/new")}>
+            <Button 
+              onClick={() => router.push("/discussions/new")}
+              className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
+            >
               Start New Discussion
             </Button>
           </div>
@@ -171,13 +174,13 @@ export default function DiscussionThreadsList({
       {/* Threads List */}
       <div className="space-y-4">
         {threads.map((thread) => (
-          <Card key={thread.id} className="hover:shadow-md transition-shadow">
+          <Card key={thread.id} className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex items-center space-x-2 mb-3">
                     {thread.isPinned && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
                         📌 Pinned
                       </Badge>
                     )}
@@ -198,13 +201,13 @@ export default function DiscussionThreadsList({
                           <Badge
                             key={index}
                             variant="outline"
-                            className="text-xs"
+                            className="text-xs bg-white/50"
                           >
                             #{tag}
                           </Badge>
                         ))}
                         {thread.tags.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs bg-white/50">
                             +{thread.tags.length - 3}
                           </Badge>
                         )}
@@ -213,30 +216,49 @@ export default function DiscussionThreadsList({
                   </div>
 
                   <h3
-                    className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600"
+                    className="text-lg font-semibold text-gray-900 mb-3 cursor-pointer hover:text-blue-600 transition-colors"
                     onClick={() => router.push(`/discussions/${thread.id}`)}
                   >
                     {thread.title}
                   </h3>
 
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-600 mb-4 leading-relaxed">
                     {truncateContent(thread.content)}
                   </p>
 
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center space-x-4">
-                      <span>
-                        By {thread.author.firstName} {thread.author.lastName}
-                        <Badge variant="outline" className="ml-2 text-xs">
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {thread.author.firstName} {thread.author.lastName}
+                        <Badge variant="outline" className="ml-2 text-xs bg-white/50">
                           {thread.author.role}
                         </Badge>
                       </span>
-                      <span>{formatDate(thread.createdAt)}</span>
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {formatDate(thread.createdAt)}
+                      </span>
                     </div>
 
                     <div className="flex items-center space-x-4">
-                      <span>👁️ {thread.viewCount} views</span>
-                      <span>💬 {thread._count.comments} comments</span>
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {thread.viewCount} views
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        {thread._count.comments} comments
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -248,7 +270,7 @@ export default function DiscussionThreadsList({
 
       {/* Empty State */}
       {threads.length === 0 && (
-        <Card>
+        <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
           <CardContent className="p-8 text-center">
             <div className="text-gray-500 mb-4">
               <div className="text-4xl mb-2">💬</div>
@@ -263,7 +285,10 @@ export default function DiscussionThreadsList({
                   : "Be the first to start a discussion!"}
               </p>
             </div>
-            <Button onClick={() => router.push("/discussions/new")}>
+            <Button 
+              onClick={() => router.push("/discussions/new")}
+              className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
+            >
               Start First Discussion
             </Button>
           </CardContent>
@@ -272,7 +297,7 @@ export default function DiscussionThreadsList({
 
       {/* Pagination */}
       {pagination.pages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 border border-gray-100">
           <div className="text-sm text-gray-500">
             Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
@@ -290,6 +315,7 @@ export default function DiscussionThreadsList({
                 if (selectedCategory) params.set("category", selectedCategory);
                 router.push(`/discussions?${params.toString()}`);
               }}
+              className="bg-white/80 hover:bg-white"
             >
               Previous
             </Button>
@@ -303,6 +329,7 @@ export default function DiscussionThreadsList({
                 if (selectedCategory) params.set("category", selectedCategory);
                 router.push(`/discussions?${params.toString()}`);
               }}
+              className="bg-white/80 hover:bg-white"
             >
               Next
             </Button>

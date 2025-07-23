@@ -34,6 +34,12 @@ export function OTPDisplay({
     }
   };
 
+  const handleResendClick = () => {
+    // Clear the OTP input when resend is clicked
+    setOtp('');
+    onResendOTP();
+  };
+
   const handleSendOTP = async () => {
     try {
       const response = await fetch('/api/login/send-otp', {
@@ -61,17 +67,17 @@ export function OTPDisplay({
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="text-center">Enter OTP</CardTitle>
-        <p className="text-sm text-gray-600 text-center">
-                      We&apos;ve sent a 6-digit code to <strong>{email}</strong>
+    <Card className="w-full max-w-md mx-auto glass-card">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-xl font-bold text-center">Enter OTP</CardTitle>
+        <p className="text-sm text-gray-600 text-center px-2">
+          We&apos;ve sent a 6-digit code to <strong className="break-all">{email}</strong>
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="otp">OTP Code</Label>
+            <Label htmlFor="otp" className="text-sm font-medium">OTP Code</Label>
             <Input
               id="otp"
               type="text"
@@ -79,7 +85,7 @@ export function OTPDisplay({
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
               maxLength={6}
-              className="text-center text-lg tracking-widest"
+              className="text-center text-lg tracking-widest input-primary h-12"
               disabled={isLoading}
             />
           </div>
@@ -113,7 +119,7 @@ export function OTPDisplay({
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full btn-primary h-12"
             disabled={otp.length !== 6 || isLoading}
           >
             {isLoading ? 'Verifying...' : 'Verify OTP'}
@@ -123,11 +129,11 @@ export function OTPDisplay({
             <Button
               type="button"
               variant="link"
-              onClick={onResendOTP}
+              onClick={handleResendClick}
               disabled={isResending}
-              className="text-sm"
+              className="text-sm text-primary-600 hover:text-primary-700"
             >
-              {isResending ? 'Resending...' : "Didn&apos;t receive code? Resend"}
+              {isResending ? 'Resending...' : "Didn't receive code? Resend"}
             </Button>
           </div>
         </form>

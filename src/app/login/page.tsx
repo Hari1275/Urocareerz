@@ -72,18 +72,14 @@ function LoginContent() {
         body: JSON.stringify({ userId, otp }),
       });
 
-      const data = await response.json();
+      const data = await response.json(); // Read once
 
       if (!response.ok) {
         throw new Error(data.error || "Invalid OTP");
       }
 
       // If login is successful, redirect to appropriate dashboard based on user role
-      if (data.user && data.user.role === "MENTOR") {
-        router.push("/dashboard/mentor");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -142,7 +138,7 @@ function LoginContent() {
           <div className="mt-4 text-center">
             <Button
               variant="link"
-              className="text-primary-600"
+              className="text-primary-600 hover:text-primary-700"
               onClick={() => setOtpSent(false)}
             >
               Use a different email
@@ -158,7 +154,7 @@ function LoginContent() {
     <div className="auth-layout">
       <div className="w-full max-w-md fade-in">
         <Card className="glass-card">
-          <CardHeader className="space-y-1">
+          <CardHeader className="space-y-3">
             <div className="flex justify-center mb-2">
               <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
                 <svg
@@ -180,14 +176,14 @@ function LoginContent() {
             <CardTitle className="text-2xl font-bold text-center">
               Welcome Back
             </CardTitle>
-            <div className="text-sm text-muted-foreground text-center">
+            <div className="text-sm text-muted-foreground text-center px-2">
               Enter your email to receive a login code
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -195,7 +191,7 @@ function LoginContent() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-primary"
+                  className="input-primary h-12"
                 />
               </div>
               {error && (
@@ -205,7 +201,7 @@ function LoginContent() {
               )}
               <Button
                 type="submit"
-                className="w-full btn-primary"
+                className="w-full btn-primary h-12"
                 disabled={loading}
               >
                 {loading ? "Sending..." : "Send Login Code"}
@@ -213,11 +209,11 @@ function LoginContent() {
             </form>
           </CardContent>
           <CardFooter className="flex justify-center border-t pt-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 text-center">
               Don&apos;t have an account?{" "}
               <Link
                 href="/register"
-                className="text-primary-600 hover:underline font-medium"
+                className="text-primary-600 hover:text-primary-700 underline font-medium"
               >
                 Register
               </Link>

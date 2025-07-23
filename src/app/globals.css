@@ -69,7 +69,28 @@
 }
 
 .auth-layout {
-  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500/20 to-secondary-500/20;
+  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500/20 to-secondary-500/20 p-4 sm:p-6 lg:p-8;
+}
+
+/* Responsive auth card improvements */
+@media (max-width: 640px) {
+  .auth-layout {
+    @apply p-3;
+  }
+  
+  .auth-layout .max-w-md {
+    @apply w-full max-w-sm;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-layout {
+    @apply p-2;
+  }
+  
+  .auth-layout .max-w-md {
+    @apply w-full max-w-xs;
+  }
 }
 
 .glass-card {

@@ -25,6 +25,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePagination } from "@/hooks/use-pagination";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 
+// Utility to read a cookie value by name (client-side only)
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+}
+
+
 interface User {
   id: string;
   email: string;
@@ -60,6 +69,7 @@ interface Application {
   coverLetter?: string;
 }
 
+
 export default function MentorDashboardPage() {
   const router = useRouter();
   const { getTypeBadge } = useOpportunityTypes();
@@ -83,25 +93,23 @@ export default function MentorDashboardPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("/api/user");
-
-        if (!response.ok) {
-          if (response.status === 401) {
+        const userResponse = await fetch("/api/user");
+        if (!userResponse.ok) {
+          if (userResponse.status === 401) {
             router.push("/login");
             return;
           }
           throw new Error("Failed to fetch user data");
         }
 
-        const data = await response.json();
+        const userData = await userResponse.json();
+        setUser(userData.user);
 
-        // Ensure user is a mentor
-        if (data.user.role !== "MENTOR") {
+        // Verify user is a mentor
+        if (userData.user.role !== "MENTOR") {
           router.push("/dashboard");
           return;
         }
-
-        setUser(data.user);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -270,10 +278,27 @@ export default function MentorDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 rounded-full bg-primary-200 mb-4"></div>
-          <div className="h-4 w-32 bg-primary-200 rounded"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading mentor dashboard...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -281,18 +306,35 @@ export default function MentorDashboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => router.push("/login")}>Back to Login</Button>
-          </CardFooter>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Error</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">
+              <div className="text-4xl mb-2">⚠️</div>
+              <h3 className="text-lg font-medium mb-2">Error Loading Dashboard</h3>
+              <p className="text-sm text-gray-600">{error}</p>
+            </div>
+            <Button 
+              onClick={() => router.push("/login")} 
+              className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+            >
+              Back to Login
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -302,35 +344,45 @@ export default function MentorDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#f1f5f9] font-sans">
-      {/* Responsive Header */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Unified Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo - Responsive sizing */}
             <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
               <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
+            </Link>
             
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-gray-500 font-medium">Welcome, {user.firstName || user.email}</span>
+              <span className="text-sm text-gray-600 font-medium">
+                Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email}</span>
+              </span>
               <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
               <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
             </div>
 
-            {/* Mobile Navigation */}
-            <div className="md:hidden flex items-center justify-end">
-              {/* Mobile Menu Button - Clean logout only */}
+            <div className="md:hidden flex items-center justify-end gap-2 w-full">
+              <div className="flex flex-row items-center gap-x-1 min-w-0 max-w-xs flex-shrink overflow-hidden">
+                {user === null ? (
+                  <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
+                ) : (
+                  <>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">Welcome,</span>
+                    <span className="text-sm text-gray-900 font-medium truncate max-w-[6rem] ml-1">
+                      {user.firstName || user.email || getCookie('name') || "User"}
+                    </span>
+                  </>
+                )}
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  // Simple mobile menu - you can expand this with a proper mobile menu component
                   const shouldLogout = confirm("Would you like to logout?");
                   if (shouldLogout) handleLogout();
                 }}
                 className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
+                aria-label="Logout"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -341,30 +393,44 @@ export default function MentorDashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 sm:mb-8 lg:mb-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Welcome back, Dr. {user.lastName}!</h1>
-          <p className="text-base sm:text-lg text-gray-600">Guide the next generation of urologists</p>
-          </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            Welcome back, <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">Dr. {user.lastName}</span>!
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl">
+            Guide the next generation of urologists through mentorship and opportunities.
+          </p>
+        </div>
 
-          {successMessage && (
+        {successMessage && (
           <div className="mb-8 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm flex items-center gap-2">
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                {successMessage}
-            </div>
-          )}
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            {successMessage}
+          </div>
+        )}
 
         {/* Modern Card Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-10 lg:mb-12">
-            {/* Post Opportunity Card */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-10 lg:mb-12 max-w-5xl mx-auto">
+          {/* Post Opportunity Card */}
           <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100">
             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-green-400 to-blue-400 text-white text-3xl shadow-lg mb-2 mx-auto">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
             <h3 className="text-lg font-bold text-gray-900 text-center">Post Opportunity</h3>
             <p className="text-sm text-gray-500 text-center">Share fellowships, jobs, or observerships</p>
-            <Button className="w-full mt-2 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" onClick={() => router.push("/dashboard/mentor/post-opportunity")}>Post Opportunity</Button>
-                </div>
+            <Button 
+              className="w-full mt-2 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" 
+              onClick={() => router.push("/dashboard/mentor/post-opportunity")}
+            >
+              Post Opportunity
+            </Button>
+          </div>
           {/* Applications Card */}
           <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100">
             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-purple-400 to-indigo-400 text-white text-3xl shadow-lg mb-2 mx-auto">
@@ -383,24 +449,24 @@ export default function MentorDashboardPage() {
             <p className="text-sm text-gray-500 text-center">Search mentees by interests and location</p>
             <Button className="w-full mt-2 bg-gradient-to-tr from-cyan-600 to-blue-500 text-white font-semibold shadow-md hover:from-cyan-700 hover:to-blue-600" onClick={() => router.push("/dashboard/mentor/search")}>Search Mentees</Button>
                 </div>
-          {/* My Schedule Card */}
-          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100">
+          {/* My Schedule Card - Commented out for future feature */}
+          {/* <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100">
             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-pink-400 to-red-400 text-white text-3xl shadow-lg mb-2 mx-auto">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
             <h3 className="text-lg font-bold text-gray-900 text-center">My Schedule</h3>
             <p className="text-sm text-gray-500 text-center">Manage availability and bookings</p>
             <Button className="w-full mt-2 bg-gradient-to-tr from-pink-600 to-red-500 text-white font-semibold shadow-md hover:from-pink-700 hover:to-red-600">Manage Schedule</Button>
-                </div>
-          {/* Mentoring Resources Card */}
-          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100">
+                </div> */}
+          {/* Mentoring Resources Card - Commented out for future feature */}
+          {/* <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100">
             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-400 text-white text-3xl shadow-lg mb-2 mx-auto">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                 </div>
             <h3 className="text-lg font-bold text-gray-900 text-center">Mentoring Resources</h3>
             <p className="text-sm text-gray-500 text-center">Access tools and materials</p>
             <Button className="w-full mt-2 bg-gradient-to-tr from-yellow-500 to-orange-400 text-white font-semibold shadow-md hover:from-yellow-600 hover:to-orange-500" variant="outline">Browse Resources</Button>
-          </div>
+          </div> */}
           </div>
 
         {/* My Opportunities Section with Table */}

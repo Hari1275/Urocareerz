@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +58,7 @@ interface User {
 
 export default function ApplicationsPage() {
   const router = useRouter();
-  const { getTypeBadge } = useOpportunityTypes();
+  const { opportunityTypes } = useOpportunityTypes();
   const [user, setUser] = useState<User | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,48 +104,54 @@ export default function ApplicationsPage() {
     fetchData();
   }, [router]);
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/logout", { method: "POST" });
+      if (response.ok) {
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING":
         return (
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            Pending
+          <Badge variant="outline" className="border-yellow-500 text-yellow-700">
+            <Clock className="w-3 h-3 mr-1" />
+            Pending Review
           </Badge>
         );
-      case "UNDER_REVIEW":
+      case "APPROVED":
         return (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Eye className="h-3 w-3" />
-            Under Review
-          </Badge>
-        );
-      case "ACCEPTED":
-        return (
-          <Badge
-            variant="default"
-            className="flex items-center gap-1 bg-green-600"
-          >
-            <CheckCircle className="h-3 w-3" />
-            Accepted
+          <Badge variant="outline" className="border-green-500 text-green-700">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Approved
           </Badge>
         );
       case "REJECTED":
         return (
-          <Badge variant="destructive" className="flex items-center gap-1">
-            <XCircle className="h-3 w-3" />
+          <Badge variant="outline" className="border-red-500 text-red-700">
+            <XCircle className="w-3 h-3 mr-1" />
             Rejected
           </Badge>
         );
       case "WITHDRAWN":
         return (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
+          <Badge variant="outline" className="border-gray-500 text-gray-700">
+            <AlertCircle className="w-3 h-3 mr-1" />
             Withdrawn
           </Badge>
         );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return (
+          <Badge variant="outline">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -159,46 +166,30 @@ export default function ApplicationsPage() {
   };
 
   const handleWithdrawApplication = async (applicationId: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to withdraw this application? This action cannot be undone."
-      )
-    ) {
+    if (!confirm("Are you sure you want to withdraw this application?")) {
       return;
     }
 
+    setWithdrawingId(applicationId);
     try {
-      setWithdrawingId(applicationId);
+      const response = await fetch(`/api/applications/${applicationId}/withdraw`, {
+        method: "POST",
+      });
 
-      const response = await fetch(
-        `/api/applications/${applicationId}/withdraw`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
+      if (response.ok) {
+        // Update the application status locally
+        setApplications((prev) =>
+          prev.map((app) =>
+            app.id === applicationId ? { ...app, status: "WITHDRAWN" } : app
+          )
+        );
+      } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to withdraw application");
+        alert(errorData.error || "Failed to withdraw application");
       }
-
-      // Update the application in the local state
-      setApplications((prevApplications) =>
-        prevApplications.map((app) =>
-          app.id === applicationId ? { ...app, status: "WITHDRAWN" } : app
-        )
-      );
-
-      // Show success message
-      alert("Application withdrawn successfully");
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error withdrawing application:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to withdraw application"
-      );
+      alert("Failed to withdraw application");
     } finally {
       setWithdrawingId(null);
     }
@@ -206,10 +197,27 @@ export default function ApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 rounded-full bg-primary-200 mb-4"></div>
-          <div className="h-4 w-32 bg-primary-200 rounded"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading applications...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -217,231 +225,195 @@ export default function ApplicationsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-          </CardContent>
-          <CardContent>
-            <Button onClick={() => router.push("/dashboard")}>
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Error</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">
+              <div className="text-4xl mb-2">⚠️</div>
+              <h3 className="text-lg font-medium mb-2">Error Loading Applications</h3>
+              <p className="text-sm text-gray-600">{error}</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold gradient-text">
-                My Applications
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">
-                Welcome, {user.firstName || user.email}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Unified Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-4">
+              <span className="text-sm text-gray-600 font-medium">
+                Welcome, <span className="text-gray-900 font-semibold">{user?.firstName || user?.email}</span>
               </span>
+              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
+              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
+            </div>
+            <div className="md:hidden flex items-center gap-3">
+              <div className="flex flex-col items-end">
+                <span className="text-xs text-gray-500">Welcome,</span>
+                <span className="text-sm text-gray-900 font-medium truncate max-w-24">
+                  {user?.firstName || user?.email}
+                </span>
+              </div>
               <Button
-                variant="outline"
-                onClick={() => router.push("/dashboard")}
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const shouldLogout = confirm("Would you like to logout?");
+                  if (shouldLogout) handleLogout();
+                }}
+                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
               >
-                Back to Dashboard
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Header with navigation */}
-          <div className="mb-6">
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/opportunities")}
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Browse Opportunities
-            </Button>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Application History
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Track the status of your submitted applications
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+              Dashboard
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">My Applications</span>
+          </nav>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              My <span className="bg-gradient-to-tr from-orange-600 to-red-500 bg-clip-text text-transparent">Applications</span>
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Track and manage your applications for opportunities in the urology community.
             </p>
           </div>
+        </div>
 
-          {/* Applications List */}
+        {/* Applications List */}
+        <div className="space-y-6">
           {applications.length === 0 ? (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No Applications Yet
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    You haven&apos;t submitted any applications yet. Start by
-                    browsing available opportunities.
-                  </p>
-                  <Button onClick={() => router.push("/opportunities")}>
-                    Browse Opportunities
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {applications.map((application) => (
-                <Card
-                  key={application.id}
-                  className="hover:shadow-lg transition-shadow"
-                >
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">
-                          {application.opportunity.title}
-                        </CardTitle>
-                        <div className="mt-2">
-                          <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              <span>
-                                {application.opportunity.location ||
-                                  "Location not specified"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Briefcase className="h-4 w-4" />
-                              <span>
-                                {application.opportunity.opportunityType
-                                  ? (() => {
-                                      const typeInfo = getTypeBadge(
-                                        application.opportunity.opportunityType
-                                          .name
-                                      );
-                                      return typeInfo
-                                        ? typeInfo.name
-                                        : application.opportunity
-                                            .opportunityType.name;
-                                    })()
-                                  : "Unknown Type"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(application.status)}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Mentor Info */}
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <span className="font-medium">Mentor:</span>
-                        <span>
-                          {application.opportunity.mentor.firstName}{" "}
-                          {application.opportunity.mentor.lastName}
-                          {application.opportunity.mentor.specialty &&
-                            ` • ${application.opportunity.mentor.specialty}`}
-                        </span>
-                      </div>
-
-                      {/* Application Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <span>
-                            <span className="font-medium">Applied:</span>{" "}
-                            {formatDate(application.createdAt)}
-                          </span>
-                        </div>
-                        {application.updatedAt !== application.createdAt && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span>
-                              <span className="font-medium">Updated:</span>{" "}
-                              {formatDate(application.updatedAt)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Cover Letter Preview */}
-                      {application.coverLetter && (
-                        <div>
-                          <h4 className="font-medium text-gray-900 mb-2">
-                            Cover Letter Preview
-                          </h4>
-                          <p className="text-gray-600 text-sm line-clamp-3">
-                            {application.coverLetter}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* CV File */}
-                      {application.cvFileName && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <FileText className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium">CV:</span>
-                          <span>{application.cvFileName}</span>
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          onClick={() =>
-                            router.push(
-                              `/opportunities/${application.opportunity.id}`
-                            )
-                          }
-                        >
-                          View Opportunity
-                        </Button>
-                        {application.status === "PENDING" && (
-                          <Button
-                            variant="outline"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() =>
-                              handleWithdrawApplication(application.id)
-                            }
-                            disabled={withdrawingId === application.id}
-                          >
-                            {withdrawingId === application.id ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
-                                Withdrawing...
-                              </>
-                            ) : (
-                              "Withdraw Application"
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">📝</div>
+              <h3 className="text-lg font-medium mb-2">No applications yet</h3>
+              <p className="text-gray-600 mb-4">
+                Start applying for opportunities to see your applications here.
+              </p>
+              <Button
+                onClick={() => router.push("/opportunities")}
+                className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+              >
+                Browse Opportunities
+              </Button>
             </div>
+          ) : (
+            applications.map((application) => (
+              <Card key={application.id} className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                        {application.opportunity.title}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 mb-2">
+                        {application.opportunity.opportunityType && (
+                          <Badge variant="outline" style={{ borderColor: application.opportunity.opportunityType.color || undefined, color: application.opportunity.opportunityType.color || undefined }}>
+                            {application.opportunity.opportunityType.name}
+                          </Badge>
+                        )}
+                        {application.opportunity.location && (
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <MapPin className="h-4 w-4" />
+                            {application.opportunity.location}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(application.status)}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4 line-clamp-3">
+                    {application.opportunity.description}
+                  </p>
+                  <div className="space-y-2">
+                    {application.opportunity.experienceLevel && (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Briefcase className="h-4 w-4" />
+                        {application.opportunity.experienceLevel}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Calendar className="h-4 w-4" />
+                      Applied on {formatDate(application.createdAt)}
+                    </div>
+                    {application.opportunity.mentor && (
+                      <div className="text-sm text-gray-500">
+                        Posted by Dr. {application.opportunity.mentor.firstName} {application.opportunity.mentor.lastName}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardContent className="pt-0">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/opportunities/${application.opportunity.id}`)}
+                      className="bg-white/80 hover:bg-white"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View Opportunity
+                    </Button>
+                    {application.status === "PENDING" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleWithdrawApplication(application.id)}
+                        disabled={withdrawingId === application.id}
+                        className="bg-white/80 hover:bg-white text-red-600 hover:text-red-700"
+                      >
+                        {withdrawingId === application.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-1"></div>
+                        ) : (
+                          <ArrowLeft className="w-4 h-4 mr-1" />
+                        )}
+                        Withdraw
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           )}
         </div>
       </main>

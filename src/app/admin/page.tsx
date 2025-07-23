@@ -165,25 +165,24 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("/api/user");
-
-        if (!response.ok) {
-          if (response.status === 401) {
+        const userResponse = await fetch("/api/user");
+        if (!userResponse.ok) {
+          if (userResponse.status === 401) {
             router.push("/login");
             return;
           }
           throw new Error("Failed to fetch user data");
         }
 
-        const data = await response.json();
+        const userData = await userResponse.json();
+        setUser(userData.user);
 
-        // Ensure user is an admin
-        if (data.user.role !== "ADMIN") {
+        // Verify user is an admin
+        if (userData.user.role !== "ADMIN") {
           router.push("/dashboard");
           return;
         }
 
-        setUser(data.user);
         await fetchStats();
       } catch (err: unknown) {
         console.error("Admin: Error in fetchUserData:", err);
@@ -281,9 +280,9 @@ export default function AdminDashboardPage() {
   const getPieLabel = (entry: any) => `${entry["role"] || entry["typeName"]}: ${entry["percent"] ? Math.round(entry["percent"] * 100) : 0}%`;
 
   return (
-    <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50" suppressHydrationWarning>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">

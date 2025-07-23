@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -40,22 +41,23 @@ export default function MentorSearchPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("/api/user");
-        if (!response.ok) {
-          if (response.status === 401) {
+        const userResponse = await fetch("/api/user");
+        if (!userResponse.ok) {
+          if (userResponse.status === 401) {
             router.push("/login");
             return;
           }
           throw new Error("Failed to fetch user data");
         }
 
-        const data = await response.json();
-        if (data.user.role !== "MENTOR") {
+        const userData = await userResponse.json();
+        setUser(userData.user);
+
+        // Verify user is a mentor
+        if (userData.user.role !== "MENTOR") {
           router.push("/dashboard");
           return;
         }
-
-        setUser(data.user);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -101,54 +103,163 @@ export default function MentorSearchPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 rounded-full bg-primary-200 mb-4"></div>
-          <div className="h-4 w-32 bg-primary-200 rounded"></div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-600">Loading...</span>
+              </div>
+              <div className="md:hidden">
+                <Button variant="outline" size="sm" disabled>
+                  Loading...
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-pulse flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-blue-200 mb-4"></div>
+              <div className="h-4 w-32 bg-blue-200 rounded"></div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-600">Error occurred</span>
+              </div>
+              <div className="md:hidden">
+                <Button variant="outline" size="sm" disabled>
+                  Error
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Card className="w-full max-w-md shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-red-500">Error</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{error}</p>
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="mt-4"
+                >
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Find Mentees</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/dashboard/mentor")}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Unified Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+            </Link>
+            
+            <div className="hidden md:flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                Welcome back, {user?.firstName || "User"}
+              </span>
+              <Link href="/profile">
+                <Button variant="outline" size="sm">
+                  Profile
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  if (confirm("Are you sure you want to logout?")) {
+                    fetch("/api/logout", { method: "POST" })
+                      .then(() => router.push("/login"));
+                  }
+                }}
               >
-                Back to Dashboard
+                Logout
+              </Button>
+            </div>
+
+            <div className="md:hidden">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  if (confirm("Are you sure you want to logout?")) {
+                    fetch("/api/logout", { method: "POST" })
+                      .then(() => router.push("/login"));
+                  }
+                }}
+              >
+                Logout
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+              Dashboard
+            </Link>
+            <span>/</span>
+            <Link href="/dashboard/mentor" className="hover:text-blue-600 transition-colors">
+              Mentor Dashboard
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">Find Mentees</span>
+          </nav>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Find <span className="bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent">Mentees</span>
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Search and connect with mentees who match your expertise and interests
+            </p>
+          </div>
+        </div>
+
         {/* Search Filters */}
-        <Card className="mb-8">
+        <Card className="mb-8 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="h-5 w-5" />
@@ -212,7 +323,7 @@ export default function MentorSearchPage() {
         )}
 
         {mentees.length === 0 && !searching && (
-          <Card>
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
             <CardContent className="text-center py-12">
               <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -228,10 +339,10 @@ export default function MentorSearchPage() {
         {/* Mentee Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mentees.map((mentee) => (
-            <Card key={mentee.id} className="hover:shadow-lg transition-shadow">
+            <Card key={mentee.id} className="hover:shadow-lg transition-shadow shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                     {mentee.profile?.avatar ? (
                       <img
                         src={mentee.profile.avatar}
@@ -239,7 +350,7 @@ export default function MentorSearchPage() {
                         className="h-12 w-12 rounded-full object-cover"
                       />
                     ) : (
-                      <User className="h-6 w-6 text-primary-600" />
+                      <User className="h-6 w-6 text-blue-600" />
                     )}
                   </div>
                   <div>
@@ -316,7 +427,7 @@ export default function MentorSearchPage() {
             </Card>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

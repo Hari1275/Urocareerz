@@ -71,25 +71,23 @@ export default function PostOpportunityPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("/api/user");
-
-        if (!response.ok) {
-          if (response.status === 401) {
+        const userResponse = await fetch("/api/user");
+        if (!userResponse.ok) {
+          if (userResponse.status === 401) {
             router.push("/login");
             return;
           }
           throw new Error("Failed to fetch user data");
         }
 
-        const data = await response.json();
+        const userData = await userResponse.json();
+        setUser(userData.user);
 
-        // Ensure user is a mentor
-        if (data.user.role !== "MENTOR") {
+        // Verify user is a mentor
+        if (userData.user.role !== "MENTOR") {
           router.push("/dashboard");
           return;
         }
-
-        setUser(data.user);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -139,10 +137,27 @@ export default function PostOpportunityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 rounded-full bg-primary-200 mb-4"></div>
-          <div className="h-4 w-32 bg-primary-200 rounded"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading post opportunity form...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -150,18 +165,35 @@ export default function PostOpportunityPage() {
 
   if (error && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-          </CardContent>
-          <CardHeader>
-            <Button onClick={() => router.push("/login")}>Back to Login</Button>
-          </CardHeader>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        {/* Unified Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              </Link>
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-500 font-medium">Error</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto py-8 px-4">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">
+              <div className="text-4xl mb-2">⚠️</div>
+              <h3 className="text-lg font-medium mb-2">Error Loading Page</h3>
+              <p className="text-sm text-gray-600">{error}</p>
+            </div>
+            <Button 
+              onClick={() => router.push("/login")} 
+              className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+            >
+              Back to Login
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -171,51 +203,73 @@ export default function PostOpportunityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link
-                href="/dashboard/mentor"
-                className="flex-shrink-0 flex items-center"
-              >
-                <h1 className="text-2xl font-bold gradient-text">UroCareerz</h1>
-              </Link>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Unified Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-4">
+              <span className="text-sm text-gray-500 font-medium">Welcome, {user.firstName || user.email}</span>
+              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
+              <Button variant="outline" onClick={() => router.push("/dashboard/mentor")} className="text-gray-700 hover:text-blue-600 transition-colors">Back to Dashboard</Button>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">
-                Welcome, {user.firstName || user.email}
-              </span>
-              <Link
-                href="/profile"
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Profile
-              </Link>
+            <div className="md:hidden flex items-center justify-end">
               <Button
-                variant="outline"
+                variant="ghost"
+                size="sm"
                 onClick={() => router.push("/dashboard/mentor")}
-                className="text-gray-700 hover:text-primary-600 transition-colors"
+                className="p-2 text-gray-700 hover:text-blue-600 transition-colors flex-shrink-0"
               >
-                Back to Dashboard
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="py-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="shadow-lg">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+              Dashboard
+            </Link>
+            <span>/</span>
+            <Link href="/dashboard/mentor" className="hover:text-blue-600 transition-colors">
+              Mentor Dashboard
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">Post Opportunity</span>
+          </nav>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Post <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">Opportunity</span>
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Create a new opportunity for mentees to apply to and help grow the community.
+            </p>
+          </div>
+        </div>
+
+        {/* Form Container */}
+        <div className="max-w-4xl mx-auto">
+          <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-xl font-bold text-gray-900">
                 <Plus className="h-5 w-5" />
-                Post New Opportunity
+                Opportunity Details
               </CardTitle>
               <CardDescription>
-                Create a new opportunity for mentees to apply to.
+                Fill in the details below to create a new opportunity for mentees.
               </CardDescription>
             </CardHeader>
             <CardContent>

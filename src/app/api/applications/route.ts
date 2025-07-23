@@ -35,6 +35,14 @@ export async function GET(request: NextRequest) {
         include: {
           opportunity: {
             include: {
+              opportunityType: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  color: true,
+                },
+              },
               mentor: {
                 select: {
                   firstName: true,
@@ -60,7 +68,18 @@ export async function GET(request: NextRequest) {
           },
         },
         include: {
-          opportunity: true,
+          opportunity: {
+            include: {
+              opportunityType: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  color: true,
+                },
+              },
+            },
+          },
           mentee: {
             select: {
               firstName: true,

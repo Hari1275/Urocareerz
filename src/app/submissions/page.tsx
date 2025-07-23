@@ -2,16 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   Clock,
@@ -19,6 +13,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface MenteeOpportunity {
   id: string;
@@ -31,6 +26,14 @@ interface MenteeOpportunity {
     color: string | null;
   };
   adminFeedback: string | null;
+}
+
+interface User {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: string;
 }
 
 const statusConfig = {
@@ -59,33 +62,56 @@ const statusConfig = {
 export default function SubmissionsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
   const [opportunities, setOpportunities] = useState<MenteeOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSubmissions();
-  }, []);
+    const fetchData = async () => {
+      try {
+        // Fetch user data
+        const userResponse = await fetch("/api/user");
+        if (!userResponse.ok) {
+          if (userResponse.status === 401) {
+            router.push("/login");
+            return;
+          }
+          throw new Error("Failed to fetch user data");
+        }
 
-  const fetchSubmissions = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/mentee-opportunities");
+        const userData = await userResponse.json();
+        setUser(userData.user);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch submissions");
+        // Verify user is a mentee
+        if (userData.user.role !== "MENTEE") {
+          router.push("/dashboard");
+          return;
+        }
+
+        // Fetch submissions
+        const submissionsResponse = await fetch("/api/mentee-opportunities");
+        if (submissionsResponse.ok) {
+          const data = await submissionsResponse.json();
+          setOpportunities(data.opportunities || []);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const data = await response.json();
-      setOpportunities(data.opportunities);
+    fetchData();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/logout", { method: "POST" });
+      if (response.ok) {
+        router.push("/login");
+      }
     } catch (error) {
-      console.error("Error fetching submissions:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load your submissions.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      console.error("Logout error:", error);
     }
   };
 
@@ -109,33 +135,67 @@ export default function SubmissionsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/dashboard")}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Submissions</h1>
-            <p className="text-gray-600 mt-2">
-              Track opportunities you&apos;ve submitted for admin review
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Unified Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-4">
+              <span className="text-sm text-gray-600">Welcome, {user?.firstName || user?.email}</span>
+              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
+              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
+            </div>
+            <div className="md:hidden flex items-center justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const shouldLogout = confirm("Would you like to logout?");
+                  if (shouldLogout) handleLogout();
+                }}
+                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </Button>
+            </div>
           </div>
-          <Button
-            onClick={() => router.push("/dashboard/mentee/submit-opportunity")}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md"
-          >
-            Submit New Opportunity
-          </Button>
         </div>
-      </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+              Dashboard
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">My Submissions</span>
+          </nav>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              My <span className="bg-gradient-to-tr from-green-600 to-emerald-500 bg-clip-text text-transparent">Submissions</span>
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+              Track opportunities you've submitted for admin review and community contribution.
+            </p>
+            <Button
+              onClick={() => router.push("/dashboard/mentee/submit-opportunity")}
+              className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+            >
+              Submit New Opportunity
+            </Button>
+          </div>
+        </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -300,6 +360,7 @@ export default function SubmissionsPage() {
           })}
         </div>
       )}
+    </main>
     </div>
   );
 }
