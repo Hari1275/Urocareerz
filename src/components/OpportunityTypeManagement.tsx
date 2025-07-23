@@ -67,26 +67,29 @@ export default function OpportunityTypeManagement() {
   const paginatedOpportunityTypes = pagination.paginateData(opportunityTypes);
 
   const colorOptions = [
-    { value: "blue", label: "Blue", class: "bg-blue-100 text-blue-800" },
-    { value: "green", label: "Green", class: "bg-green-100 text-green-800" },
-    {
-      value: "purple",
-      label: "Purple",
-      class: "bg-purple-100 text-purple-800",
-    },
-    {
-      value: "yellow",
-      label: "Yellow",
-      class: "bg-yellow-100 text-yellow-800",
-    },
-    { value: "teal", label: "Teal", class: "bg-teal-100 text-teal-800" },
-    {
-      value: "orange",
-      label: "Orange",
-      class: "bg-orange-100 text-orange-800",
-    },
-    { value: "gray", label: "Gray", class: "bg-gray-100 text-gray-800" },
+    { value: "blue", label: "Blue", class: "bg-blue-100 text-blue-800", dot: "bg-blue-500" },
+    { value: "green", label: "Green", class: "bg-green-100 text-green-800", dot: "bg-green-500" },
+    { value: "purple", label: "Purple", class: "bg-purple-100 text-purple-800", dot: "bg-purple-500" },
+    { value: "yellow", label: "Yellow", class: "bg-yellow-100 text-yellow-800", dot: "bg-yellow-500" },
+    { value: "teal", label: "Teal", class: "bg-teal-100 text-teal-800", dot: "bg-teal-500" },
+    { value: "orange", label: "Orange", class: "bg-orange-100 text-orange-800", dot: "bg-orange-500" },
+    { value: "red", label: "Red", class: "bg-red-100 text-red-800", dot: "bg-red-500" },
+    { value: "pink", label: "Pink", class: "bg-pink-100 text-pink-800", dot: "bg-pink-500" },
+    { value: "indigo", label: "Indigo", class: "bg-indigo-100 text-indigo-800", dot: "bg-indigo-500" },
+    { value: "gray", label: "Gray", class: "bg-gray-100 text-gray-800", dot: "bg-gray-500" },
   ];
+
+  const getColorDot = (color: string | undefined) => {
+    if (!color) return "bg-gray-500";
+    const colorOption = colorOptions.find(option => option.value === color);
+    return colorOption ? colorOption.dot : "bg-gray-500";
+  };
+
+  const getColorClass = (color: string | undefined) => {
+    if (!color) return "bg-gray-100 text-gray-800";
+    const colorOption = colorOptions.find(option => option.value === color);
+    return colorOption ? colorOption.class : "bg-gray-100 text-gray-800";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +103,7 @@ export default function OpportunityTypeManagement() {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({
             id: editingType.id,
             ...formData,
@@ -108,32 +112,29 @@ export default function OpportunityTypeManagement() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(
-            errorData.error || "Failed to update opportunity type"
-          );
+          throw new Error(errorData.error || "Failed to update opportunity type");
         }
 
         toast({
           title: "Success",
           description: "Opportunity type updated successfully",
-          variant: "success",
         });
       } else {
+        // Create new opportunity type
         await createOpportunityType(formData);
         toast({
           title: "Success",
           description: "Opportunity type created successfully",
-          variant: "success",
         });
       }
 
       setShowForm(false);
       resetForm();
-      await fetchOpportunityTypes();
-    } catch (error: any) {
+      fetchOpportunityTypes();
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to save opportunity type",
+        description: err.message || "Something went wrong",
         variant: "destructive",
       });
     } finally {
@@ -167,27 +168,23 @@ export default function OpportunityTypeManagement() {
 
   return (
     <>
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl font-bold">
+              <CardTitle className="text-xl font-semibold text-gray-900">
                 Opportunity Types
               </CardTitle>
-              <div className="text-sm text-muted-foreground">
+              <CardDescription>
                 Manage different types of opportunities available in the system
-              </div>
+              </CardDescription>
             </div>
-            <Button
-              onClick={openCreateForm}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Type
+            <Button onClick={openCreateForm} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Type
             </Button>
           </div>
         </CardHeader>
-
         <CardContent>
           <div className="rounded-md border">
             <Table>
@@ -220,7 +217,7 @@ export default function OpportunityTypeManagement() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div
-                            className={`w-4 h-4 rounded-full bg-${type.color}-500`}
+                            className={`w-4 h-4 rounded-full ${getColorDot(type.color)}`}
                           ></div>
                           <span className="capitalize">{type.color}</span>
                         </div>
@@ -300,7 +297,7 @@ export default function OpportunityTypeManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="e.g., FELLOWSHIP, JOB, RESEARCH"
+                placeholder="e.g., FELLOWSHIP, JOB, RESEARCH, INTERNSHIP"
                 required
               />
             </div>
@@ -333,7 +330,7 @@ export default function OpportunityTypeManagement() {
                     <SelectItem key={color.value} value={color.value}>
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-4 h-4 rounded-full bg-${color.value}-500`}
+                          className={`w-4 h-4 rounded-full ${color.dot}`}
                         ></div>
                         {color.label}
                       </div>
@@ -341,6 +338,16 @@ export default function OpportunityTypeManagement() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Color Preview */}
+            <div className="space-y-2">
+              <Label>Preview</Label>
+              <div className="p-3 border rounded-lg">
+                <Badge className={getColorClass(formData.color)}>
+                  {formData.name || "Sample Type"}
+                </Badge>
+              </div>
             </div>
 
             <DialogFooter>
@@ -351,7 +358,7 @@ export default function OpportunityTypeManagement() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
                 {loading ? "Saving..." : editingType ? "Update" : "Create"}
               </Button>
             </DialogFooter>

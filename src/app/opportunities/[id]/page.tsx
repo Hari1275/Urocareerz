@@ -258,7 +258,7 @@ export default function OpportunityDetailPage() {
                     {getTypeBadge(opportunity.opportunityType.name) && (
                       <Badge 
                         variant="secondary" 
-                        className="text-xs font-medium bg-green-100 text-green-800 border-green-200"
+                        className={`text-xs font-medium ${getTypeBadge(opportunity.opportunityType.name)?.colorClass || 'bg-gray-100 text-gray-800'}`}
                       >
                         {getTypeBadge(opportunity.opportunityType.name)?.name || opportunity.opportunityType.name}
                       </Badge>
