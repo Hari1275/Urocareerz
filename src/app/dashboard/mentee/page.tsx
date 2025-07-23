@@ -197,7 +197,7 @@ export default function MenteeDashboardPage() {
                 <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
               ) : (
                 <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || getCookie('name') || "User"}</span>
+                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
                 </span>
               )}
               <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
@@ -211,7 +211,7 @@ export default function MenteeDashboardPage() {
                   <>
                     <span className="text-xs text-gray-500 whitespace-nowrap">Welcome,</span>
                     <span className="text-sm text-gray-900 font-medium truncate max-w-[6rem] ml-1">
-                      {user.firstName || user.email || getCookie('name') || "User"}
+                      {user.firstName || user.email || "User"}
                     </span>
                   </>
                 )}

@@ -262,19 +262,27 @@ export default function ApplicationsPage() {
               <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
             </Link>
             <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-gray-600 font-medium">
-                Welcome, <span className="text-gray-900 font-semibold">{user?.firstName || user?.email}</span>
-              </span>
+              {user === null ? (
+                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
+              ) : (
+                <span className="text-sm text-gray-600 font-medium">
+                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+                </span>
+              )}
               <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
               <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
             </div>
             <div className="md:hidden flex items-center gap-3">
-              <div className="flex flex-col items-end">
-                <span className="text-xs text-gray-500">Welcome,</span>
-                <span className="text-sm text-gray-900 font-medium truncate max-w-24">
-                  {user?.firstName || user?.email}
-                </span>
-              </div>
+              {user === null ? (
+                <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
+              ) : (
+                <div className="flex flex-col items-end">
+                  <span className="text-xs text-gray-500">Welcome,</span>
+                  <span className="text-sm text-gray-900 font-medium truncate max-w-24">
+                    {user.firstName || user.email || "User"}
+                  </span>
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"

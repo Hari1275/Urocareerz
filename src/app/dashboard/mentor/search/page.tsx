@@ -190,9 +190,13 @@ export default function MentorSearchPage() {
             </Link>
             
             <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                Welcome back, {user?.firstName || "User"}
-              </span>
+              {user === null ? (
+                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
+              ) : (
+                <span className="text-sm text-gray-600 font-medium">
+                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+                </span>
+              )}
               <Link href="/profile">
                 <Button variant="outline" size="sm">
                   Profile
