@@ -197,7 +197,7 @@ export default function MenteeDashboardPage() {
                 <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
               ) : (
                 <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || user.email || "User"}</span>
                 </span>
               )}
               <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
@@ -211,7 +211,7 @@ export default function MenteeDashboardPage() {
                   <>
                     <span className="text-xs text-gray-500 whitespace-nowrap">Welcome,</span>
                     <span className="text-sm text-gray-900 font-medium truncate max-w-[6rem] ml-1">
-                      {user.firstName || user.email || "User"}
+                      {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || user.email || "User"}
                     </span>
                   </>
                 )}
@@ -240,7 +240,7 @@ export default function MenteeDashboardPage() {
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Welcome back, <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">{user.firstName || "Mentee"}</span>!
+              Welcome back, <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || "Mentee"}</span>!
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Ready to explore opportunities and contribute to the community? Let&apos;s get started!
