@@ -715,16 +715,6 @@ export default function MentorDashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8 sm:mb-10 lg:mb-12">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Welcome back, <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">Dr. {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || "User"}</span>!
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl">
-            Guide the next generation of urologists through mentorship and opportunities.
-          </p>
-        </div>
-
         {formError && (
           <div className="mb-8 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-2">

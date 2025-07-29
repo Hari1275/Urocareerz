@@ -23,6 +23,12 @@ let userCache: User | null = null;
 let userCacheTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+// Function to clear cache (can be called from other components)
+export const clearUserCache = () => {
+  userCache = null;
+  userCacheTime = 0;
+};
+
 export default function SharedHeader({ showUserInfo = true, className = "" }: SharedHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(userCache);

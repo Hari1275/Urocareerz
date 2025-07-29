@@ -84,6 +84,10 @@ export default async function middleware(req: NextRequest) {
         // User is authenticated, redirect to appropriate dashboard based on role
         if (decoded?.role === "MENTOR") {
           return NextResponse.redirect(new URL("/dashboard/mentor", req.url));
+        } else if (decoded?.role === "MENTEE") {
+          return NextResponse.redirect(new URL("/dashboard/mentee", req.url));
+        } else if (decoded?.role === "ADMIN") {
+          return NextResponse.redirect(new URL("/admin", req.url));
         } else {
           return NextResponse.redirect(new URL("/dashboard", req.url));
         }
