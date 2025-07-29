@@ -4,70 +4,63 @@ import { prisma } from "@/lib/prisma";
 
 async function handler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  if (req.method === "GET") {
-    try {
-      const opportunityId = params.id;
+  try {
+    const { id: opportunityId } = await params;
 
-      // Verify the opportunity exists
-      const opportunity = await prisma.opportunity.findUnique({
-        where: { id: opportunityId },
-        select: { id: true, title: true },
-      });
+    // Verify the opportunity exists
+    const opportunity = await prisma.opportunity.findUnique({
+      where: { id: opportunityId },
+      select: { id: true, title: true },
+    });
 
-      if (!opportunity) {
-        return NextResponse.json(
-          { error: "Opportunity not found" },
-          { status: 404 }
-        );
-      }
-
-      // Fetch saved opportunities with mentee details
-      const savedOpportunities = await prisma.savedOpportunity.findMany({
-        where: {
-          opportunityId: opportunityId,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-      // Extract mentee details from saved opportunities
-      const mentees = savedOpportunities.map((saved: any) => ({
-        id: saved.user.id,
-        firstName: saved.user.firstName,
-        lastName: saved.user.lastName,
-        email: saved.user.email,
-        role: saved.user.role,
-        createdAt: saved.createdAt.toISOString(), // Use saved date
-      }));
-
-      return NextResponse.json({ savedMentees: mentees });
-    } catch (error) {
-      console.error("Error fetching saved mentees:", error);
+    if (!opportunity) {
       return NextResponse.json(
-        { error: "Failed to fetch saved mentees" },
-        { status: 500 }
+        { error: "Opportunity not found" },
+        { status: 404 }
       );
     }
-  }
 
-  return NextResponse.json(
-    { error: "Method not allowed" },
-    { status: 405 }
-  );
+    // Fetch saved opportunities with user details
+    const savedOpportunities = await prisma.savedOpportunity.findMany({
+      where: {
+        opportunityId: opportunityId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Extract user details from saved opportunities
+    const users = savedOpportunities.map((saved: any) => ({
+      id: saved.user.id,
+      firstName: saved.user.firstName,
+      lastName: saved.user.lastName,
+      email: saved.user.email,
+      role: saved.user.role,
+      createdAt: saved.createdAt.toISOString(),
+    }));
+
+    return NextResponse.json({ savedOpportunities: users });
+  } catch (error) {
+    console.error("Error fetching saved opportunities:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch saved opportunities" },
+      { status: 500 }
+    );
+  }
 }
 
 export const GET = withAdminAuth(handler); 

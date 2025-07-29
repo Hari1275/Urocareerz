@@ -25,6 +25,14 @@ export async function POST(
     }
 
     const decoded = await verifyEdgeToken(token, secret);
+
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+
     const userId = decoded.userId;
 
     const params = await context.params;
@@ -106,10 +114,9 @@ export async function POST(
       include: {
         author: {
           select: {
-            id: true,
             firstName: true,
             lastName: true,
-            role: true,
+            email: true,
           },
         },
       },

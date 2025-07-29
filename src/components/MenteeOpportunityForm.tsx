@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
+import { Badge } from "@/components/ui/badge";
 
 interface MenteeOpportunityFormData {
   title: string;
@@ -41,7 +42,7 @@ interface MenteeOpportunityFormData {
 export default function MenteeOpportunityForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { opportunityTypes, loading: typesLoading } = useOpportunityTypes();
+  const { opportunityTypes, loading: typesLoading, getTypeBadge } = useOpportunityTypes();
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<MenteeOpportunityFormData>({
@@ -174,14 +175,38 @@ export default function MenteeOpportunityForm() {
                 disabled={typesLoading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select opportunity type" />
+                  <SelectValue placeholder="Select opportunity type">
+                    {formData.opportunityTypeId && (() => {
+                      const selectedType = opportunityTypes.find(type => type.id === formData.opportunityTypeId);
+                      if (selectedType) {
+                        const typeInfo = getTypeBadge(selectedType.name);
+                        return typeInfo ? (
+                          <Badge className={typeInfo.colorClass}>
+                            {typeInfo.name}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">{selectedType.name}</Badge>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {opportunityTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
+                  {opportunityTypes.map((type) => {
+                    const typeInfo = getTypeBadge(type.name);
+                    return (
+                      <SelectItem key={type.id} value={type.id}>
+                        {typeInfo ? (
+                          <Badge className={typeInfo.colorClass}>
+                            {typeInfo.name}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">{type.name}</Badge>
+                        )}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -263,24 +288,48 @@ export default function MenteeOpportunityForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="duration">Duration</Label>
-              <Input
-                id="duration"
+              <Select
                 value={formData.duration}
-                onChange={(e) => handleInputChange("duration", e.target.value)}
-                placeholder="e.g., 6 months, Full-time, Part-time"
-              />
+                onValueChange={(value) =>
+                  handleInputChange("duration", value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-3 months">1-3 months</SelectItem>
+                  <SelectItem value="3-6 months">3-6 months</SelectItem>
+                  <SelectItem value="6 months">6 months</SelectItem>
+                  <SelectItem value="1 year">1 year</SelectItem>
+                  <SelectItem value="2 years">2 years</SelectItem>
+                  <SelectItem value="Permanent">Permanent</SelectItem>
+                  <SelectItem value="Part-time">Part-time</SelectItem>
+                  <SelectItem value="Full-time">Full-time</SelectItem>
+                  <SelectItem value="Flexible">Flexible</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="compensation">Compensation</Label>
-              <Input
-                id="compensation"
-                value={formData.compensation}
-                onChange={(e) =>
-                  handleInputChange("compensation", e.target.value)
-                }
-                placeholder="e.g., $50,000/year, Stipend, Unpaid"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">₹</span>
+                </div>
+                <Input
+                  id="compensation"
+                  value={formData.compensation}
+                  onChange={(e) =>
+                    handleInputChange("compensation", e.target.value)
+                  }
+                  className="pl-8"
+                  placeholder="50,000/year, Stipend provided, Free"
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Enter amount without ₹ symbol. Use "Free", "Unpaid", or "Volunteer" for non-paid opportunities.
+              </p>
             </div>
           </div>
 

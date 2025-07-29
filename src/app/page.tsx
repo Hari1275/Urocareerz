@@ -21,6 +21,9 @@ function fadeUp(i = 1): Variants {
 }
 
 export default function Home() {
+  // Use a consistent year for SSR and client
+  const currentYear = new Date().getFullYear();
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
@@ -100,10 +103,10 @@ export default function Home() {
                 {i === 3 && (
                   <>
                     <div className="w-14 sm:w-16 h-14 sm:h-16 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-50 to-blue-100 mb-4 sm:mb-5 shadow-md shadow-blue-100">
-                      <svg className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.105.895-2 2-2s2 .895 2 2-.895 2-2 2-2-.895-2-2zm0 0V7m0 4v4m0 0a4 4 0 100-8 4 4 0 000 8z" /></svg>
+                      <svg className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                     </div>
-                    <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 text-gray-900">Secure & Private</h3>
-                    <p className="text-sm sm:text-base text-gray-600">Your data and conversations are protected with industry-leading security.</p>
+                    <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 text-gray-900">Real-time Collaboration</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Engage in discussions, share knowledge, and collaborate on research projects.</p>
                   </>
                 )}
               </motion.div>
@@ -261,7 +264,7 @@ export default function Home() {
               <a href="#" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Terms</a>
               <a href="#" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Contact</a>
             </div>
-            <span className="text-xs sm:text-sm text-gray-400">&copy; {new Date().getFullYear()} UroCareerz. All rights reserved.</span>
+            <span className="text-xs sm:text-sm text-gray-400" suppressHydrationWarning>&copy; {currentYear} UroCareerz. All rights reserved.</span>
           </div>
         </div>
       </footer>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
+import { useNavigation } from "@/hooks/use-navigation";
+import Breadcrumb from "@/components/Breadcrumb";
 import {
   MapPin,
   Briefcase,
@@ -45,15 +47,12 @@ interface Opportunity {
   applicationDeadline?: string;
   status: string;
   createdAt: string;
-  mentor: {
+  creator: {
     id: string;
     firstName: string;
     lastName: string;
-    profile?: {
-      specialty?: string;
-      workplace?: string;
-      yearsOfExperience?: number;
-    };
+    email: string;
+    role: string;
   };
 }
 
@@ -66,8 +65,8 @@ interface User {
 }
 
 export default function OpportunityDetailPage() {
-  const router = useRouter();
   const { getTypeBadge } = useOpportunityTypes();
+  const { goBack, navigateToApply } = useNavigation();
   const params = useParams();
   const [user, setUser] = useState<User | null>(null);
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
@@ -83,7 +82,7 @@ export default function OpportunityDetailPage() {
         const userResponse = await fetch("/api/user");
         if (!userResponse.ok) {
           if (userResponse.status === 401) {
-            router.push("/login");
+            goBack();
             return;
           }
           throw new Error("Failed to fetch user data");
@@ -121,7 +120,7 @@ export default function OpportunityDetailPage() {
     };
 
     fetchData();
-  }, [params, router]);
+  }, [params, goBack]);
 
   const handleSaveOpportunity = async () => {
     if (!opportunity) return;
@@ -148,7 +147,7 @@ export default function OpportunityDetailPage() {
 
   const handleApply = () => {
     if (opportunity) {
-      router.push(`/opportunities/${opportunity.id}/apply`);
+      navigateToApply(opportunity.id);
     }
   };
 
@@ -204,9 +203,9 @@ export default function OpportunityDetailPage() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={() => router.push("/opportunities")} className="w-full">
+            <Button onClick={goBack} className="w-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Opportunities
+              Go Back
             </Button>
           </CardContent>
         </Card>
@@ -226,9 +225,9 @@ export default function OpportunityDetailPage() {
               The opportunity you&apos;re looking for doesn&apos;t exist or has been
               removed.
             </p>
-            <Button onClick={() => router.push("/opportunities")} className="w-full">
+            <Button onClick={goBack} className="w-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Opportunities
+              Go Back
             </Button>
           </CardContent>
         </Card>
@@ -239,15 +238,23 @@ export default function OpportunityDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-6xl mx-auto py-8 px-4">
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: "Opportunities", href: "/opportunities" },
+            { label: opportunity.title },
+          ]}
+        />
+
         {/* Header */}
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => router.push("/opportunities")}
+            onClick={goBack}
             className="mb-6 hover:bg-blue-100"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Opportunities
+            Go Back
           </Button>
 
           <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
@@ -445,25 +452,15 @@ export default function OpportunityDetailPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      Dr. {opportunity.mentor.firstName}{" "}
-                      {opportunity.mentor.lastName}
+                      Dr. {opportunity.creator.firstName}{" "}
+                      {opportunity.creator.lastName}
                     </p>
-                    {opportunity.mentor.profile?.specialty && (
-                      <p className="text-sm text-gray-600">
-                        {opportunity.mentor.profile.specialty}
-                      </p>
-                    )}
-                    {opportunity.mentor.profile?.workplace && (
-                      <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                        <Building className="h-3 w-3" />
-                        {opportunity.mentor.profile.workplace}
-                      </p>
-                    )}
-                    {opportunity.mentor.profile?.yearsOfExperience && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        {opportunity.mentor.profile.yearsOfExperience} years experience
-                      </p>
-                    )}
+                    <p className="text-sm text-gray-600">
+                      {opportunity.creator.email}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {opportunity.creator.role}
+                    </p>
                   </div>
                 </div>
               </CardContent>

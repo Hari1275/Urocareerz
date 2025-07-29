@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,16 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
+import { useNavigation } from "@/hooks/use-navigation";
 import {
   Search,
   MapPin,
@@ -29,7 +28,11 @@ import {
   Calendar,
   Bookmark,
   BookmarkCheck,
+  FileText,
+  LogOut,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Opportunity {
   id: string;
@@ -50,35 +53,49 @@ interface Opportunity {
   applicationDeadline?: string;
   status: string;
   createdAt: string;
-  mentor: {
+  creator: {
     firstName: string;
     lastName: string;
-    specialty?: string;
+    email: string;
+    role: string;
   };
 }
 
-interface User {
+interface OpportunityType {
   id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  role: string;
+  name: string;
+  description?: string;
+  color?: string;
 }
 
 export default function OpportunitiesPage() {
   const router = useRouter();
-  const { opportunityTypes } = useOpportunityTypes();
-  const [user, setUser] = useState<User | null>(null);
+  const searchParams = useSearchParams();
+  const { getTypeBadge } = useOpportunityTypes();
+  const { navigateToOpportunity, navigateToApply, navigateToDashboard } = useNavigation();
+  
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [savedOpportunities, setSavedOpportunities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [savedOpportunities, setSavedOpportunities] = useState<string[]>([]);
-
-  // Filter states
+  const [user, setUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [experienceFilter, setExperienceFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [savedFilter, setSavedFilter] = useState("all");
+  const [opportunityTypes, setOpportunityTypes] = useState<OpportunityType[]>([]);
+  const [userApplications, setUserApplications] = useState<string[]>([]);
+
+  // Handle URL parameters on mount
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam === 'saved') {
+      setSavedFilter('saved');
+    } else if (filterParam === 'applied') {
+      setSavedFilter('applied');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchUserAndOpportunities = async () => {
@@ -87,7 +104,7 @@ export default function OpportunitiesPage() {
         const userResponse = await fetch("/api/user");
         if (!userResponse.ok) {
           if (userResponse.status === 401) {
-            router.push("/login");
+            navigateToDashboard();
             return;
           }
           throw new Error("Failed to fetch user data");
@@ -118,6 +135,25 @@ export default function OpportunitiesPage() {
             ) || []
           );
         }
+
+        // Fetch opportunity types
+        const typesResponse = await fetch("/api/opportunity-types");
+        if (typesResponse.ok) {
+          const typesData = await typesResponse.json();
+          setOpportunityTypes(typesData.opportunityTypes || []);
+        }
+
+        // Fetch user applications (only for mentees)
+        if (userData.user.role === "MENTEE") {
+          const applicationsResponse = await fetch("/api/applications");
+          if (applicationsResponse.ok) {
+            const applicationsData = await applicationsResponse.json();
+            const appliedOpportunityIds = applicationsData.applications?.map(
+              (app: any) => app.opportunityId
+            ) || [];
+            setUserApplications(appliedOpportunityIds);
+          }
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -126,16 +162,20 @@ export default function OpportunitiesPage() {
     };
 
     fetchUserAndOpportunities();
-  }, [router]);
+  }, [navigateToDashboard]);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/logout", { method: "POST" });
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
       if (response.ok) {
-        router.push("/login");
+        navigateToDashboard();
       }
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -167,7 +207,7 @@ export default function OpportunitiesPage() {
   };
 
   const handleApply = (opportunityId: string) => {
-    router.push(`/opportunities/${opportunityId}/apply`);
+    navigateToApply(opportunityId);
   };
 
   const getExperienceLevelLabel = (level: string) => {
@@ -203,8 +243,14 @@ export default function OpportunitiesPage() {
       typeFilter === "all" ||
       (opportunity.opportunityType &&
         opportunity.opportunityType.name === typeFilter);
+    const matchesSaved = 
+      savedFilter === "all" || 
+      (savedFilter === "saved" && savedOpportunities.includes(opportunity.id)) ||
+      (savedFilter === "not_saved" && !savedOpportunities.includes(opportunity.id)) ||
+      (savedFilter === "applied" && userApplications.includes(opportunity.id)) ||
+      (savedFilter === "not_applied" && !userApplications.includes(opportunity.id));
 
-    return matchesSearch && matchesLocation && matchesExperience && matchesType;
+    return matchesSearch && matchesLocation && matchesExperience && matchesType && matchesSaved;
   });
 
   if (loading) {
@@ -385,6 +431,18 @@ export default function OpportunitiesPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={savedFilter} onValueChange={setSavedFilter}>
+              <SelectTrigger className="bg-white/80">
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Opportunities</SelectItem>
+                <SelectItem value="saved">Only Saved</SelectItem>
+                <SelectItem value="not_saved">Only Not Saved</SelectItem>
+                <SelectItem value="applied">Applied To</SelectItem>
+                <SelectItem value="not_applied">Not Applied To</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -448,9 +506,9 @@ export default function OpportunitiesPage() {
                       {opportunity.duration}
                     </div>
                   )}
-                  {opportunity.mentor && (
+                  {opportunity.creator && (
                     <div className="text-sm text-gray-500">
-                      Posted by Dr. {opportunity.mentor.firstName} {opportunity.mentor.lastName}
+                      Posted by Dr. {opportunity.creator.firstName} {opportunity.creator.lastName}
                     </div>
                   )}
                 </div>
@@ -458,9 +516,23 @@ export default function OpportunitiesPage() {
               <CardFooter>
                 <Button
                   onClick={() => handleApply(opportunity.id)}
-                  className="w-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                  disabled={userApplications.includes(opportunity.id)}
+                  className={
+                    userApplications.includes(opportunity.id)
+                      ? "w-full bg-green-100 text-green-700 border border-green-300 font-semibold shadow-md cursor-not-allowed"
+                      : "w-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                  }
                 >
-                  Apply Now
+                  {userApplications.includes(opportunity.id) ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Applied
+                    </div>
+                  ) : (
+                    "Apply Now"
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -481,6 +553,7 @@ export default function OpportunitiesPage() {
                 setLocationFilter("all");
                 setExperienceFilter("all");
                 setTypeFilter("all");
+                setSavedFilter("all");
               }}
               variant="outline"
               className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:shadow-lg"

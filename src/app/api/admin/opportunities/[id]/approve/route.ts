@@ -5,106 +5,91 @@ import { sendOpportunityApprovalEmail } from "@/lib/email";
 import { AuditLogger } from "@/lib/audit-logger";
 
 // POST /api/admin/opportunities/[id]/approve - Approve an opportunity
-export const POST = withAdminAuth(
-  async (req: NextRequest, context?: { params: Promise<{ [key: string]: string }> }) => {
-    try {
-      const params = await context?.params;
-      const opportunityId = params?.id;
+async function handler(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const adminUser = getAdminUser(req);
+    if (!adminUser) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
 
-      if (!opportunityId) {
-        return NextResponse.json(
-          { error: "Opportunity ID is required" },
-          { status: 400 }
-        );
-      }
+    const { id: opportunityId } = await params;
 
-      // Get admin user for audit logging
-      const adminUser = getAdminUser(req);
-      if (!adminUser) {
-        return NextResponse.json({ error: "Admin user not found" }, { status: 401 });
-      }
+    // Find the opportunity
+    const opportunity = await prisma.opportunity.findUnique({
+      where: { id: opportunityId },
+    });
 
-      // Find the opportunity
-      const opportunity = await prisma.opportunity.findUnique({
-        where: { id: opportunityId },
-      });
-
-      if (!opportunity) {
-        return NextResponse.json(
-          { error: "Opportunity not found" },
-          { status: 404 }
-        );
-      }
-
-      // Update the opportunity status to approved
-      const updatedOpportunity = await prisma.opportunity.update({
-        where: { id: opportunityId },
-        data: { status: "APPROVED" },
-        include: {
-          mentor: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-        },
-      });
-
-      // Send email notification to mentor
-      try {
-        const mentorName =
-          `${updatedOpportunity.mentor.firstName || ""} ${
-            updatedOpportunity.mentor.lastName || ""
-          }`.trim() || "Mentor";
-
-        const emailResult = await sendOpportunityApprovalEmail({
-          email: updatedOpportunity.mentor.email,
-          mentorName: mentorName,
-          opportunityTitle: updatedOpportunity.title,
-        });
-
-        if (!emailResult.success) {
-          console.error(
-            "Failed to send opportunity approval email:",
-            emailResult.error
-          );
-          // Don't fail the request if email fails, just log it
-        } else {
-          console.log(
-            "Opportunity approval email sent successfully to:",
-            updatedOpportunity.mentor.email
-          );
-        }
-      } catch (emailError) {
-        console.error("Error sending opportunity approval email:", emailError);
-        // Don't fail the request if email fails, just log it
-      }
-
-      // Log the audit event
-      await AuditLogger.logOpportunityAction(
-        "OPPORTUNITY_APPROVED",
-        opportunityId,
-        adminUser.userId,
-        {
-          opportunityTitle: updatedOpportunity.title,
-          mentorEmail: updatedOpportunity.mentor.email,
-          adminEmail: adminUser.email,
-        },
-        req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined,
-        req.headers.get("user-agent") || undefined
-      );
-
-      return NextResponse.json({
-        message: "Opportunity approved successfully",
-        opportunity: updatedOpportunity,
-      });
-    } catch (error) {
-      console.error("Error approving opportunity:", error);
+    if (!opportunity) {
       return NextResponse.json(
-        { error: "Failed to approve opportunity" },
-        { status: 500 }
+        { error: "Opportunity not found" },
+        { status: 404 }
       );
     }
+
+    // Update the opportunity status to approved
+    const updatedOpportunity = await prisma.opportunity.update({
+      where: { id: opportunityId },
+      data: { status: "APPROVED" },
+    });
+
+    // Fetch creator details separately to avoid TypeScript cache issues
+    const creator = await prisma.user.findUnique({
+      where: { id: (opportunity as any).creatorId },
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+    });
+
+    if (!creator) {
+      return NextResponse.json(
+        { error: "Creator not found" },
+        { status: 404 }
+      );
+    }
+
+    // Send email notification to creator
+    const creatorName = `${
+      creator.firstName || ""
+    } ${
+      creator.lastName || ""
+    }`.trim();
+
+    await sendOpportunityApprovalEmail({
+      email: creator.email,
+      mentorName: creatorName,
+      opportunityTitle: updatedOpportunity.title,
+    });
+
+    // Log the audit event
+    await AuditLogger.logOpportunityAction(
+      "OPPORTUNITY_APPROVED",
+      opportunityId,
+      adminUser.userId,
+      {
+        opportunityTitle: updatedOpportunity.title,
+        creatorEmail: creator.email,
+        adminEmail: adminUser.email,
+      },
+      req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined,
+      req.headers.get("user-agent") || undefined
+    );
+
+    return NextResponse.json({
+      message: "Opportunity approved successfully",
+      opportunity: updatedOpportunity,
+    });
+  } catch (error) {
+    console.error("Error approving opportunity:", error);
+    return NextResponse.json(
+      { error: "Failed to approve opportunity" },
+      { status: 500 }
+    );
   }
-);
+}
+
+export const POST = withAdminAuth(handler);

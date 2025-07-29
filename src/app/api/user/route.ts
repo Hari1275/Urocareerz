@@ -31,12 +31,12 @@ export async function GET(req: NextRequest) {
     const decoded = await verifyEdgeToken(token, secret);
     console.log(
       "User API: Token verified successfully, user ID:",
-      decoded.userId
+      decoded?.userId
     );
 
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded?.userId },
       select: {
         id: true,
         email: true,

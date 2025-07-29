@@ -25,6 +25,14 @@ export async function POST(req: NextRequest) {
     }
 
     const decoded = await verifyEdgeToken(token, secret);
+    
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+    
     const userId = decoded.userId;
     console.log("Upload API: User authenticated, userId:", userId);
 
@@ -92,6 +100,7 @@ export async function POST(req: NextRequest) {
       // In a real implementation, you would save the file locally
       return NextResponse.json({
         success: true,
+        url: `local-${fileKey}`, // Mock URL for testing
         fileKey: `local-${fileKey}`, // Mock file key for testing
         fileName: file.name,
         fileSize: file.size,
@@ -115,6 +124,7 @@ export async function POST(req: NextRequest) {
     console.log("Upload API: Upload successful, returning response");
     return NextResponse.json({
       success: true,
+      url: uploadResult.url || uploadResult.key, // Return URL for frontend compatibility
       fileKey: uploadResult.key,
       fileName: file.name,
       fileSize: file.size,
@@ -146,6 +156,15 @@ export async function DELETE(req: NextRequest) {
 
     const decoded = await verifyEdgeToken(token, secret);
 
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+
+    const userId = decoded.userId;
+
     const { searchParams } = new URL(req.url);
     const fileKeyParam = searchParams.get("key");
 
@@ -173,17 +192,12 @@ export async function DELETE(req: NextRequest) {
       }
     }
 
-    console.log("Upload API DELETE: Original key param:", fileKeyParam);
-    console.log("Upload API DELETE: Final file key:", fileKey);
-    console.log("Upload API DELETE: User ID:", decoded.userId);
+    console.log("Upload API DELETE: User ID:", userId);
 
-    // Verify the file belongs to the user (basic security check)
-    if (!fileKey.includes(decoded.userId)) {
-      console.log(
-        "Upload API DELETE: Security check failed - file key does not contain user ID"
-      );
+    // Check if the file belongs to the user
+    if (!fileKey.includes(userId)) {
       return NextResponse.json(
-        { error: "Unauthorized to delete this file" },
+        { error: "Access denied" },
         { status: 403 }
       );
     }

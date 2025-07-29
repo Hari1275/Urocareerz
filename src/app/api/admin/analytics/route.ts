@@ -83,7 +83,7 @@ async function getAnalytics(request: NextRequest) {
       }),
       
       // Total mentee opportunities
-      prisma.menteeOpportunity.count({
+      prisma.opportunity.count({
         where: {
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
@@ -92,7 +92,7 @@ async function getAnalytics(request: NextRequest) {
       }),
       
       // Pending mentee opportunities
-      prisma.menteeOpportunity.count({
+      prisma.opportunity.count({
         where: {
           status: "PENDING",
           ...(Object.keys(dateFilter).length > 0 && {

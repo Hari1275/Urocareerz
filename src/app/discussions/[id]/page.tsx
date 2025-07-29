@@ -389,7 +389,13 @@ export default function DiscussionThreadPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
+                    <span suppressHydrationWarning>
+                      {new Date(thread.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
@@ -469,8 +475,12 @@ export default function DiscussionThreadPage() {
                           {comment.author.firstName} {comment.author.lastName}
                         </span>
                       </div>
-                      <span className="text-sm text-gray-500">
-                        {new Date(comment.createdAt).toLocaleDateString()}
+                      <span className="text-sm text-gray-500" suppressHydrationWarning>
+                        {new Date(comment.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
                       </span>
                     </div>
                     <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">

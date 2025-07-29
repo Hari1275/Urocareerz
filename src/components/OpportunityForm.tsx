@@ -155,6 +155,9 @@ export default function OpportunityForm({
 
       const method = isEditing ? "PUT" : "POST";
 
+      // Debug: Log the data being sent
+      console.log("Sending opportunity data:", formData);
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -166,6 +169,7 @@ export default function OpportunityForm({
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("API Error:", errorData);
         throw new Error(errorData.error || "Failed to save opportunity");
       }
 

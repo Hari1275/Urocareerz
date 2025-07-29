@@ -41,7 +41,7 @@ export async function POST(
     }
 
     // Verify the user owns this application
-    if (application.menteeId !== decoded.userId) {
+    if (application.menteeId !== decoded?.userId) {
       return NextResponse.json(
         { error: "Unauthorized to withdraw this application" },
         { status: 403 }
@@ -64,7 +64,7 @@ export async function POST(
         opportunity: {
           include: {
             opportunityType: true,
-            mentor: {
+            creator: {
               select: {
                 firstName: true,
                 lastName: true,

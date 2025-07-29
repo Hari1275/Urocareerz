@@ -76,13 +76,21 @@ export async function GET(req: NextRequest) {
 
     console.log('Download API: Original key param:', fileKeyParam);
     console.log('Download API: Final file key:', fileKey);
+    console.log('Download API: User ID:', decoded?.userId);
+
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+
     console.log('Download API: User ID:', decoded.userId);
 
-    // Verify the file belongs to the user (basic security check)
+    // Check if the file belongs to the user
     if (!fileKey.includes(decoded.userId)) {
-      console.log('Download API: Security check failed - file key does not contain user ID');
       return NextResponse.json(
-        { error: 'Unauthorized to access this file' },
+        { error: "Access denied" },
         { status: 403 }
       );
     }

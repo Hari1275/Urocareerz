@@ -29,17 +29,14 @@ model User {
   // Profile relationship
   profile   Profile?
   
-  // Opportunities relationship (for mentors)
-  opportunities Opportunity[]
+  // Opportunities relationship (unified - both mentor and mentee created)
+  opportunities Opportunity[] @relation("OpportunityCreator")
   
   // Saved opportunities relationship (for mentees)
   savedOpportunities SavedOpportunity[]
   
   // Applications relationship (for mentees)
   applications Application[]
-  
-  // Mentee opportunity submissions
-  menteeOpportunities MenteeOpportunity[]
   
   // Discussion threads (created by user)
   discussionThreads DiscussionThread[]
@@ -96,146 +93,120 @@ model Opportunity {
   opportunityTypeId String   @db.ObjectId
   opportunityType   OpportunityType @relation(fields: [opportunityTypeId], references: [id])
   status            OpportunityStatus @default(PENDING)
-  mentorId          String   @db.ObjectId
-  mentor            User     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
   
-  // Additional fields
+  // Unified creator field - can be either mentor or mentee
+  creatorId         String   @db.ObjectId
+  creator           User     @relation("OpportunityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorRole       Role     // MENTOR or MENTEE to distinguish the creator type
+  
+  // Source attribution for external opportunities
+  sourceUrl         String?  // URL where the opportunity was found
+  sourceName        String?  // Name of the source (e.g., "LinkedIn", "Indeed")
+  
+  // Opportunity details
   requirements      String?
   benefits          String?
   duration          String?
   compensation      String?
   applicationDeadline DateTime?
   
-  // Soft delete field
-  deletedAt         DateTime?
+  // Admin management fields
+  adminFeedback     String?  // Admin feedback on the opportunity
+  adminNotes        String?  // Internal admin notes
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime? // Soft delete field
   
   // Relationships
+  applications      Application[]
   savedOpportunities SavedOpportunity[]
-  applications        Application[]
-  
-  // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
-// New model for mentee opportunity submissions
-model MenteeOpportunity {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  title             String
-  description       String
-  location          String?
-  experienceLevel   String?
-  opportunityTypeId String   @db.ObjectId
-  opportunityType   OpportunityType @relation(fields: [opportunityTypeId], references: [id])
-  status            MenteeOpportunityStatus @default(PENDING)
-  menteeId          String   @db.ObjectId
-  mentee            User     @relation(fields: [menteeId], references: [id], onDelete: Cascade)
-  
-  // Additional fields
-  requirements      String?
-  benefits          String?
-  duration          String?
-  compensation      String?
-  applicationDeadline DateTime?
-  sourceUrl         String?  // URL to the original opportunity
-  sourceName        String?  // Name of the source (e.g., "LinkedIn", "Company Website")
-  
-  // Admin feedback
-  adminFeedback     String?
-  adminNotes        String?
-  
-  // Soft delete field
-  deletedAt         DateTime?
-  
-  // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
-// New model for discussion threads
-model DiscussionThread {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  content     String
-  category    DiscussionCategory @default(GENERAL)
-  status      DiscussionStatus @default(ACTIVE)
-  authorId    String   @db.ObjectId
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
-  // Thread metadata
-  tags        String[]
-  isPinned    Boolean  @default(false)
-  viewCount   Int      @default(0)
-  
-  // Soft delete field
-  deletedAt   DateTime?
-  
-  // Relationships
-  comments    DiscussionComment[]
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// New model for discussion comments
-model DiscussionComment {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  content   String
-  authorId  String   @db.ObjectId
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  threadId  String   @db.ObjectId
-  thread    DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  
-  // Comment metadata
-  isEdited  Boolean  @default(false)
-  editedAt  DateTime?
-  
-  // Soft delete field
-  deletedAt DateTime?
-  
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model OpportunityType {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String   @unique
-  description String?
-  color       String?  // For UI styling (e.g., "blue", "green", "purple")
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  opportunities Opportunity[]
-  menteeOpportunities MenteeOpportunity[]
-
-  @@map("opportunityTypes")
 }
 
 enum OpportunityStatus {
   PENDING
   APPROVED
   REJECTED
-  CLOSED
+  EXPIRED
 }
 
-enum MenteeOpportunityStatus {
+model OpportunityType {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  color       String   @default("#3B82F6") // Default blue color
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  opportunities Opportunity[]
+}
+
+model Application {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  menteeId      String   @db.ObjectId
+  opportunityId String   @db.ObjectId
+  status        ApplicationStatus @default(PENDING)
+  coverLetter   String?
+  resumeUrl     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relationships
+  mentee        User     @relation(fields: [menteeId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  
+  @@unique([menteeId, opportunityId])
+}
+
+enum ApplicationStatus {
   PENDING
-  APPROVED
+  ACCEPTED
   REJECTED
-  CONVERTED  // Converted to a regular opportunity
+  WITHDRAWN
+}
+
+model SavedOpportunity {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  opportunityId String   @db.ObjectId
+  createdAt     DateTime @default(now())
+  
+  // Relationships
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, opportunityId])
+}
+
+model DiscussionThread {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  category    DiscussionCategory
+  tags        String[]
+  status      DiscussionStatus @default(ACTIVE)
+  isPinned    Boolean  @default(false)
+  authorId    String   @db.ObjectId
+  deletedAt   DateTime? // Soft delete field
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    DiscussionComment[]
 }
 
 enum DiscussionCategory {
   GENERAL
-  CASE_DISCUSSION
+  MENTORSHIP
   CAREER_ADVICE
-  TECHNICAL
-  NETWORKING
-  RESOURCES
+  RESEARCH
+  CLINICAL
+  FELLOWSHIP
+  OTHER
 }
 
 enum DiscussionStatus {
@@ -244,57 +215,32 @@ enum DiscussionStatus {
   ARCHIVED
 }
 
-model SavedOpportunity {
-  id            String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String      @db.ObjectId
-  opportunityId String      @db.ObjectId
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  createdAt     DateTime    @default(now())
+model DiscussionComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  authorId  String   @db.ObjectId
+  threadId  String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   
-  @@unique([userId, opportunityId])
+  // Relationships
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  thread    DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 }
 
-model Application {
-  id            String           @id @default(auto()) @map("_id") @db.ObjectId
-  menteeId      String           @db.ObjectId
-  opportunityId String           @db.ObjectId
-  status        ApplicationStatus @default(PENDING)
-  cvFile        String?          // S3 key for CV file
-  cvFileName    String?          // Original filename for CV
-  coverLetter   String?
-  mentee        User             @relation(fields: [menteeId], references: [id], onDelete: Cascade)
-  opportunity   Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  
-  @@unique([menteeId, opportunityId])
-}
-
-enum ApplicationStatus {
-  PENDING
-  UNDER_REVIEW
-  ACCEPTED
-  REJECTED
-  WITHDRAWN
-}
-
-// Audit Log model for tracking admin and user actions
 model AuditLog {
-  id          String      @id @default(auto()) @map("_id") @db.ObjectId
-  action      String      // e.g., "USER_APPROVED", "OPPORTUNITY_DELETED", "ROLE_CHANGED"
-  entityType  String      // e.g., "User", "Opportunity", "Discussion"
-  entityId    String      // ID of the affected entity
-  userId      String      @db.ObjectId // ID of the user who performed the action
-  user        User        @relation(fields: [userId], references: [id])
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  action     String
+  entityType String
+  entityId   String
+  userId     String   @db.ObjectId
+  metadata   Json?    // Additional data about the action
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
   
-  // Additional context
-  details     String?     // JSON string with additional details
-  ipAddress   String?     // IP address of the user
-  userAgent   String?     // User agent string
-  
-  // Timestamps
-  createdAt   DateTime    @default(now())
+  // Relationships
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([action])
   @@index([entityType])

@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useClientOnly } from '@/hooks/use-client-only'
 
 export default function ClientYear() {
-  const [year, setYear] = useState<number | null>(null)
-
-  useEffect(() => {
-    setYear(new Date().getFullYear())
-  }, [])
+  const isClient = useClientOnly()
+  
+  // Use a consistent year for SSR and initial client render
+  const currentYear = new Date().getFullYear()
 
   return (
     <span suppressHydrationWarning>
-      {year || new Date().getFullYear()}
+      {currentYear}
     </span>
   )
 } 

@@ -24,6 +24,11 @@ function VerifyContent() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Redirect to registration if no userId is provided
@@ -64,8 +69,8 @@ function VerifyContent() {
   const handleResendOTP = async () => {
     if (!userId) return;
 
-    setError(null);
     setResending(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/resend-otp", {
@@ -78,17 +83,15 @@ function VerifyContent() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to resend verification code");
+      if (response.ok) {
+        setError("OTP resent successfully!");
+        // In development, show OTP on screen
+        if (data.otp) {
+          setDevOtp(data.otp);
+        }
+      } else {
+        throw new Error(data.error || "Failed to resend OTP");
       }
-
-      // In development mode, show the OTP
-      if (data.otp) {
-        setDevOtp(data.otp);
-      }
-
-      // Show success message
-      setError("A new verification code has been sent to your email");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -96,8 +99,20 @@ function VerifyContent() {
     }
   };
 
-  if (!userId) {
-    return null; // Will redirect in useEffect
+  // Show loading state during SSR
+  if (!mounted) {
+    return (
+      <div className="auth-layout">
+        <div className="w-full max-w-md fade-in">
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -142,7 +157,7 @@ function VerifyContent() {
                   onChange={(e) => setOtp(e.target.value)}
                   className="text-center text-xl tracking-widest input-primary"
                 />
-                {devOtp && process.env.NODE_ENV === "development" && (
+                {mounted && devOtp && process.env.NODE_ENV === "development" && (
                   <p className="text-xs text-gray-500 mt-2">
                     Development mode: OTP is {devOtp}
                   </p>

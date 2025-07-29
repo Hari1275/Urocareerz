@@ -115,6 +115,14 @@ export async function POST(req: NextRequest) {
     }
 
     const decoded = await verifyEdgeToken(token, secret);
+
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+
     const userId = decoded.userId;
 
     // Get user to check if approved
@@ -170,23 +178,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
 
-    // Create discussion thread
+    // Create the discussion thread
     const thread = await prisma.discussionThread.create({
       data: {
         title,
         content,
         category,
-        tags: tags.slice(0, 5), // Limit to 5 tags
+        tags,
         authorId: userId,
         status: "ACTIVE",
       },
       include: {
         author: {
           select: {
-            id: true,
             firstName: true,
             lastName: true,
-            role: true,
+            email: true,
           },
         },
       },

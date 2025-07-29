@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Get all opportunities posted by this mentor
     const mentorOpportunities = await prisma.opportunity.findMany({
-      where: { mentorId: payload.userId },
+      where: { creatorId: payload.userId },
       select: { id: true },
     });
 

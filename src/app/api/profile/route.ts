@@ -28,12 +28,12 @@ export async function GET(req: NextRequest) {
     const decoded = await verifyEdgeToken(token, secret);
     console.log(
       "Profile API: Token verified successfully, user ID:",
-      decoded.userId
+      decoded?.userId
     );
 
     // Get user with profile
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded?.userId },
       include: {
         profile: true,
       },
@@ -96,9 +96,16 @@ export async function POST(req: NextRequest) {
 
     const decoded = await verifyEdgeToken(token, secret);
 
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+
     // Check if profile already exists
     const existingProfile = await prisma.profile.findUnique({
-      where: { userId: decoded.userId },
+      where: { userId: decoded?.userId },
     });
 
     if (existingProfile) {
@@ -113,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields based on user role
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded?.userId },
       select: { role: true },
     });
 
@@ -159,7 +166,7 @@ export async function POST(req: NextRequest) {
 
     // Prepare profile data
     const profileData: Record<string, unknown> = {
-      userId: decoded.userId,
+      userId: decoded?.userId,
       bio: body.bio || null,
       location: body.location || null,
       avatar: convertFileKeyToUrl(body.avatar),
@@ -183,7 +190,14 @@ export async function POST(req: NextRequest) {
 
     // Create profile
     const profile = await prisma.profile.create({
-      data: profileData,
+      data: {
+        ...profileData,
+        user: {
+          connect: {
+            id: decoded.userId,
+          },
+        },
+      },
     });
 
     return NextResponse.json(
@@ -220,6 +234,13 @@ export async function PUT(req: NextRequest) {
 
     const decoded = await verifyEdgeToken(token, secret);
 
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+
     // Get request body
     const body = await req.json();
     console.log("Profile API PUT: Received body:", body);
@@ -230,7 +251,7 @@ export async function PUT(req: NextRequest) {
 
     // Get user role
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded?.userId },
       select: { role: true },
     });
 
@@ -313,8 +334,12 @@ export async function PUT(req: NextRequest) {
       where: { userId: decoded.userId },
       update: updateData,
       create: {
-        userId: decoded.userId,
         ...updateData,
+        user: {
+          connect: {
+            id: decoded.userId,
+          },
+        },
       },
     });
 

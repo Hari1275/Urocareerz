@@ -23,7 +23,6 @@ import {
   Calendar,
 } from "lucide-react";
 import UserManagementTable from "@/components/UserManagementTable";
-import OpportunityManagementTable from "@/components/OpportunityManagementTable";
 import ContentModerationTable from "@/components/ContentModerationTable";
 import OpportunityTypeManagement from "@/components/OpportunityTypeManagement";
 import DiscussionManagementTable from "@/components/DiscussionManagementTable";
@@ -104,7 +103,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "opportunities" | "content" | "types" | "discussions" | "audit-logs"
+    "overview" | "users" | "content" | "types" | "discussions" | "audit-logs"
   >("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [, setUsers] = useState<User[]>([]);
@@ -280,7 +279,7 @@ export default function AdminDashboardPage() {
   const getPieLabel = (entry: any) => `${entry["role"] || entry["typeName"]}: ${entry["percent"] ? Math.round(entry["percent"] * 100) : 0}%`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50" suppressHydrationWarning>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -366,17 +365,6 @@ export default function AdminDashboardPage() {
               >
                 <Users className="h-4 w-4 mr-3" />
                 User Management
-              </Button>
-              <Button
-                variant={activeTab === "opportunities" ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => {
-                  setActiveTab("opportunities");
-                  setSidebarOpen(false);
-                }}
-              >
-                <FileText className="h-4 w-4 mr-3" />
-                Opportunity Management
               </Button>
               <Button
                 variant={activeTab === "content" ? "default" : "ghost"}
@@ -837,21 +825,6 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {activeTab === "opportunities" && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Opportunity Management
-                </h2>
-                <p className="text-gray-600">
-                  Review and moderate submitted opportunities
-                </p>
-              </div>
-
-              <OpportunityManagementTable />
-            </div>
-          )}
-
           {activeTab === "content" && (
             <div className="space-y-6">
               <div>
@@ -859,7 +832,7 @@ export default function AdminDashboardPage() {
                   Content Moderation
                 </h2>
                 <p className="text-gray-600">
-                  Review and moderate submitted opportunities
+                  Review, moderate, and manage all opportunities with comprehensive engagement metrics and detailed information
                 </p>
               </div>
 

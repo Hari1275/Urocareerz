@@ -1,44 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAdminAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { withAdminAuth } from "@/lib/admin-auth";
 
 async function handler(
   req: NextRequest,
-  context?: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const params = await context?.params;
-  const opportunityId = params?.id;
-
-  if (!opportunityId) {
-    return NextResponse.json(
-      { error: "Opportunity ID is required" },
-      { status: 400 }
-    );
-  }
+  const { id: opportunityId } = await params;
 
   if (req.method === "GET") {
     try {
-      const opportunity = await prisma.opportunity.findUnique({
+      const opportunity = await (prisma.opportunity.findUnique({
         where: {
           id: opportunityId,
         },
         include: {
-          mentor: {
+          creator: {
             select: {
               id: true,
               firstName: true,
               lastName: true,
               email: true,
+              role: true,
             },
           },
+          opportunityType: true,
           _count: {
             select: {
               applications: true,
               savedOpportunities: true,
             },
           },
-        },
-      });
+        } as any,
+      }) as any);
 
       if (!opportunity) {
         return NextResponse.json(
@@ -60,22 +54,24 @@ async function handler(
   if (req.method === "PUT") {
     try {
       const body = await req.json();
+
       const {
         title,
         description,
         location,
         experienceLevel,
-        opportunityType,
+        opportunityTypeId,
         status,
         requirements,
         benefits,
         duration,
         compensation,
         applicationDeadline,
+        creatorId,
       } = body;
 
       // Validate required fields
-      if (!title || !description || !opportunityType || !status) {
+      if (!title || !description || !opportunityTypeId || !status) {
         return NextResponse.json(
           { error: "Missing required fields" },
           { status: 400 }
@@ -84,9 +80,7 @@ async function handler(
 
       // Check if opportunity exists
       const existingOpportunity = await prisma.opportunity.findUnique({
-        where: {
-          id: opportunityId,
-        },
+        where: { id: opportunityId },
       });
 
       if (!existingOpportunity) {
@@ -96,15 +90,32 @@ async function handler(
         );
       }
 
+      // Check if creator exists and has the correct role
+      if (creatorId) {
+        const creator = await prisma.user.findUnique({
+          where: {
+            id: creatorId,
+            role: "MENTOR",
+          },
+        });
+
+        if (!creator) {
+          return NextResponse.json(
+            { error: "Invalid creator selected" },
+            { status: 400 }
+          );
+        }
+      }
+
       // Update opportunity
-      const updatedOpportunity = await prisma.opportunity.update({
+      const updatedOpportunity = await (prisma.opportunity.update({
         where: { id: opportunityId },
         data: {
           title,
           description,
           location,
           experienceLevel,
-          opportunityType,
+          opportunityTypeId,
           status,
           requirements,
           benefits,
@@ -113,18 +124,22 @@ async function handler(
           applicationDeadline: applicationDeadline
             ? new Date(applicationDeadline)
             : null,
-        },
+          creatorId: creatorId || (existingOpportunity as any).creatorId,
+          creatorRole: "MENTOR",
+        } as any,
         include: {
-          mentor: {
+          creator: {
             select: {
               id: true,
               firstName: true,
               lastName: true,
               email: true,
+              role: true,
             },
           },
-        },
-      });
+          opportunityType: true,
+        } as any,
+      }) as any);
 
       return NextResponse.json({
         message: "Opportunity updated successfully",
@@ -143,9 +158,7 @@ async function handler(
     try {
       // Check if opportunity exists
       const existingOpportunity = await prisma.opportunity.findUnique({
-        where: {
-          id: opportunityId,
-        },
+        where: { id: opportunityId },
       });
 
       if (!existingOpportunity) {
@@ -156,12 +169,10 @@ async function handler(
       }
 
       // Soft delete the opportunity
-      await prisma.opportunity.update({
+      await (prisma.opportunity.update({
         where: { id: opportunityId },
-        data: {
-          deletedAt: new Date(),
-        },
-      });
+        data: { deletedAt: new Date() },
+      }) as any);
 
       return NextResponse.json({
         message: "Opportunity deleted successfully",
@@ -175,7 +186,10 @@ async function handler(
     }
   }
 
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+  return NextResponse.json(
+    { error: "Method not allowed" },
+    { status: 405 }
+  );
 }
 
 export const GET = withAdminAuth(handler);

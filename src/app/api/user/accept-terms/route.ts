@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // Update user to mark terms as accepted
     const updatedUser = await prisma.user.update({
-      where: { id: decoded.userId },
+      where: { id: decoded?.userId },
       data: { termsAccepted: true },
       select: {
         id: true,

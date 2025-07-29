@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       include: {
         opportunity: {
           include: {
-            mentor: {
+            creator: {
               select: {
                 firstName: true,
                 lastName: true,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       include: {
         opportunity: {
           include: {
-            mentor: {
+            creator: {
               select: {
                 firstName: true,
                 lastName: true,

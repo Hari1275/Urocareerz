@@ -19,6 +19,7 @@ interface FileUploadProps {
   maxSize?: number; // in MB
   type?: "resume" | "avatar";
   className?: string;
+  autoUpload?: boolean; // New prop for auto-upload functionality
 }
 
 export default function FileUpload({
@@ -34,6 +35,7 @@ export default function FileUpload({
   maxSize = 5,
   type = "resume",
   className = "",
+  autoUpload = false,
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -250,7 +252,7 @@ export default function FileUpload({
 
       {/* Selected File Display */}
       {selectedFile && (
-        <Card className="p-4">
+        <Card className="p-4 border-2 border-blue-200 bg-blue-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {isImage && previewUrl ? (
@@ -262,7 +264,7 @@ export default function FileUpload({
                   />
                 </div>
               ) : (
-                <FileText className="h-8 w-8 text-gray-400" />
+                <FileText className="h-8 w-8 text-blue-600" />
               )}
               <div>
                 <p className="text-sm font-medium text-gray-900">
@@ -271,18 +273,34 @@ export default function FileUpload({
                 <p className="text-xs text-gray-500">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
+                {!autoUpload && (
+                  <p className="text-xs text-blue-600 font-medium mt-1">
+                    ⚠️ File selected but not uploaded yet
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-2">
               {/* Show Upload button again since auto-upload is removed */}
               <Button
                 type="button"
-                variant="outline"
+                variant="default"
                 size="sm"
                 onClick={onFileUpload}
                 disabled={isUploading}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2"
+                style={{ display: autoUpload ? 'none' : 'inline-flex' }}
               >
-                {isUploading ? "Uploading..." : "Upload"}
+                {isUploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    📤 Upload Resume
+                  </>
+                )}
               </Button>
               <Button
                 type="button"
@@ -295,6 +313,15 @@ export default function FileUpload({
               </Button>
             </div>
           </div>
+          
+          {/* Additional call-to-action */}
+          {!isUploading && !autoUpload && (
+            <div className="mt-3 p-2 bg-blue-100 rounded-md">
+              <p className="text-xs text-blue-800 font-medium">
+                💡 Click "Upload Resume" to upload your file before submitting the application
+              </p>
+            </div>
+          )}
         </Card>
       )}
 

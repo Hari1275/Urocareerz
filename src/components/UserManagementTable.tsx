@@ -552,8 +552,12 @@ export default function UserManagementTable() {
                           );
                         })()}
                       </TableCell>
-                      <TableCell>
-                        {new Date(user.createdAt).toLocaleDateString()}
+                      <TableCell suppressHydrationWarning>
+                        {new Date(user.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
@@ -706,8 +710,12 @@ export default function UserManagementTable() {
                       </div>
                     </div>
 
-                    <div className="text-sm text-gray-500">
-                      Created: {new Date(user.createdAt).toLocaleDateString()}
+                    <div className="text-sm text-gray-500" suppressHydrationWarning>
+                      Created: {new Date(user.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
                     </div>
 
                     <div className="flex flex-wrap gap-2">

@@ -82,7 +82,7 @@ export default async function middleware(req: NextRequest) {
         const decoded = await verifyEdgeToken(token, secret);
 
         // User is authenticated, redirect to appropriate dashboard based on role
-        if (decoded.role === "MENTOR") {
+        if (decoded?.role === "MENTOR") {
           return NextResponse.redirect(new URL("/dashboard/mentor", req.url));
         } else {
           return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -118,11 +118,11 @@ export default async function middleware(req: NextRequest) {
 
       console.log(
         "Middleware: Token verified successfully, user role:",
-        decoded.role
+        decoded?.role
       );
 
       // Check if the path requires admin role and the user is not an admin
-      if (isAdminPath && decoded.role !== "ADMIN") {
+      if (isAdminPath && decoded?.role !== "ADMIN") {
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
 

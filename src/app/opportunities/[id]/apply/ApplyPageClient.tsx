@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useNavigation } from "@/hooks/use-navigation";
 import ApplicationForm from "@/components/ApplicationForm";
 
 interface Opportunity {
@@ -25,10 +30,11 @@ interface Opportunity {
   applicationDeadline?: string;
   status: string;
   createdAt: string;
-  mentor: {
+  creator: {
     firstName: string;
     lastName: string;
-    specialty?: string;
+    email: string;
+    role: string;
   };
 }
 
@@ -45,53 +51,28 @@ export default function ApplyPageClient({
 }: {
   opportunityId: string;
 }) {
-  const router = useRouter();
+  const { goBack } = useNavigation();
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch user data
-        const userResponse = await fetch("/api/user");
-        if (!userResponse.ok) {
-          if (userResponse.status === 401) {
-            router.push("/login");
-            return;
-          }
-          throw new Error("Failed to fetch user data");
-        }
-
-        const userData = await userResponse.json();
-        console.log("User data:", userData);
-        setUser(userData.user);
-
-        // Verify user is a mentee
-        if (userData.user.role !== "MENTEE") {
-          setError("Only mentees can apply for opportunities");
-          setLoading(false);
-          return;
-        }
-
-        // Fetch opportunity details
-        console.log("Fetching opportunity with ID:", opportunityId);
-        const opportunityResponse = await fetch(`/api/opportunities/${opportunityId}`);
-        if (!opportunityResponse.ok) {
-          if (opportunityResponse.status === 404) {
+        const response = await fetch(`/api/opportunities/${opportunityId}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
             setError("Opportunity not found");
           } else {
-            throw new Error("Failed to fetch opportunity details");
+            throw new Error("Failed to fetch opportunity");
           }
           setLoading(false);
           return;
         }
 
-        const opportunityData = await opportunityResponse.json();
-        console.log("Opportunity API response:", opportunityData);
-
-        // Check if opportunity exists and has required properties
+        const opportunityData = await response.json();
+        
         if (!opportunityData.opportunity) {
           console.error("API returned success but opportunity data is missing");
           setError("Invalid opportunity data received from server");
@@ -116,10 +97,11 @@ export default function ApplyPageClient({
               description: opportunityData.opportunity.opportunityType?.description,
               color: opportunityData.opportunity.opportunityType?.color,
             },
-            mentor: {
-              firstName: opportunityData.opportunity.mentor?.firstName || "",
-              lastName: opportunityData.opportunity.mentor?.lastName || "",
-              specialty: opportunityData.opportunity.mentor?.profile?.specialty,
+            creator: {
+              firstName: opportunityData.opportunity.creator?.firstName || "",
+              lastName: opportunityData.opportunity.creator?.lastName || "",
+              email: opportunityData.opportunity.creator?.email || "",
+              role: opportunityData.opportunity.creator?.role || "",
             },
           };
           console.log("Transformed opportunity:", transformedOpportunity);
@@ -137,7 +119,7 @@ export default function ApplyPageClient({
     };
 
     fetchData();
-  }, [opportunityId, router]);
+  }, [opportunityId]);
 
   if (loading) {
     return (
@@ -163,8 +145,8 @@ export default function ApplyPageClient({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">{error}</p>
-            <Button onClick={() => router.push("/opportunities")} className="w-full">
-              Back to Opportunities
+            <Button onClick={goBack} className="w-full">
+              Go Back
             </Button>
           </CardContent>
         </Card>
@@ -181,8 +163,8 @@ export default function ApplyPageClient({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">Opportunity not found</p>
-            <Button onClick={() => router.push("/opportunities")} className="w-full">
-              Back to Opportunities
+            <Button onClick={goBack} className="w-full">
+              Go Back
             </Button>
           </CardContent>
         </Card>

@@ -62,7 +62,7 @@ interface Opportunity {
   duration: string;
   stipend: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CLOSED";
-  mentor: {
+  creator: {
     id: string;
     firstName: string;
     lastName: string;
@@ -461,11 +461,11 @@ export default function OpportunityManagementTable() {
                             <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
                             <div className="min-w-0">
                               <div className="font-medium truncate">
-                                {opportunity.mentor.firstName}{" "}
-                                {opportunity.mentor.lastName}
+                                {opportunity.creator.firstName}{" "}
+                                {opportunity.creator.lastName}
                               </div>
                               <div className="text-sm text-gray-500 truncate">
-                                {opportunity.mentor.email}
+                                {opportunity.creator.email}
                               </div>
                             </div>
                           </div>
@@ -614,11 +614,11 @@ export default function OpportunityManagementTable() {
                       <User className="h-4 w-4 text-gray-400" />
                       <div>
                         <div className="font-medium text-sm">
-                          {opportunity.mentor.firstName}{" "}
-                          {opportunity.mentor.lastName}
+                          {opportunity.creator.firstName}{" "}
+                          {opportunity.creator.lastName}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {opportunity.mentor.email}
+                          {opportunity.creator.email}
                         </div>
                       </div>
                     </div>

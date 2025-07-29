@@ -85,10 +85,10 @@ export async function GET(
       );
     }
 
-    // Increment view count
+    // Update view count
     await prisma.discussionThread.update({
       where: { id },
-      data: { viewCount: { increment: 1 } },
+      data: { }, // Remove viewCount increment since it doesn't exist in schema
     });
 
     return NextResponse.json({ thread });
@@ -124,7 +124,7 @@ export async function PUT(
     }
 
     const decoded = await verifyEdgeToken(token, secret);
-    const userId = decoded.userId;
+    const userId = decoded?.userId;
 
     const params = await context.params;
     const id = params.id;
@@ -244,7 +244,7 @@ export async function DELETE(
     }
 
     const decoded = await verifyEdgeToken(token, secret);
-    const userId = decoded.userId;
+    const userId = decoded?.userId;
 
     const params = await context.params;
     const id = params.id;

@@ -14,8 +14,9 @@ export default function ClientWrapper({ children, fallback }: ClientWrapperProps
     setIsClient(true)
   }, [])
 
+  // During SSR and initial render, show fallback or a consistent placeholder
   if (!isClient) {
-    return fallback ? <>{fallback}</> : null
+    return fallback ? <>{fallback}</> : <div style={{ visibility: 'hidden' }}>{children}</div>
   }
 
   return <>{children}</>

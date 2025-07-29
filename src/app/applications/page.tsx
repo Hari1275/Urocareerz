@@ -1,24 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
+import { useNavigation } from "@/hooks/use-navigation";
+import Breadcrumb from "@/components/Breadcrumb";
 import {
-  FileText,
-  Calendar,
   MapPin,
   Briefcase,
+  Calendar,
+  Eye,
+  ArrowLeft,
+  LogOut,
   Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
-  Eye,
-  ArrowLeft,
 } from "lucide-react";
+import Link from "next/link";
 
 interface Application {
   id: string;
@@ -40,10 +46,11 @@ interface Application {
     };
     location?: string;
     experienceLevel?: string;
-    mentor: {
+    creator: {
       firstName: string;
       lastName: string;
-      specialty?: string;
+      email: string;
+      role: string;
     };
   };
 }
@@ -57,12 +64,12 @@ interface User {
 }
 
 export default function ApplicationsPage() {
-  const router = useRouter();
-  const { opportunityTypes } = useOpportunityTypes();
-  const [user, setUser] = useState<User | null>(null);
+  const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
+  const { navigateToOpportunity, navigateToOpportunities, navigateToDashboard } = useNavigation();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -72,7 +79,7 @@ export default function ApplicationsPage() {
         const userResponse = await fetch("/api/user");
         if (!userResponse.ok) {
           if (userResponse.status === 401) {
-            router.push("/login");
+            navigateToDashboard();
             return;
           }
           throw new Error("Failed to fetch user data");
@@ -102,16 +109,20 @@ export default function ApplicationsPage() {
     };
 
     fetchData();
-  }, [router]);
+  }, [navigateToDashboard]);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/logout", { method: "POST" });
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
       if (response.ok) {
-        router.push("/login");
+        navigateToDashboard();
       }
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -301,28 +312,20 @@ export default function ApplicationsPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
-              Dashboard
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">My Applications</span>
-          </nav>
-        </div>
+      <main className="container mx-auto py-8 px-4">
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: "Applications" },
+          ]}
+        />
 
         {/* Page Header */}
-        <div className="mb-8 sm:mb-10 lg:mb-12">
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              My <span className="bg-gradient-to-tr from-orange-600 to-red-500 bg-clip-text text-transparent">Applications</span>
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Track and manage your applications for opportunities in the urology community.
-            </p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
+          <p className="text-gray-600">
+            Track the status of your opportunity applications
+          </p>
         </div>
 
         {/* Applications List */}
@@ -335,7 +338,7 @@ export default function ApplicationsPage() {
                 Start applying for opportunities to see your applications here.
               </p>
               <Button
-                onClick={() => router.push("/opportunities")}
+                onClick={navigateToOpportunities}
                 className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
               >
                 Browse Opportunities
@@ -384,9 +387,9 @@ export default function ApplicationsPage() {
                       <Calendar className="h-4 w-4" />
                       Applied on {formatDate(application.createdAt)}
                     </div>
-                    {application.opportunity.mentor && (
+                    {application.opportunity.creator && (
                       <div className="text-sm text-gray-500">
-                        Posted by Dr. {application.opportunity.mentor.firstName} {application.opportunity.mentor.lastName}
+                        Posted by Dr. {application.opportunity.creator.firstName} {application.opportunity.creator.lastName}
                       </div>
                     )}
                   </div>
@@ -396,7 +399,7 @@ export default function ApplicationsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/opportunities/${application.opportunity.id}`)}
+                      onClick={() => navigateToOpportunity(application.opportunity.id)}
                       className="bg-white/80 hover:bg-white"
                     >
                       <Eye className="w-4 h-4 mr-1" />

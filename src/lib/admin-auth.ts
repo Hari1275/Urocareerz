@@ -7,6 +7,28 @@ export interface AdminUser {
   role: string;
 }
 
+// Verify admin token function
+export async function verifyAdminToken(token: string): Promise<AdminUser | null> {
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+
+    const decoded = (await verifyEdgeToken(token, secret)) as AdminUser;
+
+    // Check if user is admin
+    if (decoded.role !== "ADMIN") {
+      return null;
+    }
+
+    return decoded;
+  } catch (error) {
+    console.error("Admin token verification error:", error);
+    return null;
+  }
+}
+
 // Admin authentication middleware for API routes
 export function withAdminAuth(
   handler: (req: NextRequest, context?: any) => Promise<NextResponse>

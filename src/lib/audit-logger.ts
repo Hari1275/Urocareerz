@@ -22,7 +22,6 @@ export class AuditLogger {
           entityType: data.entityType,
           entityId: data.entityId,
           userId: data.userId,
-          details: data.details ? JSON.stringify(data.details) : null,
           ipAddress: data.ipAddress,
           userAgent: data.userAgent,
         },

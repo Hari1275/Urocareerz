@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 // GET /api/opportunity-types - Get all active opportunity types (public)
 export async function GET(req: NextRequest) {
   try {
+    console.log('Fetching opportunity types...');
     const opportunityTypes = await prisma.opportunityType.findMany({
       where: { isActive: true },
       select: {
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest) {
       orderBy: { name: "asc" },
     });
 
+    console.log('Found opportunity types:', opportunityTypes);
     return NextResponse.json({ opportunityTypes });
   } catch (error) {
     console.error("Error fetching opportunity types:", error);

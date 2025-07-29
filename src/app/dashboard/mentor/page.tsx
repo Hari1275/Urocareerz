@@ -27,8 +27,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePagination } from "@/hooks/use-pagination";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
+import { useMenteeSearch } from "@/hooks/use-mentee-search";
 
 // Utility to read a cookie value by name (client-side only)
 function getCookie(name: string): string | undefined {
@@ -85,11 +87,20 @@ interface Application {
 
 export default function MentorDashboardPage() {
   const router = useRouter();
-  const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
+  const { opportunityTypes, loading: opportunityTypesLoading, error: opportunityTypesError, getTypeBadge } = useOpportunityTypes();
+  const { mentees, loading: searchLoading, error: searchError, filters, pagination, updateFilters, changePage, clearSearch } = useMenteeSearch();
+  
+  // Debug opportunity types
+  useEffect(() => {
+    console.log('Opportunity Types:', opportunityTypes);
+    console.log('Loading:', opportunityTypesLoading);
+    console.log('Error:', opportunityTypesError);
+  }, [opportunityTypes, opportunityTypesLoading, opportunityTypesError]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loadingOpportunities, setLoadingOpportunities] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -100,42 +111,95 @@ export default function MentorDashboardPage() {
   const [reviewing, setReviewing] = useState(false);
   
   // New state for view management
-  const [currentView, setCurrentView] = useState<'main' | 'opportunities' | 'applications'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'opportunities' | 'applications' | 'post-opportunity' | 'find-mentees'>('main');
 
   
   // Modal states for opportunities
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [editingOpportunity, setEditingOpportunity] = useState<Partial<Opportunity>>({});
   const [savingOpportunity, setSavingOpportunity] = useState(false);
+  const [selectedMentee, setSelectedMentee] = useState<any>(null);
+
+  // Form states for Post Opportunity and Find Mentees
+  const [postOpportunityForm, setPostOpportunityForm] = useState({
+    title: '',
+    description: '',
+    location: '',
+    experienceLevel: '',
+    opportunityTypeId: '',
+    requirements: '',
+    benefits: '',
+    duration: '',
+    compensation: '',
+    applicationDeadline: ''
+  });
+  const [postingOpportunity, setPostingOpportunity] = useState(false);
+
+  const [findMenteesForm, setFindMenteesForm] = useState({
+    search: '',
+    location: '',
+    experienceLevel: '',
+    interests: ''
+  });
+  const [searchingMentees, setSearchingMentees] = useState(false);
 
   // Pagination hooks
   const opportunitiesPagination = usePagination({ initialPageSize: 10 });
   const applicationsPagination = usePagination({ initialPageSize: 10 });
 
+  // Optimized data fetching - fetch all data in parallel
   useEffect(() => {
-    const fetchUserData = async () => {
+    const initializeDashboard = async () => {
       try {
-        const userResponse = await fetch("/api/user", {
-          credentials: 'include',
-        });
-        if (!userResponse.ok) {
-          if (userResponse.status === 401) {
-            router.push("/login");
+        setLoading(true);
+        
+        // Fetch user data, opportunities, and applications in parallel
+        const [userResponse, opportunitiesResponse, applicationsResponse] = await Promise.allSettled([
+          fetch("/api/user", { credentials: 'include' }),
+          fetch("/api/opportunities", { credentials: 'include' }),
+          fetch("/api/applications/mentor", { credentials: 'include' })
+        ]);
+
+        // Handle user data
+        if (userResponse.status === 'fulfilled' && userResponse.value.ok) {
+          const userData = await userResponse.value.json();
+          setUser(userData.user);
+
+          // Verify user is a mentor
+          if (userData.user.role !== "MENTOR") {
+            router.push("/dashboard");
             return;
           }
+        } else if (userResponse.status === 'fulfilled' && userResponse.value.status === 401) {
+          router.push("/login");
+          return;
+        } else {
           throw new Error("Failed to fetch user data");
         }
 
-        const userData = await userResponse.json();
-        setUser(userData.user);
-
-        // Verify user is a mentor
-        if (userData.user.role !== "MENTOR") {
-          router.push("/dashboard");
-          return;
+        // Handle opportunities data
+        if (opportunitiesResponse.status === 'fulfilled' && opportunitiesResponse.value.ok) {
+          const data = await opportunitiesResponse.value.json();
+          const opportunitiesData = data.opportunities || [];
+          setOpportunities(opportunitiesData);
+          opportunitiesPagination.actions.setTotalItems(opportunitiesData.length);
+        } else {
+          console.error("Failed to fetch opportunities");
         }
+
+        // Handle applications data
+        if (applicationsResponse.status === 'fulfilled' && applicationsResponse.value.ok) {
+          const data = await applicationsResponse.value.json();
+          const applicationsData = data.applications || [];
+          setApplications(applicationsData);
+          applicationsPagination.actions.setTotalItems(applicationsData.length);
+        } else {
+          console.error("Failed to fetch applications");
+        }
+
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -143,8 +207,8 @@ export default function MentorDashboardPage() {
       }
     };
 
-    fetchUserData();
-  }, [router]);
+    initializeDashboard();
+  }, [router, opportunitiesPagination.actions, applicationsPagination.actions]);
 
   // Check for success message in URL
   useEffect(() => {
@@ -161,14 +225,7 @@ export default function MentorDashboardPage() {
     }
   }, []);
 
-  // Fetch opportunities when user is loaded
-  useEffect(() => {
-    if (user) {
-      fetchOpportunities();
-      fetchApplications();
-    }
-  }, [user]);
-
+  // Optimized individual fetch functions for manual refresh
   const fetchOpportunities = async () => {
     setLoadingOpportunities(true);
     try {
@@ -325,15 +382,99 @@ export default function MentorDashboardPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/logout", { 
+      const response = await fetch("/api/logout", {
         method: "POST",
         credentials: 'include',
       });
-      router.push("/");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed", err);
+      if (response.ok) {
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
     }
+  };
+
+  // Form submission handlers
+  const handlePostOpportunity = async () => {
+    // Clear any previous form errors
+    setFormError(null);
+    
+    if (!postOpportunityForm.title || !postOpportunityForm.description || !postOpportunityForm.opportunityTypeId) {
+      setFormError("Please fill in all required fields (Title, Description, and Opportunity Type)");
+      return;
+    }
+
+    setPostingOpportunity(true);
+    try {
+      const response = await fetch("/api/opportunities", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+        body: JSON.stringify(postOpportunityForm),
+      });
+
+      if (response.ok) {
+        setSuccessMessage("Opportunity posted successfully! It is now pending approval.");
+        // Clear any form errors
+        setFormError(null);
+        // Reset form
+        setPostOpportunityForm({
+          title: '',
+          description: '',
+          location: '',
+          experienceLevel: '',
+          opportunityTypeId: '',
+          requirements: '',
+          benefits: '',
+          duration: '',
+          compensation: '',
+          applicationDeadline: ''
+        });
+        // Go back to main dashboard
+        setCurrentView('main');
+        // Refresh opportunities list
+        fetchOpportunities();
+      } else {
+        const errorData = await response.json();
+        setFormError(errorData.error || "Failed to post opportunity");
+      }
+    } catch (error) {
+      console.error("Error posting opportunity:", error);
+      setFormError("Failed to post opportunity. Please try again.");
+    } finally {
+      setPostingOpportunity(false);
+    }
+  };
+
+  const handleFindMentees = async () => {
+    // Clear any previous form errors
+    setFormError(null);
+    
+    setSearchingMentees(true);
+    try {
+      // Update search filters with form data
+      updateFilters({
+        query: findMenteesForm.search,
+        location: findMenteesForm.location,
+        experienceLevel: findMenteesForm.experienceLevel,
+        interests: findMenteesForm.interests
+      });
+      
+      setSuccessMessage("Search completed successfully!");
+      setFormError(null);
+      setSearchingMentees(false);
+    } catch (error) {
+      console.error("Error searching mentees:", error);
+      setFormError("Failed to search mentees. Please try again.");
+      setSearchingMentees(false);
+    }
+  };
+
+  const handleViewMenteeProfile = (mentee: any) => {
+    setSelectedMentee(mentee);
+    setShowProfileModal(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -397,6 +538,66 @@ export default function MentorDashboardPage() {
     return counts;
   };
 
+  // Loading skeleton components
+  const DashboardSkeleton = () => (
+    <div className="space-y-6">
+      {/* Welcome skeleton */}
+      <div className="text-center mb-8">
+        <Skeleton className="h-8 w-64 mx-auto mb-4" />
+        <Skeleton className="h-6 w-96 mx-auto" />
+      </div>
+      
+      {/* Stats cards skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="bg-white/70 backdrop-blur-lg shadow-xl border-0">
+            <CardContent className="p-6">
+              <Skeleton className="h-12 w-12 rounded-full mb-4" />
+              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="h-4 w-24" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      {/* Action cards skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="bg-white/70 backdrop-blur-lg shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
+            <CardContent className="p-6">
+              <Skeleton className="h-8 w-32 mb-4" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4 mb-4" />
+              <Skeleton className="h-10 w-24" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const TableSkeleton = () => (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow overflow-hidden">
+        <div className="p-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center space-x-4 py-3 border-b border-gray-100 last:border-b-0">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-16 ml-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -414,12 +615,7 @@ export default function MentorDashboardPage() {
           </div>
         </header>
         <div className="container mx-auto py-8 px-4">
-          <div className="flex items-center justify-center min-h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading mentor dashboard...</p>
-            </div>
-          </div>
+          <DashboardSkeleton />
         </div>
       </div>
     );
@@ -529,6 +725,25 @@ export default function MentorDashboardPage() {
           </p>
         </div>
 
+        {formError && (
+          <div className="mb-8 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {formError}
+            </div>
+            <button
+              onClick={() => setFormError(null)}
+              className="text-red-500 hover:text-red-700 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {successMessage && (
           <div className="mb-8 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm flex items-center gap-2">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -552,7 +767,7 @@ export default function MentorDashboardPage() {
               <p className="text-sm text-gray-500 text-center">Share fellowships, jobs, or observerships</p>
               <Button 
                 className="w-full mt-2 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" 
-                onClick={() => router.push("/dashboard/mentor/post-opportunity")}
+                onClick={() => setCurrentView('post-opportunity')}
               >
                 Post Opportunity
               </Button>
@@ -601,7 +816,7 @@ export default function MentorDashboardPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 text-center">Find Mentees</h3>
               <p className="text-sm text-gray-500 text-center">Search mentees by interests and location</p>
-              <Button className="w-full mt-2 bg-gradient-to-tr from-cyan-600 to-blue-500 text-white font-semibold shadow-md hover:from-cyan-700 hover:to-blue-600" onClick={() => router.push("/dashboard/mentor/search")}>
+              <Button className="w-full mt-2 bg-gradient-to-tr from-cyan-600 to-blue-500 text-white font-semibold shadow-md hover:from-cyan-700 hover:to-blue-600" onClick={() => setCurrentView('find-mentees')}>
                 Search Mentees
               </Button>
             </div>
@@ -639,7 +854,7 @@ export default function MentorDashboardPage() {
             <div className="text-center mb-8">
               <Button 
                 className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600 px-8 py-3"
-                onClick={() => router.push("/dashboard/mentor/post-opportunity")}
+                onClick={() => setCurrentView('post-opportunity')}
               >
                 Post New Opportunity
               </Button>
@@ -746,10 +961,7 @@ export default function MentorDashboardPage() {
             </div>
 
             {loadingOpportunities ? (
-              <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-gray-500">Loading opportunities...</p>
-              </div>
+              <TableSkeleton />
             ) : opportunities.length === 0 ? (
               <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center">
                 <div className="text-4xl mb-4">📝</div>
@@ -757,7 +969,7 @@ export default function MentorDashboardPage() {
                 <p className="text-gray-600 mb-4">Start by posting your first opportunity to help mentees.</p>
                 <Button 
                   className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" 
-                  onClick={() => router.push("/dashboard/mentor/post-opportunity")}
+                  onClick={() => setCurrentView('post-opportunity')}
                 >
                   Post Your First Opportunity
                 </Button>
@@ -809,8 +1021,12 @@ export default function MentorDashboardPage() {
                             <span className="text-sm text-gray-700">{opportunity.location || "Remote"}</span>
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm text-gray-500">
-                              {new Date(opportunity.createdAt).toLocaleDateString()}
+                            <span className="text-sm text-gray-500" suppressHydrationWarning>
+                              {new Date(opportunity.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
@@ -917,10 +1133,7 @@ export default function MentorDashboardPage() {
           </div>
           
           {loadingApplications ? (
-            <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-gray-500">Loading applications...</p>
-            </div>
+            <TableSkeleton />
           ) : applications.length === 0 ? (
             <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center">
               <div className="text-4xl mb-4">📋</div>
@@ -928,7 +1141,7 @@ export default function MentorDashboardPage() {
               <p className="text-gray-600 mb-4">Applications will appear here when mentees apply to your opportunities.</p>
               <Button 
                 className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" 
-                onClick={() => router.push("/dashboard/mentor/post-opportunity")}
+                onClick={() => setCurrentView('post-opportunity')}
               >
                 Post an Opportunity
               </Button>
@@ -974,8 +1187,12 @@ export default function MentorDashboardPage() {
                             {getApplicationStatusBadge(application.status)}
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm text-gray-500">
-                              {new Date(application.appliedAt).toLocaleDateString()}
+                            <span className="text-sm text-gray-500" suppressHydrationWarning>
+                              {new Date(application.appliedAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
@@ -1056,6 +1273,624 @@ export default function MentorDashboardPage() {
         </div>
         )}
 
+        {/* Post Opportunity Detail View */}
+        {currentView === 'post-opportunity' && (
+          <div className="mb-8 sm:mb-10 lg:mb-12">
+            {/* Header with Back Button */}
+            <div className="flex items-center gap-4 mb-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentView('main')}
+                className="flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Dashboard
+              </Button>
+            </div>
+
+            {/* Page Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                Post New <span className="bg-gradient-to-tr from-green-600 to-blue-500 bg-clip-text text-transparent">Opportunity</span>
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Share fellowships, jobs, or observerships with the urology community.
+              </p>
+            </div>
+
+            {/* Post Opportunity Form */}
+            <div className="max-w-4xl mx-auto">
+              <Card className="bg-white/70 backdrop-blur-lg shadow-xl border-0">
+                <CardContent className="p-8">
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-green-400 to-blue-400 text-white text-4xl shadow-lg mb-4 mx-auto">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Create New Opportunity</h3>
+                    <p className="text-gray-600">Fill out the form below to post your opportunity</p>
+                  </div>
+
+                  {/* Form-specific error display */}
+                  {formError && (
+                    <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {formError}
+                      </div>
+                      <button
+                        onClick={() => setFormError(null)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="space-y-6">
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div>
+                         <Label htmlFor="title" className="text-sm font-medium text-gray-700">Opportunity Title *</Label>
+                         <Input
+                           id="title"
+                           value={postOpportunityForm.title}
+                           onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, title: e.target.value }))}
+                           placeholder="e.g., Urology Fellowship Program"
+                           className="mt-1"
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="type" className="text-sm font-medium text-gray-700">Opportunity Type *</Label>
+                         {opportunityTypesLoading ? (
+                           <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50">
+                             <div className="animate-pulse flex space-x-4">
+                               <div className="flex-1 space-y-2 py-1">
+                                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                               </div>
+                             </div>
+                           </div>
+                         ) : opportunityTypesError ? (
+                           <div className="mt-1 p-3 border border-red-200 rounded-md bg-red-50 text-red-700">
+                             Error loading opportunity types: {opportunityTypesError}
+                           </div>
+                         ) : opportunityTypes.length === 0 ? (
+                           <div className="mt-1 p-3 border border-yellow-200 rounded-md bg-yellow-50 text-yellow-700">
+                             No opportunity types available
+                           </div>
+                         ) : (
+                           <Select value={postOpportunityForm.opportunityTypeId} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, opportunityTypeId: value }))}>
+                             <SelectTrigger className="mt-1">
+                               <SelectValue placeholder="Select type">
+                                 {postOpportunityForm.opportunityTypeId && (() => {
+                                   const selectedType = opportunityTypes.find(type => type.id === postOpportunityForm.opportunityTypeId);
+                                   if (selectedType) {
+                                     const typeInfo = getTypeBadge(selectedType.name);
+                                     return typeInfo ? (
+                                       <Badge className={typeInfo.colorClass}>
+                                         {typeInfo.name}
+                                       </Badge>
+                                     ) : (
+                                       <Badge variant="secondary">{selectedType.name}</Badge>
+                                     );
+                                   }
+                                   return null;
+                                 })()}
+                               </SelectValue>
+                             </SelectTrigger>
+                             <SelectContent>
+                               {opportunityTypes.map((type) => {
+                                 const typeInfo = getTypeBadge(type.name);
+                                 return (
+                                   <SelectItem key={type.id} value={type.id}>
+                                     {typeInfo ? (
+                                       <Badge className={typeInfo.colorClass}>
+                                         {typeInfo.name}
+                                       </Badge>
+                                     ) : (
+                                       <Badge variant="secondary">{type.name}</Badge>
+                                     )}
+                                   </SelectItem>
+                                 );
+                               })}
+                             </SelectContent>
+                           </Select>
+                         )}
+                       </div>
+                     </div>
+
+                     <div>
+                       <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description *</Label>
+                       <Textarea
+                         id="description"
+                         value={postOpportunityForm.description}
+                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, description: e.target.value }))}
+                         placeholder="Provide a detailed description of the opportunity..."
+                         className="mt-1 min-h-[120px]"
+                       />
+                     </div>
+
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div>
+                         <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+                         <Input
+                           id="location"
+                           value={postOpportunityForm.location}
+                           onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, location: e.target.value }))}
+                           placeholder="e.g., New York, NY or Remote"
+                           className="mt-1"
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
+                         <Select value={postOpportunityForm.experienceLevel} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, experienceLevel: value }))}>
+                           <SelectTrigger className="mt-1">
+                             <SelectValue placeholder="Select level" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="entry">Entry Level</SelectItem>
+                             <SelectItem value="mid">Mid Level</SelectItem>
+                             <SelectItem value="senior">Senior Level</SelectItem>
+                             <SelectItem value="expert">Expert Level</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div>
+                         <Label htmlFor="duration" className="text-sm font-medium text-gray-700">Duration</Label>
+                         <Select value={postOpportunityForm.duration} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, duration: value }))}>
+                           <SelectTrigger className="mt-1 text-gray-900">
+                             <SelectValue placeholder="Select duration" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="1-3 months" className="text-gray-900">1-3 months</SelectItem>
+                             <SelectItem value="3-6 months" className="text-gray-900">3-6 months</SelectItem>
+                             <SelectItem value="6 months" className="text-gray-900">6 months</SelectItem>
+                             <SelectItem value="1 year" className="text-gray-900">1 year</SelectItem>
+                             <SelectItem value="2 years" className="text-gray-900">2 years</SelectItem>
+                             <SelectItem value="Permanent" className="text-gray-900">Permanent</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       <div>
+                         <Label htmlFor="compensation" className="text-sm font-medium text-gray-700">Compensation</Label>
+                         <Input
+                           id="compensation"
+                           value={postOpportunityForm.compensation}
+                           onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, compensation: e.target.value }))}
+                           placeholder="e.g., ₹50,000/year, Stipend provided"
+                           className="mt-1"
+                         />
+                       </div>
+                     </div>
+
+                     <div>
+                       <Label htmlFor="requirements" className="text-sm font-medium text-gray-700">Requirements</Label>
+                       <Textarea
+                         id="requirements"
+                         value={postOpportunityForm.requirements}
+                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, requirements: e.target.value }))}
+                         placeholder="List the requirements and qualifications needed..."
+                         className="mt-1 min-h-[100px]"
+                       />
+                     </div>
+
+                     <div>
+                       <Label htmlFor="benefits" className="text-sm font-medium text-gray-700">Benefits</Label>
+                       <Textarea
+                         id="benefits"
+                         value={postOpportunityForm.benefits}
+                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, benefits: e.target.value }))}
+                         placeholder="Describe the benefits and perks of this opportunity..."
+                         className="mt-1 min-h-[100px]"
+                       />
+                     </div>
+
+                     <div>
+                       <Label htmlFor="deadline" className="text-sm font-medium text-gray-700">Application Deadline</Label>
+                       <Input
+                         id="deadline"
+                         type="date"
+                         value={postOpportunityForm.applicationDeadline}
+                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, applicationDeadline: e.target.value }))}
+                         className="mt-1"
+                       />
+                     </div>
+
+                                         <div className="flex justify-end gap-4 pt-6">
+                       <Button
+                         variant="outline"
+                         onClick={() => setCurrentView('main')}
+                         className="px-8"
+                         disabled={postingOpportunity}
+                       >
+                         Cancel
+                       </Button>
+                       <Button
+                         className="bg-gradient-to-tr from-green-600 to-blue-500 text-white font-semibold shadow-md hover:from-green-700 hover:to-blue-600 px-8"
+                         onClick={handlePostOpportunity}
+                         disabled={postingOpportunity}
+                       >
+                         {postingOpportunity ? "Posting..." : "Post Opportunity"}
+                       </Button>
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Find Mentees Detail View */}
+        {currentView === 'find-mentees' && (
+          <div className="mb-8 sm:mb-10 lg:mb-12">
+            {/* Header with Back Button */}
+            <div className="flex items-center gap-4 mb-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentView('main')}
+                className="flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Dashboard
+              </Button>
+            </div>
+
+            {/* Page Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                Find <span className="bg-gradient-to-tr from-cyan-600 to-blue-500 bg-clip-text text-transparent">Mentees</span>
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Search and connect with mentees based on their interests, location, and experience level.
+              </p>
+            </div>
+
+            {/* Search Form */}
+            <div className="max-w-4xl mx-auto">
+              <Card className="bg-white/70 backdrop-blur-lg shadow-xl border-0">
+                <CardContent className="p-8">
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-400 text-white text-4xl shadow-lg mb-4 mx-auto">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Search Mentees</h3>
+                    <p className="text-gray-600">Use the filters below to find mentees that match your criteria</p>
+                  </div>
+
+                  {/* Form-specific error display */}
+                  {formError && (
+                    <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {formError}
+                      </div>
+                      <button
+                        onClick={() => setFormError(null)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                                     <div className="space-y-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div>
+                         <Label htmlFor="search" className="text-sm font-medium text-gray-700">Search Keywords</Label>
+                         <Input
+                           id="search"
+                           value={findMenteesForm.search}
+                           onChange={(e) => {
+                             setFindMenteesForm(prev => ({ ...prev, search: e.target.value }));
+                             // Real-time search with debouncing
+                             updateFilters({ query: e.target.value });
+                           }}
+                           placeholder="Search by name, interests, or keywords..."
+                           className="mt-1"
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+                         <Input
+                           id="location"
+                           value={findMenteesForm.location}
+                           onChange={(e) => {
+                             setFindMenteesForm(prev => ({ ...prev, location: e.target.value }));
+                             // Real-time search with debouncing
+                             updateFilters({ location: e.target.value });
+                           }}
+                           placeholder="e.g., New York, NY or Remote"
+                           className="mt-1"
+                         />
+                       </div>
+                     </div>
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div>
+                         <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
+                         <Select value={findMenteesForm.experienceLevel} onValueChange={(value) => {
+                           setFindMenteesForm(prev => ({ ...prev, experienceLevel: value }));
+                           // Real-time search with debouncing
+                           updateFilters({ experienceLevel: value });
+                         }}>
+                           <SelectTrigger className="mt-1">
+                             <SelectValue placeholder="Any experience level" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="student">Medical Student</SelectItem>
+                             <SelectItem value="resident">Resident</SelectItem>
+                             <SelectItem value="fellow">Fellow</SelectItem>
+                             <SelectItem value="attending">Attending</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       <div>
+                         <Label htmlFor="interests" className="text-sm font-medium text-gray-700">Interests</Label>
+                         <Select value={findMenteesForm.interests} onValueChange={(value) => {
+                           setFindMenteesForm(prev => ({ ...prev, interests: value }));
+                           // Real-time search with debouncing
+                           updateFilters({ interests: value });
+                         }}>
+                           <SelectTrigger className="mt-1">
+                             <SelectValue placeholder="Select interests" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="oncology">Oncology</SelectItem>
+                             <SelectItem value="pediatric">Pediatric Urology</SelectItem>
+                             <SelectItem value="reconstructive">Reconstructive</SelectItem>
+                             <SelectItem value="endourology">Endourology</SelectItem>
+                             <SelectItem value="infertility">Infertility</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
+
+                                         <div className="flex justify-end gap-4 pt-6">
+                       <Button
+                         variant="outline"
+                         onClick={() => setCurrentView('main')}
+                         className="px-8"
+                         disabled={searchingMentees}
+                       >
+                         Cancel
+                       </Button>
+                       <Button
+                         className="bg-gradient-to-tr from-cyan-600 to-blue-500 text-white font-semibold shadow-md hover:from-cyan-700 hover:to-blue-600 px-8"
+                         onClick={handleFindMentees}
+                         disabled={searchingMentees}
+                       >
+                         {searchingMentees ? "Searching..." : "Search Mentees"}
+                       </Button>
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Search Results */}
+            {(searchLoading || mentees.length > 0 || searchError) && (
+              <div className="mt-8 max-w-6xl mx-auto">
+                <Card className="bg-white/70 backdrop-blur-lg shadow-xl border-0">
+                  <CardContent className="p-6">
+                    {/* Results Header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Search Results</h3>
+                        {!searchLoading && (
+                          <p className="text-sm text-gray-600">
+                            Found {mentees.length} mentee{mentees.length !== 1 ? 's' : ''} 
+                            {pagination.total > mentees.length && ` (showing ${mentees.length} of ${pagination.total})`}
+                          </p>
+                        )}
+                      </div>
+                      {mentees.length > 0 && (
+                        <Button
+                          variant="outline"
+                          onClick={clearSearch}
+                          className="text-sm"
+                        >
+                          Clear Search
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Loading State */}
+                    {searchLoading && (
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                            <Skeleton className="h-12 w-12 rounded-full" />
+                            <div className="space-y-2 flex-1">
+                              <Skeleton className="h-4 w-1/4" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Error State */}
+                    {searchError && !searchLoading && (
+                      <div className="text-center py-8">
+                        <div className="text-red-500 mb-2">
+                          <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <p className="text-gray-600">{searchError}</p>
+                        <Button
+                          onClick={() => updateFilters(filters)}
+                          className="mt-4"
+                          variant="outline"
+                        >
+                          Try Again
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Results */}
+                    {!searchLoading && !searchError && mentees.length > 0 && (
+                      <div className="space-y-4">
+                        {mentees.map((mentee) => (
+                          <div key={mentee.id} className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            {/* Avatar */}
+                            <div className="flex-shrink-0">
+                              {mentee.profile?.avatar ? (
+                                <img
+                                  src={mentee.profile.avatar}
+                                  alt={`${mentee.firstName} ${mentee.lastName}`}
+                                  className="h-12 w-12 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-400 flex items-center justify-center text-white font-semibold">
+                                  {mentee.firstName?.[0]}{mentee.lastName?.[0]}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-lg font-semibold text-gray-900 truncate">
+                                  {mentee.firstName} {mentee.lastName}
+                                </h4>
+                                <Badge variant="outline" className="text-xs">
+                                  {mentee.profile?.availabilityStatus || 'Available'}
+                                </Badge>
+                              </div>
+                              
+                              <p className="text-sm text-gray-600 mb-2">{mentee.email}</p>
+                              
+                              {mentee.profile?.location && (
+                                <p className="text-sm text-gray-500 mb-2">
+                                  📍 {mentee.profile.location}
+                                </p>
+                              )}
+                              
+                              {mentee.profile?.bio && (
+                                <p className="text-sm text-gray-700 mb-2 line-clamp-2">
+                                  {mentee.profile.bio}
+                                </p>
+                              )}
+                              
+                              {mentee.profile?.interests && mentee.profile.interests.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                  {mentee.profile.interests.slice(0, 3).map((interest, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs">
+                                      {interest}
+                                    </Badge>
+                                  ))}
+                                  {mentee.profile.interests.length > 3 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      +{mentee.profile.interests.length - 3} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {mentee.profile?.yearsOfExperience && (
+                                <p className="text-sm text-gray-500">
+                                  💼 {mentee.profile.yearsOfExperience} years of experience
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex-shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewMenteeProfile(mentee)}
+                              >
+                                View Profile
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No Results */}
+                    {!searchLoading && !searchError && mentees.length === 0 && (
+                      <div className="text-center py-12">
+                        <div className="mb-4">
+                          <svg
+                            className="mx-auto h-12 w-12 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
+                        <p className="text-gray-500 mb-4">
+                          Try adjusting your search criteria or filters to find more mentees.
+                        </p>
+                        <div className="space-y-2 text-sm text-gray-400">
+                          <p>• Check your spelling</p>
+                          <p>• Try different keywords</p>
+                          <p>• Broaden your location or experience filters</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {!searchLoading && !searchError && mentees.length > 0 && pagination.totalPages > 1 && (
+                      <div className="mt-6 flex items-center justify-between">
+                        <p className="text-sm text-gray-600">
+                          Page {pagination.page} of {pagination.totalPages}
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => changePage(pagination.page - 1)}
+                            disabled={!pagination.hasPrev}
+                          >
+                            Previous
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => changePage(pagination.page + 1)}
+                            disabled={!pagination.hasNext}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Quick Actions - integrated into main flow */}
         <div className="mt-8 px-4">
           <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-gray-100">
@@ -1063,13 +1898,13 @@ export default function MentorDashboardPage() {
               <span className="text-lg font-semibold text-gray-800 text-center sm:text-left whitespace-nowrap">Ready to take action?</span>
               <div className="flex flex-wrap items-center gap-3 justify-center sm:justify-end">
                     <Button
-                  onClick={() => router.push("/dashboard/mentor/post-opportunity")}
+                  onClick={() => setCurrentView('post-opportunity')}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg"
                     >
                       Post Opportunity
                     </Button>
                     <Button
-                  onClick={() => router.push("/dashboard/mentor/search")}
+                  onClick={() => setCurrentView('find-mentees')}
                   className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 >
                   Search Mentees
@@ -1260,7 +2095,22 @@ export default function MentorDashboardPage() {
                       }}
                     >
                       <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select opportunity type" />
+                        <SelectValue placeholder="Select opportunity type">
+                          {(editingOpportunity.opportunityType?.id || selectedOpportunity.opportunityType.id) && (() => {
+                            const selectedType = opportunityTypes.find(type => type.id === (editingOpportunity.opportunityType?.id || selectedOpportunity.opportunityType.id));
+                            if (selectedType) {
+                              const typeInfo = getTypeBadge(selectedType.name);
+                              return typeInfo ? (
+                                <Badge className={typeInfo.colorClass}>
+                                  {typeInfo.name}
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">{selectedType.name}</Badge>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {opportunityTypes.map((type) => {
@@ -1321,7 +2171,7 @@ export default function MentorDashboardPage() {
                       value={editingOpportunity.compensation || ''}
                       onChange={(e) => setEditingOpportunity(prev => ({ ...prev, compensation: e.target.value }))}
                       className="mt-1"
-                      placeholder="e.g., $50,000/year, Competitive salary"
+                      placeholder="e.g., ₹50,000/year, Competitive salary"
                     />
                   </div>
 
@@ -1399,6 +2249,189 @@ export default function MentorDashboardPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Mentee Profile Modal */}
+        <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  {selectedMentee?.profile?.avatar ? (
+                    <img
+                      src={selectedMentee.profile.avatar}
+                      alt={`${selectedMentee.firstName} ${selectedMentee.lastName}`}
+                      className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center border-2 border-gray-200">
+                      <span className="text-white font-semibold text-lg">
+                        {selectedMentee?.firstName?.[0]}{selectedMentee?.lastName?.[0]}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {selectedMentee?.firstName} {selectedMentee?.lastName}
+                  </div>
+                  <div className="text-sm text-gray-500 font-medium">
+                    {selectedMentee?.email}
+                  </div>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            {selectedMentee && (
+              <div className="space-y-8">
+                {/* Profile Overview */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {selectedMentee.profile?.location && (
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-blue-600 text-lg">📍</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Location</p>
+                          <p className="text-gray-900 font-semibold">{selectedMentee.profile.location}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedMentee.profile?.yearsOfExperience && (
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-green-600 text-lg">⚡</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Experience</p>
+                          <p className="text-gray-900 font-semibold">{selectedMentee.profile.yearsOfExperience} years</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedMentee.profile?.availabilityStatus && (
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                          <span className="text-emerald-600 text-lg">✓</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Status</p>
+                          <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-200">
+                            {selectedMentee.profile.availabilityStatus}
+                          </Badge>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* About Section */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                    About
+                  </h3>
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                    {selectedMentee.profile?.bio ? (
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedMentee.profile.bio}</p>
+                    ) : (
+                      <p className="text-gray-500 italic">No bio information available</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Professional Information */}
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                    Professional Information
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Education */}
+                    {selectedMentee.profile?.education && (
+                      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            <span className="text-purple-600 text-sm">🎓</span>
+                          </div>
+                          <h4 className="font-semibold text-gray-900">Education</h4>
+                        </div>
+                        <p className="text-gray-700">{selectedMentee.profile.education}</p>
+                      </div>
+                    )}
+
+                    {/* Specialty */}
+                    {selectedMentee.profile?.specialty && (
+                      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                            <span className="text-orange-600 text-sm">🎯</span>
+                          </div>
+                          <h4 className="font-semibold text-gray-900">Specialty</h4>
+                        </div>
+                        <p className="text-gray-700">{selectedMentee.profile.specialty}</p>
+                      </div>
+                    )}
+
+                    {/* Workplace */}
+                    {selectedMentee.profile?.workplace && (
+                      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span className="text-indigo-600 text-sm">🏢</span>
+                          </div>
+                          <h4 className="font-semibold text-gray-900">Workplace</h4>
+                        </div>
+                        <p className="text-gray-700">{selectedMentee.profile.workplace}</p>
+                      </div>
+                    )}
+
+                    {/* Member Since */}
+                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                          <span className="text-gray-600 text-sm">📅</span>
+                        </div>
+                        <h4 className="font-semibold text-gray-900">Member Since</h4>
+                      </div>
+                      <p className="text-gray-700">
+                        {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interests & Skills */}
+                {selectedMentee.profile?.interests && selectedMentee.profile.interests.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
+                      Interests & Skills
+                    </h3>
+                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                      <div className="flex flex-wrap gap-3">
+                        {selectedMentee.profile.interests.map((interest: string, index: number) => (
+                          <Badge 
+                            key={index} 
+                            variant="secondary" 
+                            className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-200 px-4 py-2 text-sm font-medium"
+                          >
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Application Review Modal (unchanged) */}
       {showReviewModal && selectedApplication && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1412,7 +2445,13 @@ export default function MentorDashboardPage() {
               <div className="border-b pb-4">
                   <h3 className="font-semibold text-gray-900 mb-2">{selectedApplication.menteeName}</h3>
                   <p className="text-sm text-gray-600 mb-1"><strong>Email:</strong> {selectedApplication.menteeEmail}</p>
-                  <p className="text-sm text-gray-600 mb-1"><strong>Applied:</strong> {new Date(selectedApplication.appliedAt).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-600 mb-1" suppressHydrationWarning>
+                    <strong>Applied:</strong> {new Date(selectedApplication.appliedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
                   <p className="text-sm text-gray-600 mb-1"><strong>Status:</strong> {selectedApplication.status}</p>
                 {selectedApplication.coverLetter && (
                   <div className="mt-3">

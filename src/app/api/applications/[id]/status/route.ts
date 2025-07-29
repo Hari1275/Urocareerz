@@ -5,7 +5,7 @@ import { sendApplicationStatusEmail } from "@/lib/email";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -38,16 +38,12 @@ export async function PATCH(
       );
     }
 
+    const { id: applicationId } = await params;
+    
     // Get the application and verify it belongs to an opportunity posted by this mentor
-    const application = await prisma.application.findUnique({
-      where: { id: params.id },
+    const application = await (prisma.application.findUnique({
+      where: { id: applicationId },
       include: {
-        opportunity: {
-          select: {
-            mentorId: true,
-            title: true,
-          },
-        },
         mentee: {
           select: {
             email: true,
@@ -56,7 +52,19 @@ export async function PATCH(
           },
         },
       },
-    });
+    }) as any);
+
+    if (!application) {
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 }
+      );
+    }
+
+    // Get the opportunity separately to check creator
+    const opportunity = await prisma.opportunity.findUnique({
+      where: { id: application.opportunityId },
+    }) as any;
 
     if (!application) {
       return NextResponse.json(
@@ -66,7 +74,7 @@ export async function PATCH(
     }
 
     // Verify the opportunity belongs to this mentor
-    if (application.opportunity.mentorId !== payload.userId) {
+    if (opportunity.creatorId !== payload.userId) {
       return NextResponse.json(
         {
           error:
@@ -77,8 +85,8 @@ export async function PATCH(
     }
 
     // Update the application status
-    const updatedApplication = await prisma.application.update({
-      where: { id: params.id },
+    const updatedApplication = await (prisma.application.update({
+      where: { id: applicationId },
       data: { status },
       include: {
         opportunity: {
@@ -94,7 +102,7 @@ export async function PATCH(
           },
         },
       },
-    });
+    }) as any);
 
     // Send email notification to mentee about the status update
     try {
@@ -108,7 +116,7 @@ export async function PATCH(
       const emailResult = await sendApplicationStatusEmail({
         email: application.mentee.email,
         menteeName: menteeName,
-        opportunityTitle: application.opportunity.title,
+        opportunityTitle: opportunity.title,
         status: status,
         mentorName: mentorName,
       });

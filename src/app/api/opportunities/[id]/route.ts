@@ -2,57 +2,93 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyEdgeToken } from "@/lib/edge-auth";
 import { prisma } from "@/lib/prisma";
 
-async function handler(
+export async function PUT(
   req: NextRequest,
-  context?: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const params = await context?.params;
-  const opportunityId = params?.id;
+  try {
+    const { id: opportunityId } = await params;
 
-  if (!opportunityId) {
-    return NextResponse.json(
-      { error: "Opportunity ID is required" },
-      { status: 400 }
-    );
-  }
+    // Get token from cookies
+    const token = req.cookies.get("token")?.value;
 
-  if (req.method === "PUT") {
-    try {
-      // Get token from cookies
-      const token = req.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
 
-      if (!token) {
-        return NextResponse.json(
-          { error: "Authentication required" },
-          { status: 401 }
-        );
-      }
+    // Verify token
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not defined");
+    }
 
-      // Verify token
-      const secret = process.env.JWT_SECRET;
-      if (!secret) {
-        throw new Error("JWT_SECRET is not defined");
-      }
+    const decoded = await verifyEdgeToken(token, secret);
 
-      const decoded = await verifyEdgeToken(token, secret);
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
 
-      if (!decoded) {
-        return NextResponse.json(
-          { error: "Invalid token" },
-          { status: 401 }
-        );
-      }
+    // Check if user is mentor or mentee
+    if (decoded.role !== "MENTOR" && decoded.role !== "MENTEE") {
+      return NextResponse.json(
+        { error: "Mentor or mentee access required" },
+        { status: 403 }
+      );
+    }
 
-      // Check if user is mentor
-      if (decoded.role !== "MENTOR") {
-        return NextResponse.json(
-          { error: "Mentor access required" },
-          { status: 403 }
-        );
-      }
+    const body = await req.json();
+    const {
+      title,
+      description,
+      location,
+      experienceLevel,
+      requirements,
+      benefits,
+      duration,
+      compensation,
+      applicationDeadline,
+    } = body;
 
-      const body = await req.json();
-      const {
+    // Validate required fields
+    if (!title || !description) {
+      return NextResponse.json(
+        { error: "Title and description are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if opportunity exists and belongs to the creator
+    const existingOpportunity = await prisma.opportunity.findUnique({
+      where: {
+        id: opportunityId,
+      },
+    });
+
+    if (!existingOpportunity) {
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if the opportunity belongs to the current user
+    if ((existingOpportunity as any).creatorId !== decoded.userId) {
+      return NextResponse.json(
+        { error: "You can only edit your own opportunities" },
+        { status: 403 }
+      );
+    }
+
+    // Update opportunity
+    const updatedOpportunity = await (prisma.opportunity.update({
+      where: { id: opportunityId },
+      data: {
         title,
         description,
         location,
@@ -61,82 +97,81 @@ async function handler(
         benefits,
         duration,
         compensation,
-        applicationDeadline,
-      } = body;
-
-      // Validate required fields
-      if (!title || !description) {
-        return NextResponse.json(
-          { error: "Title and description are required" },
-          { status: 400 }
-        );
-      }
-
-      // Check if opportunity exists and belongs to the mentor
-      const existingOpportunity = await prisma.opportunity.findUnique({
-        where: {
-          id: opportunityId,
-        },
-      });
-
-      if (!existingOpportunity) {
-        return NextResponse.json(
-          { error: "Opportunity not found" },
-          { status: 404 }
-        );
-      }
-
-      // Check if the opportunity belongs to the current mentor
-      if (existingOpportunity.mentorId !== decoded.userId) {
-        return NextResponse.json(
-          { error: "You can only edit your own opportunities" },
-          { status: 403 }
-        );
-      }
-
-      // Update opportunity
-      const updatedOpportunity = await prisma.opportunity.update({
-        where: { id: opportunityId },
-        data: {
-          title,
-          description,
-          location,
-          experienceLevel,
-          requirements,
-          benefits,
-          duration,
-          compensation,
-          applicationDeadline: applicationDeadline
-            ? new Date(applicationDeadline)
-            : null,
-        },
-        include: {
-          opportunityType: true,
-          mentor: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
+        applicationDeadline: applicationDeadline
+          ? new Date(applicationDeadline)
+          : null,
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
           },
         },
-      });
+        opportunityType: true,
+      } as any,
+    }) as any);
 
-      return NextResponse.json({
-        message: "Opportunity updated successfully",
-        opportunity: updatedOpportunity,
-      });
-    } catch (error) {
-      console.error("Error updating opportunity:", error);
-      return NextResponse.json(
-        { error: "Failed to update opportunity" },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json({
+      opportunity: updatedOpportunity,
+      message: "Opportunity updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating opportunity:", error);
+    return NextResponse.json(
+      { error: "Failed to update opportunity" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
-export const PUT = handler;
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: opportunityId } = await params;
+
+    const opportunity = await (prisma.opportunity.findUnique({
+      where: {
+        id: opportunityId,
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+        opportunityType: true,
+        _count: {
+          select: {
+            applications: true,
+            savedOpportunities: true,
+          },
+        },
+      } as any,
+    }) as any);
+
+    if (!opportunity) {
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ opportunity });
+  } catch (error) {
+    console.error("Error fetching opportunity:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch opportunity" },
+      { status: 500 }
+    );
+  }
+}

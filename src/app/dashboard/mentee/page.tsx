@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePagination } from "@/hooks/use-pagination";
 
 interface MenteeOpportunity {
@@ -30,10 +31,29 @@ interface User {
   role: string;
 }
 
+interface SavedOpportunity {
+  id: string;
+  opportunity: {
+    id: string;
+    title: string;
+    description: string;
+    opportunityType: {
+      name: string;
+      color: string | null;
+    };
+    creator: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+  savedAt: string;
+}
+
 export default function MenteeDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [opportunities, setOpportunities] = useState<MenteeOpportunity[]>([]);
+  const [savedOpportunities, setSavedOpportunities] = useState<SavedOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const opportunitiesPagination = usePagination({ initialPageSize: 10 });
 
@@ -42,7 +62,7 @@ export default function MenteeDashboardPage() {
       const response = await fetch("/api/user");
       if (response.ok) {
         const userData = await response.json();
-        setUser(userData.user); // Fix: assign the actual user object
+        setUser(userData.user);
       } else {
         router.push("/login");
       }
@@ -55,10 +75,9 @@ export default function MenteeDashboardPage() {
   const fetchMenteeOpportunities = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/mentee-opportunities");
+      const response = await fetch("/api/opportunities");
       if (response.ok) {
         const data = await response.json();
-        // Fix: Extract the opportunities array from the response
         const opportunitiesArray = data.opportunities || [];
         setOpportunities(opportunitiesArray);
         opportunitiesPagination.actions.setTotalItems(opportunitiesArray.length);
@@ -72,6 +91,21 @@ export default function MenteeDashboardPage() {
     }
   };
 
+  const fetchSavedOpportunities = async () => {
+    try {
+      const response = await fetch("/api/saved-opportunities");
+      if (response.ok) {
+        const data = await response.json();
+        const savedOpportunitiesArray = data.savedOpportunities || [];
+        setSavedOpportunities(savedOpportunitiesArray);
+      } else {
+        console.error("Failed to fetch saved opportunities");
+      }
+    } catch (error) {
+      console.error("Error fetching saved opportunities:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -79,6 +113,7 @@ export default function MenteeDashboardPage() {
   useEffect(() => {
     if (user) {
       fetchMenteeOpportunities();
+      fetchSavedOpportunities();
     }
   }, [user]);
 
@@ -109,16 +144,26 @@ export default function MenteeDashboardPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    // Use a consistent date format to prevent hydration mismatches
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  // Utility to read a cookie value by name (client-side only)
-  function getCookie(name: string): string | undefined {
-    if (typeof document === 'undefined') return undefined;
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift();
-  }
+  // Helper function for status counts
+  const getOpportunityStatusCounts = () => {
+    const counts = {
+      total: opportunities.length,
+      pending: opportunities.filter(opp => opp.status === 'PENDING').length,
+      approved: opportunities.filter(opp => opp.status === 'APPROVED').length,
+      rejected: opportunities.filter(opp => opp.status === 'REJECTED').length,
+      converted: opportunities.filter(opp => opp.status === 'CONVERTED').length,
+    };
+    return counts;
+  };
 
   if (loading) {
     return (
@@ -249,7 +294,7 @@ export default function MenteeDashboardPage() {
         </div>
 
         {/* Main Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-10 lg:mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-10 lg:mb-12">
           {/* Submit Opportunity Card */}
           <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/dashboard/mentee/submit-opportunity")}>
             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-green-400 to-blue-400 text-white text-3xl shadow-lg mb-2 mx-auto">
@@ -294,6 +339,40 @@ export default function MenteeDashboardPage() {
             <p className="text-sm text-gray-500 text-center">View and track your applications</p>
           </div>
 
+          {/* Saved Opportunities Card */}
+          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/opportunities?filter=saved")}>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-400 text-white text-3xl shadow-lg mb-2 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 text-center">Saved Opportunities</h3>
+            <p className="text-sm text-gray-500 text-center">
+              {savedOpportunities.length > 0 
+                ? `${savedOpportunities.length} saved opportunity${savedOpportunities.length !== 1 ? 'ies' : ''}`
+                : 'No saved opportunities yet'
+              }
+            </p>
+            {savedOpportunities.length > 0 && (
+              <div className="mt-2">
+                <div className="flex items-center justify-center w-8 h-8 bg-amber-100 text-amber-600 rounded-full text-sm font-bold mx-auto">
+                  {savedOpportunities.length}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Applied Opportunities Card */}
+          <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/opportunities?filter=applied")}>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-green-400 to-emerald-400 text-white text-3xl shadow-lg mb-2 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 text-center">Applied Opportunities</h3>
+            <p className="text-sm text-gray-500 text-center">Track opportunities you've applied to</p>
+          </div>
+
           {/* My Submissions Card */}
           <div className="relative group bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-6 flex flex-col gap-4 transition-transform hover:scale-[1.03] hover:shadow-2xl border border-gray-100 cursor-pointer" onClick={() => router.push("/submissions")}>
             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-400 text-white text-3xl shadow-lg mb-2 mx-auto">
@@ -314,139 +393,6 @@ export default function MenteeDashboardPage() {
             </div>
             <h3 className="text-lg font-bold text-gray-900 text-center">My Profile</h3>
             <p className="text-sm text-gray-500 text-center">Update your profile and preferences</p>
-          </div>
-        </div>
-
-        {/* Submitted Opportunities Section */}
-        <div className="mb-8 sm:mb-10 lg:mb-12">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Submitted Opportunities</h2>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Show:</span>
-                <Select
-                  value={opportunitiesPagination.state.pageSize.toString()}
-                  onValueChange={(value) => opportunitiesPagination.actions.setPageSize(parseInt(value))}
-                >
-                  <SelectTrigger className="w-20 h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>per page</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <span className="text-gray-500">Loading...</span>
-              </div>
-            ) : opportunities.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">📝</div>
-                <h3 className="text-lg font-medium mb-2">No opportunities submitted yet</h3>
-                <p className="text-gray-600 mb-4">Start contributing to the community by submitting opportunities you&apos;ve found.</p>
-                <Button className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" onClick={() => router.push("/dashboard/mentee/submit-opportunity")}>Submit Your First Opportunity</Button>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4 text-sm text-gray-600">
-                  Showing {opportunitiesPagination.state.startIndex + 1} to {opportunitiesPagination.state.endIndex} of {opportunitiesPagination.state.totalItems} opportunities
-                </div>
-                
-                {/* Table Layout */}
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50/80">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white/50 divide-y divide-gray-200/50">
-                      {opportunitiesPagination.paginateData(opportunities).map((opportunity) => (
-                        <tr key={opportunity.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex flex-col">
-                              <div className="text-sm font-medium text-gray-900 truncate max-w-xs">{opportunity.title}</div>
-                              <div className="text-sm text-gray-500 line-clamp-2 max-w-xs">{opportunity.description}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant="outline" style={{ borderColor: opportunity.opportunityType.color || undefined, color: opportunity.opportunityType.color || undefined }}>
-                              {opportunity.opportunityType.name}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {getStatusBadge(opportunity.status)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(opportunity.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {opportunity.adminFeedback ? (
-                              <div className="text-sm text-blue-600 font-medium">Available</div>
-                            ) : (
-                              <div className="text-sm text-gray-400">None</div>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                {/* Pagination Controls */}
-                {opportunitiesPagination.state.totalPages > 1 && (
-                  <div className="mt-6 flex justify-center">
-                    <Pagination>
-                      <PaginationContent className="flex flex-wrap justify-center gap-1 sm:gap-2">
-                        <PaginationItem>
-                          <PaginationPrevious 
-                            onClick={opportunitiesPagination.actions.previousPage}
-                            className={!opportunitiesPagination.state.hasPreviousPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                        </PaginationItem>
-                        
-                        {opportunitiesPagination.getPageNumbers().map((pageNumber, index) => (
-                          <PaginationItem key={index}>
-                            {pageNumber === -1 ? (
-                              <PaginationEllipsis />
-                            ) : (
-                              <PaginationLink
-                                onClick={() => opportunitiesPagination.actions.setCurrentPage(pageNumber)}
-                                isActive={pageNumber === opportunitiesPagination.state.currentPage}
-                                className="cursor-pointer min-w-[2rem] sm:min-w-[2.5rem]"
-                              >
-                                {pageNumber}
-                              </PaginationLink>
-                            )}
-                          </PaginationItem>
-                        ))}
-                        
-                        <PaginationItem>
-                          <PaginationNext 
-                            onClick={opportunitiesPagination.actions.nextPage}
-                            className={!opportunitiesPagination.state.hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
-              </>
-            )}
           </div>
         </div>
 

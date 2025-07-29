@@ -1,16 +1,10 @@
-import { useEffect, useState } from "react"
+import { useBrowserAPI } from './use-client-only'
 
 export function useMobile(breakpoint: number = 768): boolean {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    function handleResize() {
-      setIsMobile(window.innerWidth < breakpoint)
-    }
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [breakpoint])
+  const isMobile = useBrowserAPI(
+    () => window.innerWidth < breakpoint,
+    false
+  )
 
   return isMobile
 }

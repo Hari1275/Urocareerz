@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // Get user and verify they are a mentor
+    // Get user and verify they are a mentor or mentee
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       include: { profile: true },
@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (user.role !== "MENTOR") {
+    if (user.role !== "MENTOR" && user.role !== "MENTEE") {
       return NextResponse.json(
-        { error: "Only mentors can post opportunities" },
+        { error: "Only mentors and mentees can post opportunities" },
         { status: 403 }
       );
     }
@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       duration,
       compensation,
       applicationDeadline,
+      sourceUrl,
+      sourceName,
     } = body;
 
     // Validate required fields
@@ -66,8 +68,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the opportunity
-    const opportunity = await prisma.opportunity.create({
+    // Create the opportunity with unified structure
+    const opportunity = await (prisma.opportunity.create({
       data: {
         title,
         description,
@@ -81,10 +83,25 @@ export async function POST(request: NextRequest) {
         applicationDeadline: applicationDeadline
           ? new Date(applicationDeadline)
           : null,
-        mentorId: user.id,
+        creatorId: user.id,
+        creatorRole: user.role,
+        sourceUrl,
+        sourceName,
         status: "PENDING",
-      },
-    });
+      } as any,
+      include: {
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+        opportunityType: true,
+      } as any,
+    }) as any);
 
     return NextResponse.json(
       {
@@ -129,64 +146,132 @@ export async function GET(request: NextRequest) {
     // Get user
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
+      select: { id: true, role: true } // Only select needed fields
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get opportunities based on user role
+    // Get query parameters for pagination
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const skip = (page - 1) * limit;
+
+    // Get opportunities based on user role with pagination
     let opportunities;
+    let totalCount;
+    
     if (user.role === "MENTOR") {
       // Mentors see their own opportunities
-      opportunities = await prisma.opportunity.findMany({
-        where: { mentorId: user.id },
-        include: {
-          mentor: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
+      const [opportunitiesData, countData] = await Promise.all([
+        (prisma.opportunity.findMany({
+          where: { creatorId: user.id } as any,
+          include: {
+            creator: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                role: true,
+              },
             },
-          },
-          opportunityType: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
+            opportunityType: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+          } as any,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }) as any),
+        (prisma.opportunity.count({
+          where: { creatorId: user.id } as any,
+        }) as any)
+      ]);
+      
+      opportunities = opportunitiesData;
+      totalCount = countData;
     } else if (user.role === "ADMIN") {
       // Admins see all opportunities
-      opportunities = await prisma.opportunity.findMany({
-        include: {
-          mentor: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
+      const [opportunitiesData, countData] = await Promise.all([
+        (prisma.opportunity.findMany({
+          include: {
+            creator: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                role: true,
+              },
             },
-          },
-          opportunityType: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
+            opportunityType: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+          } as any,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }) as any),
+        (prisma.opportunity.count() as any)
+      ]);
+      
+      opportunities = opportunitiesData;
+      totalCount = countData;
     } else {
       // Mentees see only approved opportunities
-      opportunities = await prisma.opportunity.findMany({
-        where: { status: "APPROVED" },
-        include: {
-          mentor: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
+      const [opportunitiesData, countData] = await Promise.all([
+        (prisma.opportunity.findMany({
+          where: { status: "APPROVED" },
+          include: {
+            creator: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                role: true,
+              },
             },
-          },
-          opportunityType: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
+            opportunityType: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+          } as any,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }) as any),
+        (prisma.opportunity.count({
+          where: { status: "APPROVED" },
+        }) as any)
+      ]);
+      
+      opportunities = opportunitiesData;
+      totalCount = countData;
     }
 
-    return NextResponse.json({ opportunities });
+    return NextResponse.json({ 
+      opportunities,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNext: page * limit < totalCount,
+        hasPrev: page > 1,
+      }
+    });
   } catch (error) {
     console.error("Error fetching opportunities:", error);
     return NextResponse.json(

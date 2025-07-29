@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     if (user.role === "MENTEE") {
       // Mentees see their own applications
-      applications = await prisma.application.findMany({
+      applications = await (prisma.application.findMany({
         where: { menteeId: payload.userId },
         include: {
           opportunity: {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
                   color: true,
                 },
               },
-              mentor: {
+              creator: {
                 select: {
                   firstName: true,
                   lastName: true,
@@ -54,18 +54,18 @@ export async function GET(request: NextRequest) {
                   },
                 },
               },
-            },
+            } as any,
           },
         },
         orderBy: { createdAt: "desc" },
-      });
+      }) as any);
     } else if (user.role === "MENTOR") {
       // Mentors see applications for their opportunities
-      applications = await prisma.application.findMany({
+      applications = await (prisma.application.findMany({
         where: {
           opportunity: {
-            mentorId: payload.userId,
-          },
+            creatorId: payload.userId,
+          } as any,
         },
         include: {
           opportunity: {
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: { createdAt: "desc" },
-      });
+      }) as any);
     } else {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    const { opportunityId, coverLetter, cvFile, cvFileName } =
+    const { opportunityId, coverLetter, resumeUrl } =
       await request.json();
 
     if (!opportunityId) {
@@ -178,68 +178,66 @@ export async function POST(request: NextRequest) {
     const application = await prisma.application.create({
       data: {
         menteeId: payload.userId,
-        opportunityId: opportunityId,
+        opportunityId,
         coverLetter: coverLetter || null,
-        cvFile: cvFile || null,
-        cvFileName: cvFileName || null,
-      },
-      include: {
-        opportunity: {
-          include: {
-            mentor: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-                profile: {
-                  select: {
-                    specialty: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        mentee: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
       },
     });
 
     // Send email notification to mentor
     try {
-      const mentorName =
-        `${application.opportunity.mentor.firstName || ""} ${
-          application.opportunity.mentor.lastName || ""
-        }`.trim() || "Mentor";
-      const menteeName =
-        `${application.mentee.firstName || ""} ${
-          application.mentee.lastName || ""
-        }`.trim() || application.mentee.email;
+      // Get opportunity and creator details for email
+      const opportunityWithCreator = await (prisma.opportunity.findUnique({
+        where: { id: opportunityId },
+        include: {
+          creator: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        } as any,
+      }) as any);
 
-      const emailResult = await sendApplicationSubmissionEmail({
-        email: application.opportunity.mentor.email,
-        mentorName: mentorName,
-        menteeName: menteeName,
-        opportunityTitle: application.opportunity.title,
-        menteeEmail: application.mentee.email,
+      const mentee = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
       });
 
-      if (!emailResult.success) {
-        console.error(
-          "Failed to send application submission email:",
-          emailResult.error
-        );
-        // Don't fail the request if email fails, just log it
-      } else {
-        console.log(
-          "Application submission email sent successfully to:",
-          application.opportunity.mentor.email
-        );
+      if (opportunityWithCreator && mentee) {
+        const mentorName =
+          `${(opportunityWithCreator as any).creator.firstName || ""} ${
+            (opportunityWithCreator as any).creator.lastName || ""
+          }`.trim() || "Mentor";
+        const menteeName =
+          `${mentee.firstName || ""} ${
+            mentee.lastName || ""
+          }`.trim() || mentee.email;
+
+        const emailResult = await sendApplicationSubmissionEmail({
+          email: (opportunityWithCreator as any).creator.email,
+          mentorName: mentorName,
+          menteeName: menteeName,
+          opportunityTitle: opportunityWithCreator.title,
+          menteeEmail: mentee.email,
+        });
+
+        if (!emailResult.success) {
+          console.error(
+            "Failed to send application submission email:",
+            emailResult.error
+          );
+          // Don't fail the request if email fails, just log it
+        } else {
+          console.log(
+            "Application submission email sent successfully to:",
+            (opportunityWithCreator as any).creator.email
+          );
+        }
       }
     } catch (emailError) {
       console.error("Error sending application submission email:", emailError);
