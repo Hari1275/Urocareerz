@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,7 +69,7 @@ interface OpportunityType {
   color?: string;
 }
 
-export default function OpportunitiesPage() {
+function OpportunitiesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { getTypeBadge } = useOpportunityTypes();
@@ -457,5 +457,13 @@ export default function OpportunitiesPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function OpportunitiesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OpportunitiesContent />
+    </Suspense>
   );
 }
