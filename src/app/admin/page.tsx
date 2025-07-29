@@ -328,7 +328,7 @@ export default function AdminDashboardPage() {
 
         {/* Sidebar */}
         <aside
-          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-sm transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          className={`fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 w-64 bg-white shadow-sm transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:h-screen ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -342,7 +342,7 @@ export default function AdminDashboardPage() {
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <nav className="mt-4 lg:mt-8">
+          <nav className="mt-4 lg:mt-8 lg:overflow-y-auto lg:h-[calc(100vh-8rem)]">
             <div className="px-4 space-y-2">
               <Button
                 variant={activeTab === "overview" ? "default" : "ghost"}
