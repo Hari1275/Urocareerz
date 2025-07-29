@@ -18,47 +18,26 @@ interface SharedHeaderProps {
   className?: string;
 }
 
-// Simple user cache to avoid repeated API calls
-let userCache: User | null = null;
-let userCacheTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Function to clear cache (can be called from other components)
-export const clearUserCache = () => {
-  userCache = null;
-  userCacheTime = 0;
-};
-
 export default function SharedHeader({ showUserInfo = true, className = "" }: SharedHeaderProps) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(userCache);
-  const [isLoading, setIsLoading] = useState(!userCache && showUserInfo);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   const fetchUserData = async () => {
-    const now = Date.now();
-    
-    // Use cache if available and fresh
-    if (userCache && (now - userCacheTime) < CACHE_DURATION) {
-      setUser(userCache);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       const response = await fetch("/api/user");
       if (response.ok) {
         const userData = await response.json();
-        userCache = userData.user;
-        userCacheTime = now;
         setUser(userData.user);
       } else {
-        userCache = null;
+        setUser(null);
         router.push("/login");
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
-      userCache = null;
+      setUser(null);
       router.push("/login");
     } finally {
       setIsLoading(false);
@@ -69,7 +48,7 @@ export default function SharedHeader({ showUserInfo = true, className = "" }: Sh
     try {
       const response = await fetch("/api/logout", { method: "POST" });
       if (response.ok) {
-        userCache = null; // Clear cache on logout
+        setUser(null);
         router.push("/login");
       }
     } catch (error) {
@@ -77,11 +56,16 @@ export default function SharedHeader({ showUserInfo = true, className = "" }: Sh
     }
   };
 
+  // Ensure we're on the client side before fetching data
   useEffect(() => {
-    if (showUserInfo && !userCache) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && showUserInfo && !user) {
       fetchUserData();
     }
-  }, [showUserInfo]);
+  }, [isClient, showUserInfo, user]);
 
   const userName = user 
     ? (user.firstName && user.lastName 

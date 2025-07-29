@@ -50,6 +50,7 @@ import {
   UserX,
   UserCheck2,
 } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -553,11 +554,7 @@ export default function UserManagementTable() {
                         })()}
                       </TableCell>
                       <TableCell suppressHydrationWarning>
-                        {new Date(user.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        {formatDate(user.createdAt)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
@@ -711,11 +708,7 @@ export default function UserManagementTable() {
                     </div>
 
                     <div className="text-sm text-gray-500" suppressHydrationWarning>
-                      Created: {new Date(user.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
+                      Created: {formatDate(user.createdAt)}
                     </div>
 
                     <div className="flex flex-wrap gap-2">

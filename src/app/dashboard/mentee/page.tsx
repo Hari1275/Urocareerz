@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import SharedHeader, { clearUserCache } from "@/components/shared-header";
+import SharedHeader from "@/components/shared-header";
 
 interface SavedOpportunity {
   id: string;
@@ -73,7 +73,6 @@ export default function MenteeDashboardPage() {
 
   useEffect(() => {
     // Clear cache and check user role
-    clearUserCache();
     checkUserRole();
     fetchSavedOpportunities();
   }, []);

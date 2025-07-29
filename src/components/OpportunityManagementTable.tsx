@@ -47,6 +47,7 @@ import {
   MapPin,
   Calendar,
 } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 interface Opportunity {
   id: string;
@@ -314,12 +315,8 @@ export default function OpportunityManagementTable() {
     setShowOpportunityForm(true);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const formatDateString = (dateString: string) => {
+    return formatDate(dateString);
   };
 
   if (loading) {
@@ -509,7 +506,7 @@ export default function OpportunityManagementTable() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4 text-gray-400" />
-                            {formatDate(opportunity.createdAt)}
+                            {formatDateString(opportunity.createdAt)}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -655,7 +652,7 @@ export default function OpportunityManagementTable() {
 
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="h-4 w-4" />
-                      {formatDate(opportunity.createdAt)}
+                      {formatDateString(opportunity.createdAt)}
                     </div>
 
                     <div className="flex flex-wrap gap-2">

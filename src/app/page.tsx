@@ -4,6 +4,7 @@ import Link from "next/link";
 import HeroSection from "../components/hero-section";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
+import ClientYear from '@/components/ClientYear'
 
 function fadeUp(i = 1): Variants {
   return {
@@ -264,7 +265,7 @@ export default function Home() {
               <a href="#" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Terms</a>
               <a href="#" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Contact</a>
             </div>
-            <span className="text-xs sm:text-sm text-gray-400" suppressHydrationWarning>&copy; {currentYear} UroCareerz. All rights reserved.</span>
+            <span className="text-xs sm:text-sm text-gray-400" suppressHydrationWarning>&copy; <ClientYear /> UroCareerz. All rights reserved.</span>
           </div>
         </div>
       </footer>
