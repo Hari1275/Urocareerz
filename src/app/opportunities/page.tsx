@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import SharedHeader from "@/components/shared-header";
 
 interface Opportunity {
   id: string;
@@ -78,13 +79,13 @@ export default function OpportunitiesPage() {
   const [savedOpportunities, setSavedOpportunities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [experienceFilter, setExperienceFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [savedFilter, setSavedFilter] = useState("all");
   const [opportunityTypes, setOpportunityTypes] = useState<OpportunityType[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [userApplications, setUserApplications] = useState<string[]>([]);
 
   // Handle URL parameters on mount
@@ -97,85 +98,76 @@ export default function OpportunitiesPage() {
     }
   }, [searchParams]);
 
+  // Fetch all data
   useEffect(() => {
-    const fetchUserAndOpportunities = async () => {
+    const fetchData = async () => {
       try {
-        // Fetch user data
-        const userResponse = await fetch("/api/user");
-        if (!userResponse.ok) {
-          if (userResponse.status === 401) {
-            navigateToDashboard();
-            return;
-          }
-          throw new Error("Failed to fetch user data");
-        }
-
-        const userData = await userResponse.json();
-        setUser(userData.user);
+        setLoading(true);
+        setError(null);
 
         // Fetch opportunities
-        const opportunitiesResponse = await fetch("/api/opportunities");
-        if (opportunitiesResponse.ok) {
-          const data = await opportunitiesResponse.json();
-          // Only show approved opportunities for mentees
-          const approvedOpportunities =
-            data.opportunities?.filter(
-              (opp: Opportunity) => opp.status === "APPROVED"
-            ) || [];
-          setOpportunities(approvedOpportunities);
+        const response = await fetch("/api/opportunities");
+        if (!response.ok) {
+          throw new Error("Failed to fetch opportunities");
         }
+        const data = await response.json();
+        setOpportunities(data.opportunities || []);
 
-        // Fetch saved opportunities
-        const savedResponse = await fetch("/api/saved-opportunities");
-        if (savedResponse.ok) {
-          const savedData = await savedResponse.json();
-          setSavedOpportunities(
-            savedData.savedOpportunities?.map(
-              (opp: any) => opp.opportunityId
-            ) || []
-          );
-        }
+        // Fetch user data
+        const userResponse = await fetch("/api/user");
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          setUser(userData.user);
 
-        // Fetch opportunity types
-        const typesResponse = await fetch("/api/opportunity-types");
-        if (typesResponse.ok) {
-          const typesData = await typesResponse.json();
-          setOpportunityTypes(typesData.opportunityTypes || []);
-        }
+          // Fetch saved opportunities
+          const savedResponse = await fetch("/api/saved-opportunities");
+          if (savedResponse.ok) {
+            const savedData = await savedResponse.json();
+            setSavedOpportunities(
+              savedData.savedOpportunities?.map(
+                (opp: any) => opp.opportunityId
+              ) || []
+            );
+          }
 
-        // Fetch user applications (only for mentees)
-        if (userData.user.role === "MENTEE") {
-          const applicationsResponse = await fetch("/api/applications");
-          if (applicationsResponse.ok) {
-            const applicationsData = await applicationsResponse.json();
-            const appliedOpportunityIds = applicationsData.applications?.map(
-              (app: any) => app.opportunityId
-            ) || [];
-            setUserApplications(appliedOpportunityIds);
+          // Fetch opportunity types
+          const typesResponse = await fetch("/api/opportunity-types");
+          if (typesResponse.ok) {
+            const typesData = await typesResponse.json();
+            setOpportunityTypes(typesData.opportunityTypes || []);
+          }
+
+          // Fetch user applications (only for mentees)
+          if (userData.user.role === "MENTEE") {
+            const applicationsResponse = await fetch("/api/applications");
+            if (applicationsResponse.ok) {
+              const applicationsData = await applicationsResponse.json();
+              const appliedOpportunityIds = applicationsData.applications?.map(
+                (app: any) => app.opportunityId
+              ) || [];
+              setUserApplications(appliedOpportunityIds);
+            }
           }
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(error instanceof Error ? error.message : "An error occurred");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserAndOpportunities();
-  }, [navigateToDashboard]);
+    fetchData();
+  }, []);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-
+      const response = await fetch("/api/logout", { method: "POST" });
       if (response.ok) {
-        navigateToDashboard();
+        router.push("/login");
       }
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Error logging out:", error);
     }
   };
 
@@ -253,111 +245,10 @@ export default function OpportunitiesPage() {
     return matchesSearch && matchesLocation && matchesExperience && matchesType && matchesSaved;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Loading...</span>
-              </div>
-            </div>
-          </div>
-        </header>
-        <div className="container mx-auto py-8 px-4">
-          <div className="flex items-center justify-center min-h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading opportunities...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Error</span>
-              </div>
-            </div>
-          </div>
-        </header>
-        <div className="container mx-auto py-8 px-4">
-          <div className="text-center">
-            <div className="text-red-500 mb-4">
-              <div className="text-4xl mb-2">⚠️</div>
-              <h3 className="text-lg font-medium mb-2">Error Loading Opportunities</h3>
-              <p className="text-sm text-gray-600">{error}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-4">
-              {user === null ? (
-                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
-                </span>
-              )}
-              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
-              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
-            </div>
-            <div className="md:hidden flex items-center gap-3">
-              {user === null ? (
-                <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
-              ) : (
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-gray-500">Welcome,</span>
-                  <span className="text-sm text-gray-900 font-medium truncate max-w-24">
-                    {user.firstName || user.email || "User"}
-                  </span>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const shouldLogout = confirm("Would you like to logout?");
-                  if (shouldLogout) handleLogout();
-                }}
-                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <SharedHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}
@@ -372,16 +263,37 @@ export default function OpportunitiesPage() {
         </div>
 
         {/* Page Header */}
-        <div className="mb-8 sm:mb-10 lg:mb-12">
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Browse <span className="bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent">Opportunities</span>
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Explore and apply for opportunities posted by mentors in the urology community.
-            </p>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Explore <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Opportunities</span>
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Discover amazing opportunities posted by mentors and take your career to the next level.
+          </p>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="text-red-500 mr-3">⚠️</div>
+              <div>
+                <h3 className="text-sm font-medium text-red-800">Error Loading Data</h3>
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State for Data */}
+        {loading && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
+              <p className="text-blue-700 text-sm">Loading opportunities...</p>
+            </div>
+          </div>
+        )}
 
         {/* Search and Filters */}
         <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 mb-8 border border-gray-100">
@@ -401,9 +313,6 @@ export default function OpportunitiesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="remote">Remote</SelectItem>
-                <SelectItem value="onsite">On-site</SelectItem>
-                <SelectItem value="hybrid">Hybrid</SelectItem>
               </SelectContent>
             </Select>
             <Select value={experienceFilter} onValueChange={setExperienceFilter}>

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePagination } from "@/hooks/use-pagination";
+import SharedHeader from "@/components/shared-header";
 
 interface MenteeOpportunity {
   id: string;
@@ -21,14 +22,6 @@ interface MenteeOpportunity {
     color: string | null;
   };
   adminFeedback: string | null;
-}
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  role: string;
 }
 
 interface SavedOpportunity {
@@ -51,30 +44,14 @@ interface SavedOpportunity {
 
 export default function MenteeDashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [opportunities, setOpportunities] = useState<MenteeOpportunity[]>([]);
   const [savedOpportunities, setSavedOpportunities] = useState<SavedOpportunity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingData, setLoadingData] = useState(false);
   const opportunitiesPagination = usePagination({ initialPageSize: 10 });
-
-  const fetchUserData = async () => {
-    try {
-      const response = await fetch("/api/user");
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData.user);
-      } else {
-        router.push("/login");
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      router.push("/login");
-    }
-  };
 
   const fetchMenteeOpportunities = async () => {
     try {
-      setLoading(true);
+      setLoadingData(true);
       const response = await fetch("/api/opportunities");
       if (response.ok) {
         const data = await response.json();
@@ -87,7 +64,7 @@ export default function MenteeDashboardPage() {
     } catch (error) {
       console.error("Error fetching opportunities:", error);
     } finally {
-      setLoading(false);
+      setLoadingData(false);
     }
   };
 
@@ -107,26 +84,10 @@ export default function MenteeDashboardPage() {
   };
 
   useEffect(() => {
-    fetchUserData();
+    // Load data immediately without blocking UI
+    fetchMenteeOpportunities();
+    fetchSavedOpportunities();
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchMenteeOpportunities();
-      fetchSavedOpportunities();
-    }
-  }, [user]);
-
-  const handleLogout = async () => {
-    try {
-      const response = await fetch("/api/logout", { method: "POST" });
-      if (response.ok) {
-        router.push("/login");
-      }
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -144,7 +105,6 @@ export default function MenteeDashboardPage() {
   };
 
   const formatDate = (dateString: string) => {
-    // Use a consistent date format to prevent hydration mismatches
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -153,139 +113,17 @@ export default function MenteeDashboardPage() {
     });
   };
 
-  // Helper function for status counts
-  const getOpportunityStatusCounts = () => {
-    const counts = {
-      total: opportunities.length,
-      pending: opportunities.filter(opp => opp.status === 'PENDING').length,
-      approved: opportunities.filter(opp => opp.status === 'APPROVED').length,
-      rejected: opportunities.filter(opp => opp.status === 'REJECTED').length,
-      converted: opportunities.filter(opp => opp.status === 'CONVERTED').length,
-    };
-    return counts;
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Loading...</span>
-              </div>
-            </div>
-          </div>
-        </header>
-        <div className="container mx-auto py-8 px-4">
-          <div className="flex items-center justify-center min-h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading mentee dashboard...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Error</span>
-              </div>
-            </div>
-          </div>
-        </header>
-        <div className="container mx-auto py-8 px-4">
-          <div className="text-center">
-            <div className="text-red-500 mb-4">
-              <div className="text-4xl mb-2">⚠️</div>
-              <h3 className="text-lg font-medium mb-2">Authentication Error</h3>
-              <p className="text-sm text-gray-600">Please log in to access your dashboard.</p>
-            </div>
-            <Button 
-              onClick={() => router.push("/login")} 
-              className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
-            >
-              Go to Login
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-4">
-              {user === null ? (
-                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || user.email || "User"}</span>
-                </span>
-              )}
-              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
-              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
-            </div>
-            <div className="md:hidden flex items-center justify-end gap-2 w-full">
-              <div className="flex flex-row items-center gap-x-1 min-w-0 max-w-xs flex-shrink overflow-hidden">
-                {user === null ? (
-                  <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
-                ) : (
-                  <>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">Welcome,</span>
-                    <span className="text-sm text-gray-900 font-medium truncate max-w-[6rem] ml-1">
-                      {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || user.email || "User"}
-                    </span>
-                  </>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const shouldLogout = confirm("Would you like to logout?");
-                  if (shouldLogout) handleLogout();
-                }}
-                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
-                aria-label="Logout"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Use Shared Header */}
+      <SharedHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Welcome back, <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || "Mentee"}</span>!
+              Welcome back, <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">Mentee</span>!
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Ready to explore opportunities and contribute to the community? Let&apos;s get started!
@@ -348,10 +186,13 @@ export default function MenteeDashboardPage() {
             </div>
             <h3 className="text-lg font-bold text-gray-900 text-center">Saved Opportunities</h3>
             <p className="text-sm text-gray-500 text-center">
-              {savedOpportunities.length > 0 
-                ? `${savedOpportunities.length} saved opportunity${savedOpportunities.length !== 1 ? 'ies' : ''}`
-                : 'No saved opportunities yet'
-              }
+              {loadingData ? (
+                <span className="animate-pulse">Loading...</span>
+              ) : savedOpportunities.length > 0 ? (
+                `${savedOpportunities.length} saved opportunity${savedOpportunities.length !== 1 ? 'ies' : ''}`
+              ) : (
+                'No saved opportunities yet'
+              )}
             </p>
             {savedOpportunities.length > 0 && (
               <div className="mt-2">
