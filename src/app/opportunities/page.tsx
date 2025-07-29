@@ -80,7 +80,6 @@ export default function OpportunitiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [locationFilter, setLocationFilter] = useState("all");
   const [experienceFilter, setExperienceFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [savedFilter, setSavedFilter] = useState("all");
@@ -222,12 +221,6 @@ export default function OpportunitiesPage() {
     const matchesSearch =
       opportunity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       opportunity.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation =
-      locationFilter === "all" ||
-      (opportunity.location &&
-        opportunity.location
-          .toLowerCase()
-          .includes(locationFilter.toLowerCase()));
     const matchesExperience =
       experienceFilter === "all" ||
       opportunity.experienceLevel === experienceFilter;
@@ -242,7 +235,7 @@ export default function OpportunitiesPage() {
       (savedFilter === "applied" && userApplications.includes(opportunity.id)) ||
       (savedFilter === "not_applied" && !userApplications.includes(opportunity.id));
 
-    return matchesSearch && matchesLocation && matchesExperience && matchesType && matchesSaved;
+    return matchesSearch && matchesExperience && matchesType && matchesSaved;
   });
 
   return (
@@ -296,8 +289,8 @@ export default function OpportunitiesPage() {
         )}
 
         {/* Search and Filters */}
-        <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 mb-8 border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mb-8 bg-white/70 backdrop-blur-lg rounded-xl shadow p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -307,14 +300,6 @@ export default function OpportunitiesPage() {
                 className="pl-10 bg-white/80"
               />
             </div>
-            <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="bg-white/80">
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={experienceFilter} onValueChange={setExperienceFilter}>
               <SelectTrigger className="bg-white/80">
                 <SelectValue placeholder="Experience Level" />
@@ -459,7 +444,6 @@ export default function OpportunitiesPage() {
             <Button
               onClick={() => {
                 setSearchTerm("");
-                setLocationFilter("all");
                 setExperienceFilter("all");
                 setTypeFilter("all");
                 setSavedFilter("all");
