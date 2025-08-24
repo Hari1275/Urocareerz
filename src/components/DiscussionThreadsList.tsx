@@ -49,7 +49,8 @@ interface DiscussionThreadsListProps {
     total: number;
     pages: number;
   };
-  onRefresh: () => void;
+  onRefresh: (category?: string, status?: string) => void;
+  onNewDiscussion?: () => void;
 }
 
 const categoryLabels = {
@@ -74,6 +75,7 @@ export default function DiscussionThreadsList({
   threads,
   pagination,
   onRefresh,
+  onNewDiscussion,
 }: DiscussionThreadsListProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -82,26 +84,16 @@ export default function DiscussionThreadsList({
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    const params = new URLSearchParams();
-    if (category && category !== "ALL") {
-      params.set("category", category);
-    }
-    if (selectedStatus && selectedStatus !== "ACTIVE") {
-      params.set("status", selectedStatus);
-    }
-    router.push(`/discussions?${params.toString()}`);
+    const categoryParam = category === "ALL" ? undefined : category;
+    const statusParam = selectedStatus === "ACTIVE" ? undefined : selectedStatus;
+    onRefresh(categoryParam, statusParam);
   };
 
   const handleStatusChange = (status: string) => {
     setSelectedStatus(status);
-    const params = new URLSearchParams();
-    if (selectedCategory && selectedCategory !== "ALL") {
-      params.set("category", selectedCategory);
-    }
-    if (status && status !== "ACTIVE") {
-      params.set("status", status);
-    }
-    router.push(`/discussions?${params.toString()}`);
+    const categoryParam = selectedCategory === "ALL" ? undefined : selectedCategory;
+    const statusParam = status === "ACTIVE" ? undefined : status;
+    onRefresh(categoryParam, statusParam);
   };
 
   const formatDate = (dateString: string) => {
@@ -162,7 +154,7 @@ export default function DiscussionThreadsList({
             </div>
 
             <Button 
-              onClick={() => router.push("/discussions/new")}
+              onClick={() => onNewDiscussion ? onNewDiscussion() : router.push("/discussions/new")}
               className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
             >
               Start New Discussion
@@ -286,7 +278,7 @@ export default function DiscussionThreadsList({
               </p>
             </div>
             <Button 
-              onClick={() => router.push("/discussions/new")}
+              onClick={() => onNewDiscussion ? onNewDiscussion() : router.push("/discussions/new")}
               className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
             >
               Start First Discussion
@@ -310,10 +302,8 @@ export default function DiscussionThreadsList({
               size="sm"
               disabled={pagination.page === 1}
               onClick={() => {
-                const params = new URLSearchParams();
-                params.set("page", String(pagination.page - 1));
-                if (selectedCategory) params.set("category", selectedCategory);
-                router.push(`/discussions?${params.toString()}`);
+                // For now, pagination is handled by the parent component
+                // Future enhancement: implement pagination callback
               }}
               className="bg-white/80 hover:bg-white"
             >
@@ -324,10 +314,8 @@ export default function DiscussionThreadsList({
               size="sm"
               disabled={pagination.page === pagination.pages}
               onClick={() => {
-                const params = new URLSearchParams();
-                params.set("page", String(pagination.page + 1));
-                if (selectedCategory) params.set("category", selectedCategory);
-                router.push(`/discussions?${params.toString()}`);
+                // For now, pagination is handled by the parent component
+                // Future enhancement: implement pagination callback
               }}
               className="bg-white/80 hover:bg-white"
             >

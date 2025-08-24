@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import ProfileForm from "@/components/ProfileForm";
 import ProfileDisplay from "@/components/ProfileDisplay";
+import ProfileStrength from "@/components/ProfileStrength";
+import { LoadingPage } from "@/components/ui/loading-spinner";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User } from "lucide-react";
+import { User, ArrowLeft } from "lucide-react";
 
 interface Profile {
   id?: string;
@@ -193,61 +196,50 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Loading...</span>
-              </div>
-            </div>
-          </div>
-        </header>
-        <div className="container mx-auto py-8 px-4">
-          <div className="flex items-center justify-center min-h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading profile...</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LoadingPage 
+        title="Loading your profile..." 
+        description="Fetching your profile information and settings"
+        size="lg"
+      />
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Premium Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Error</span>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
               </div>
+              <div className="text-sm text-slate-500">Error</div>
             </div>
           </div>
         </header>
-        <div className="container mx-auto py-8 px-4">
-          <div className="text-center">
-            <div className="text-red-500 mb-4">
-              <div className="text-4xl mb-2">⚠️</div>
-              <h3 className="text-lg font-medium mb-2">Error Loading Profile</h3>
-              <p className="text-sm text-gray-600">{error}</p>
-            </div>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
-            >
-              Try Again
-            </Button>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-center min-h-96">
+            <Card className="max-w-md w-full bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+              <CardContent className="p-6 text-center">
+                <div className="text-red-500 mb-4">
+                  <div className="text-4xl mb-2">⚠️</div>
+                  <h3 className="text-lg font-semibold mb-2 text-slate-900">Error Loading Profile</h3>
+                  <p className="text-sm text-slate-600">{error}</p>
+                </div>
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                >
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -259,183 +251,238 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Premium Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-4">
-              {user === null ? (
-                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-slate-600 font-medium">
+                  Welcome, {user.firstName || user.email}
                 </span>
               )}
-              <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</Link>
-              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
-            </div>
-            <div className="md:hidden flex items-center justify-end gap-2 w-full">
-              <div className="flex flex-row items-center gap-x-1 min-w-0 max-w-xs flex-shrink overflow-hidden">
-                {user === null ? (
-                  <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
-                ) : (
-                  <>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">Welcome,</span>
-                    <span className="text-sm text-gray-900 font-medium truncate max-w-[6rem] ml-1">
-                      {user.firstName || user.email || "User"}
-                    </span>
-                  </>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const shouldLogout = confirm("Would you like to logout?");
-                  if (shouldLogout) handleLogout();
-                }}
-                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
-                aria-label="Logout"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+              <Link href="/dashboard" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                Dashboard
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
+                Logout
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
-              Dashboard
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">Profile</span>
-          </nav>
-        </div>
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Navigation */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24 space-y-6">
+              {/* Profile Navigation Card */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardContent className="p-4">
+                  <nav className="space-y-2">
+                    <Link 
+                      href="/dashboard" 
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                      <span>Back to Dashboard</span>
+                    </Link>
+                    <button 
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
+                    >
+                      <User className="h-5 w-5" />
+                      <span>Profile Settings</span>
+                    </button>
+                  </nav>
+                </CardContent>
+              </Card>
 
-        {/* Page Header */}
-        <div className="mb-8 sm:mb-10 lg:mb-12">
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              My <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">Profile</span>
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Manage your professional profile and account settings.
-            </p>
+              {/* Profile Strength */}
+              <ProfileStrength user={user} profile={profile} />
+            </div>
           </div>
-        </div>
 
-        {/* Profile Content */}
-        <div className="max-w-4xl mx-auto">
-          {isEditing ? (
+          {/* Main Content */}
+          <div className="lg:col-span-6">
             <div className="space-y-6">
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-100 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-400 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
-                </div>
-                <ProfileForm
-                  profile={combinedProfile}
-                  onSubmit={handleSubmitProfile}
-                  isSubmitting={isSubmitting}
-                  onCancel={handleCancelEdit}
-                />
+              {/* Page Header */}
+              <div className="text-center">
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                  My <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Profile</span>
+                </h1>
+                <p className="text-slate-600">Manage your professional profile and account settings.</p>
+              </div>
+              {/* Profile Content */}
+              <div className="space-y-6">
+                {isEditing ? (
+                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-slate-900 flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500">
+                          <User className="h-5 w-5 text-white" />
+                        </div>
+                        Edit Profile
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ProfileForm
+                        profile={combinedProfile}
+                        onSubmit={handleSubmitProfile}
+                        isSubmitting={isSubmitting}
+                        onCancel={handleCancelEdit}
+                      />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-xl font-bold text-slate-900 flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-gradient-to-tr from-green-500 to-emerald-500">
+                              <User className="h-5 w-5 text-white" />
+                            </div>
+                            Profile Information
+                          </CardTitle>
+                          <Button 
+                            onClick={() => setIsEditing(true)}
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                          >
+                            Edit Profile
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <ProfileDisplay
+                          profile={combinedProfile}
+                          onEdit={() => setIsEditing(true)}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    {/* Account Security Section */}
+                    <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                      <CardHeader>
+                        <CardTitle className="text-xl font-bold text-slate-900 flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                          </div>
+                          Account Security
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-slate-100 hover:bg-white/80 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-slate-900">Email Address</h3>
+                              <p className="text-sm text-slate-600">{user.email}</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm" disabled className="bg-white/80 border-slate-200 text-slate-400">
+                            Change Email
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-slate-100 hover:bg-white/80 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                              <User className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-slate-900">Account Role</h3>
+                              <p className="text-sm text-slate-600">
+                                {user.role === "MENTOR"
+                                  ? "Mentor"
+                                  : user.role === "MENTEE"
+                                  ? "Mentee"
+                                  : user.role === "ADMIN"
+                                  ? "Administrator"
+                                  : user.role}
+                              </p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm" disabled className="bg-white/80 border-slate-200 text-slate-400">
+                            Contact Support
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-green-400 to-blue-400 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-900">Profile Information</h2>
-                  </div>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24 space-y-6">
+              {/* Quick Actions */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   <Button 
                     onClick={() => setIsEditing(true)}
-                    className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                    disabled={isEditing}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
                   >
-                    Edit Profile
+                    <User className="h-4 w-4 mr-2" />
+                    {isEditing ? 'Editing...' : 'Edit Profile'}
                   </Button>
-                </div>
-                <ProfileDisplay
-                  profile={combinedProfile}
-                  onEdit={() => setIsEditing(true)}
-                />
-              </div>
-
-              {/* Account Security Section */}
-              <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-100 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-400 to-pink-400 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Account Security</h2>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-gray-100 hover:bg-white/70 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">Email Address</h3>
-                        <p className="text-sm text-gray-600">{user.email}</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200 text-gray-400">
-                      Change Email
+                  <Link href="/dashboard">
+                    <Button 
+                      variant="outline" 
+                      className="w-full bg-white/80 border-slate-200 hover:bg-white"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Dashboard
                     </Button>
-                  </div>
+                  </Link>
+                </CardContent>
+              </Card>
 
-                  <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-gray-100 hover:bg-white/70 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">Account Role</h3>
-                        <p className="text-sm text-gray-600">
-                          {user.role === "MENTOR"
-                            ? "Mentor"
-                            : user.role === "MENTEE"
-                            ? "Mentee"
-                            : user.role === "ADMIN"
-                            ? "Administrator"
-                            : user.role}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" disabled className="bg-white/80 border-gray-200 text-gray-400">
+              {/* Help & Support */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Need Help?</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="text-sm text-slate-600 space-y-2">
+                    <p>Having trouble with your profile?</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full bg-white/80 border-slate-200 hover:bg-white"
+                      onClick={() => window.open('mailto:support@urocareerz.com', '_blank')}
+                    >
                       Contact Support
                     </Button>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
-          )}
+          </div>
         </div>
       </main>
     </div>

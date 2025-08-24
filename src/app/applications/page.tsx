@@ -23,6 +23,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  FileText,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -208,25 +210,30 @@ export default function ApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Premium Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
               </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Loading...</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-slate-500 font-medium animate-pulse">Loading...</span>
               </div>
             </div>
           </div>
         </header>
-        <div className="container mx-auto py-8 px-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading applications...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-slate-600 font-medium">Loading applications...</p>
             </div>
           </div>
         </div>
@@ -236,27 +243,38 @@ export default function ApplicationsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Premium Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
               </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Error</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-red-500 font-medium">Error</span>
               </div>
             </div>
           </div>
         </header>
-        <div className="container mx-auto py-8 px-4">
-          <div className="text-center">
-            <div className="text-red-500 mb-4">
-              <div className="text-4xl mb-2">⚠️</div>
-              <h3 className="text-lg font-medium mb-2">Error Loading Applications</h3>
-              <p className="text-sm text-gray-600">{error}</p>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-16">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-red-100 to-red-200 flex items-center justify-center">
+              <AlertCircle className="h-12 w-12 text-red-500" />
             </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Error Loading Applications</h3>
+            <p className="text-slate-600 mb-6 max-w-md mx-auto">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600 rounded-xl px-6"
+            >
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
@@ -264,66 +282,55 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Premium Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-4">
-              {user === null ? (
-                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
+              </Link>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-slate-600 font-medium">
+                  Welcome, {user.firstName || user.email}
                 </span>
               )}
-              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
-              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
-            </div>
-            <div className="md:hidden flex items-center gap-3">
-              {user === null ? (
-                <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
-              ) : (
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-gray-500">Welcome,</span>
-                  <span className="text-sm text-gray-900 font-medium truncate max-w-24">
-                    {user.firstName || user.email || "User"}
-                  </span>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const shouldLogout = confirm("Would you like to logout?");
-                  if (shouldLogout) handleLogout();
-                }}
-                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+              <Link href="/profile" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                Profile
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
+                Logout
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Applications" },
-          ]}
-        />
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm text-slate-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors font-medium">
+              Dashboard
+            </Link>
+            <span>/</span>
+            <span className="text-slate-900 font-semibold">My Applications</span>
+          </nav>
+        </div>
 
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">My Applications</h1>
+          <p className="text-slate-600">
             Track the status of your opportunity applications
           </p>
         </div>
@@ -331,38 +338,49 @@ export default function ApplicationsPage() {
         {/* Applications List */}
         <div className="space-y-6">
           {applications.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-4xl mb-4">📝</div>
-              <h3 className="text-lg font-medium mb-2">No applications yet</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="text-center py-16">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
+                <FileText className="h-12 w-12 text-slate-400" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">No applications yet</h3>
+              <p className="text-slate-600 mb-6 max-w-md mx-auto">
                 Start applying for opportunities to see your applications here.
               </p>
               <Button
                 onClick={navigateToOpportunities}
-                className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600 rounded-xl px-6"
               >
+                <Search className="h-4 w-4 mr-2" />
                 Browse Opportunities
               </Button>
             </div>
           ) : (
             applications.map((application) => (
-              <Card key={application.id} className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-                <CardHeader>
+              <Card key={application.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-300 rounded-2xl">
+                <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                      <CardTitle className="text-lg font-bold text-slate-900 mb-3">
                         {application.opportunity.title}
                       </CardTitle>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-3 mb-2">
                         {application.opportunity.opportunityType && (
-                          <Badge variant="outline" style={{ borderColor: application.opportunity.opportunityType.color || undefined, color: application.opportunity.opportunityType.color || undefined }}>
+                          <Badge 
+                            variant="secondary" 
+                            className="rounded-lg font-medium"
+                            style={{ 
+                              backgroundColor: application.opportunity.opportunityType.color ? application.opportunity.opportunityType.color + '20' : undefined, 
+                              color: application.opportunity.opportunityType.color || undefined,
+                              borderColor: application.opportunity.opportunityType.color || undefined 
+                            }}
+                          >
                             {application.opportunity.opportunityType.name}
                           </Badge>
                         )}
                         {application.opportunity.location && (
-                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                          <div className="flex items-center gap-1 text-sm text-slate-500">
                             <MapPin className="h-4 w-4" />
-                            {application.opportunity.location}
+                            <span>{application.opportunity.location}</span>
                           </div>
                         )}
                       </div>
@@ -372,38 +390,41 @@ export default function ApplicationsPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 mb-4 line-clamp-3">
+                <CardContent className="pb-4">
+                  <p className="text-slate-600 mb-4 line-clamp-3 text-sm leading-relaxed">
                     {application.opportunity.description}
                   </p>
                   <div className="space-y-2">
                     {application.opportunity.experienceLevel && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Briefcase className="h-4 w-4" />
-                        {application.opportunity.experienceLevel}
+                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <Briefcase className="h-4 w-4 text-slate-400" />
+                        <span>{application.opportunity.experienceLevel}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Calendar className="h-4 w-4" />
-                      Applied on {formatDate(application.createdAt)}
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Calendar className="h-4 w-4 text-slate-400" />
+                      <span>Applied on {formatDate(application.createdAt)}</span>
                     </div>
                     {application.opportunity.creator && (
-                      <div className="text-sm text-gray-500">
-                        Posted by Dr. {application.opportunity.creator.firstName} {application.opportunity.creator.lastName}
+                      <div className="text-sm text-slate-500">
+                        <span>Posted by </span>
+                        <span className="font-medium text-slate-700">
+                          Dr. {application.opportunity.creator.firstName} {application.opportunity.creator.lastName}
+                        </span>
                       </div>
                     )}
                   </div>
                 </CardContent>
                 <CardContent className="pt-0">
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigateToOpportunity(application.opportunity.id)}
-                      className="bg-white/80 hover:bg-white"
+                      className="bg-white/80 hover:bg-white border-slate-200 rounded-xl transition-all duration-200"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View Opportunity
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
                     </Button>
                     {application.status === "PENDING" && (
                       <Button
@@ -411,12 +432,12 @@ export default function ApplicationsPage() {
                         size="sm"
                         onClick={() => handleWithdrawApplication(application.id)}
                         disabled={withdrawingId === application.id}
-                        className="bg-white/80 hover:bg-white text-red-600 hover:text-red-700"
+                        className="bg-white/80 hover:bg-red-50 border-slate-200 text-red-600 hover:text-red-700 hover:border-red-200 rounded-xl transition-all duration-200"
                       >
                         {withdrawingId === application.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-1"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
                         ) : (
-                          <ArrowLeft className="w-4 h-4 mr-1" />
+                          <ArrowLeft className="w-4 h-4 mr-2" />
                         )}
                         Withdraw
                       </Button>

@@ -239,39 +239,68 @@ function OpportunitiesContent() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <SharedHeader />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Premium Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
+              </Link>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-slate-600 font-medium">
+                  Welcome, {user.firstName || user.email}
+                </span>
+              )}
+              <Link href="/profile" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                Profile
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}
         <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+          <nav className="flex items-center space-x-2 text-sm text-slate-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors font-medium">
               Dashboard
             </Link>
             <span>/</span>
-            <span className="text-gray-900 font-medium">Browse Opportunities</span>
+            <span className="text-slate-900 font-semibold">Find Opportunities</span>
           </nav>
         </div>
 
         {/* Page Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Explore <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Opportunities</span>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">
+            Find <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Opportunities</span>
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Discover amazing opportunities posted by mentors and take your career to the next level.
+          <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+            Discover amazing career opportunities and take your professional journey to the next level.
           </p>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-2xl shadow-sm">
             <div className="flex items-center">
               <div className="text-red-500 mr-3">⚠️</div>
               <div>
-                <h3 className="text-sm font-medium text-red-800">Error Loading Data</h3>
+                <h3 className="text-sm font-semibold text-red-800">Error Loading Data</h3>
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             </div>
@@ -280,28 +309,28 @@ function OpportunitiesContent() {
 
         {/* Loading State for Data */}
         {loading && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-6 p-4 bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-2xl shadow-sm">
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
-              <p className="text-blue-700 text-sm">Loading opportunities...</p>
+              <p className="text-blue-700 text-sm font-medium">Loading opportunities...</p>
             </div>
           </div>
         )}
 
         {/* Search and Filters */}
-        <div className="mb-8 bg-white/70 backdrop-blur-lg rounded-xl shadow p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mb-8 bg-white/70 backdrop-blur-md rounded-2xl shadow-lg shadow-slate-900/5 border border-slate-200/60 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
                 placeholder="Search opportunities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/80"
+                className="pl-10 bg-white/90 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
               />
             </div>
             <Select value={experienceFilter} onValueChange={setExperienceFilter}>
-              <SelectTrigger className="bg-white/80">
+              <SelectTrigger className="bg-white/90 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl">
                 <SelectValue placeholder="Experience Level" />
               </SelectTrigger>
               <SelectContent>
@@ -313,7 +342,7 @@ function OpportunitiesContent() {
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="bg-white/80">
+              <SelectTrigger className="bg-white/90 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl">
                 <SelectValue placeholder="Opportunity Type" />
               </SelectTrigger>
               <SelectContent>
@@ -326,7 +355,7 @@ function OpportunitiesContent() {
               </SelectContent>
             </Select>
             <Select value={savedFilter} onValueChange={setSavedFilter}>
-              <SelectTrigger className="bg-white/80">
+              <SelectTrigger className="bg-white/90 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl">
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent>
@@ -342,29 +371,37 @@ function OpportunitiesContent() {
 
         {/* Results Count */}
         <div className="mb-6">
-          <p className="text-gray-600">
-            Found {filteredOpportunities.length} opportunity{filteredOpportunities.length !== 1 ? 'ies' : 'y'}
+          <p className="text-slate-600 font-medium">
+            Found <span className="text-slate-900 font-bold">{filteredOpportunities.length}</span> opportunity{filteredOpportunities.length !== 1 ? 'ies' : 'y'}
           </p>
         </div>
 
         {/* Opportunities Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredOpportunities.map((opportunity) => (
-            <Card key={opportunity.id} className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-              <CardHeader>
+            <Card key={opportunity.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 rounded-2xl">
+              <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                    <CardTitle className="text-lg font-bold text-slate-900 mb-3 line-clamp-2 leading-tight">
                       {opportunity.title}
                     </CardTitle>
-                                         <div className="flex items-center gap-2 mb-2">
-                       <Badge variant="outline" style={{ borderColor: opportunity.opportunityType.color || undefined, color: opportunity.opportunityType.color || undefined }}>
-                         {opportunity.opportunityType.name}
-                       </Badge>
-                       {opportunity.location && (
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge 
+                        variant="secondary" 
+                        className="rounded-lg font-medium"
+                        style={{ 
+                          backgroundColor: opportunity.opportunityType.color ? opportunity.opportunityType.color + '20' : undefined, 
+                          color: opportunity.opportunityType.color || undefined,
+                          borderColor: opportunity.opportunityType.color || undefined 
+                        }}
+                      >
+                        {opportunity.opportunityType.name}
+                      </Badge>
+                      {opportunity.location && (
+                        <div className="flex items-center gap-1 text-sm text-slate-500">
                           <MapPin className="h-4 w-4" />
-                          {opportunity.location}
+                          <span className="truncate">{opportunity.location}</span>
                         </div>
                       )}
                     </div>
@@ -373,48 +410,51 @@ function OpportunitiesContent() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSaveOpportunity(opportunity.id)}
-                    className="text-gray-400 hover:text-yellow-500"
+                    className="text-slate-400 hover:text-pink-500 hover:bg-pink-50 rounded-xl transition-all duration-200 p-2"
                   >
                     {savedOpportunities.includes(opportunity.id) ? (
-                      <BookmarkCheck className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                      <BookmarkCheck className="h-5 w-5 fill-pink-500 text-pink-500" />
                     ) : (
                       <Bookmark className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4 line-clamp-3">
+              <CardContent className="pb-4">
+                <p className="text-slate-600 mb-4 line-clamp-3 text-sm leading-relaxed">
                   {opportunity.description}
                 </p>
                 <div className="space-y-2">
                   {opportunity.experienceLevel && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Briefcase className="h-4 w-4" />
-                      {getExperienceLevelLabel(opportunity.experienceLevel)}
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Briefcase className="h-4 w-4 text-slate-400" />
+                      <span>{getExperienceLevelLabel(opportunity.experienceLevel)}</span>
                     </div>
                   )}
                   {opportunity.duration && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Calendar className="h-4 w-4" />
-                      {opportunity.duration}
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Calendar className="h-4 w-4 text-slate-400" />
+                      <span>{opportunity.duration}</span>
                     </div>
                   )}
                   {opportunity.creator && (
-                    <div className="text-sm text-gray-500">
-                      Posted by Dr. {opportunity.creator.firstName} {opportunity.creator.lastName}
+                    <div className="text-sm text-slate-500">
+                      <span>Posted by </span>
+                      <span className="font-medium text-slate-700">
+                        Dr. {opportunity.creator.firstName} {opportunity.creator.lastName}
+                      </span>
                     </div>
                   )}
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="pt-0">
                 <Button
                   onClick={() => handleApply(opportunity.id)}
                   disabled={userApplications.includes(opportunity.id)}
                   className={
                     userApplications.includes(opportunity.id)
-                      ? "w-full bg-green-100 text-green-700 border border-green-300 font-semibold shadow-md cursor-not-allowed"
-                      : "w-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                      ? "w-full bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold shadow-sm cursor-not-allowed rounded-xl hover:bg-emerald-100"
+                      : "w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600 hover:shadow-lg transition-all duration-200 rounded-xl"
                   }
                 >
                   {userApplications.includes(opportunity.id) ? (
@@ -422,7 +462,7 @@ function OpportunitiesContent() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      Applied
+                      <span>Applied</span>
                     </div>
                   ) : (
                     "Apply Now"
@@ -435,10 +475,12 @@ function OpportunitiesContent() {
 
         {/* Empty State */}
         {filteredOpportunities.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">🔍</div>
-            <h3 className="text-lg font-medium mb-2">No opportunities found</h3>
-            <p className="text-gray-600 mb-4">
+          <div className="text-center py-16">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
+              <Search className="h-12 w-12 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No opportunities found</h3>
+            <p className="text-slate-600 mb-6 max-w-md mx-auto">
               Try adjusting your search criteria or check back later for new opportunities.
             </p>
             <Button
@@ -449,12 +491,12 @@ function OpportunitiesContent() {
                 setSavedFilter("all");
               }}
               variant="outline"
-              className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:shadow-lg"
+              className="bg-white/70 backdrop-blur-sm border-slate-200 hover:bg-white hover:shadow-lg rounded-xl px-6"
             >
-              Clear Filters
+              Clear All Filters
             </Button>
           </div>
-        )}
+        )})
       </main>
     </div>
   );

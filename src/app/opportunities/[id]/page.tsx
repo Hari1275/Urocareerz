@@ -13,7 +13,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { useNavigation } from "@/hooks/use-navigation";
-import Breadcrumb from "@/components/Breadcrumb";
+
+import { cn } from "@/lib/utils";
 import {
   MapPin,
   Briefcase,
@@ -171,21 +172,41 @@ export default function OpportunityDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="max-w-6xl mx-auto py-8 px-4">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <div className="h-64 bg-gray-200 rounded"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Premium Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
               </div>
-              <div className="space-y-6">
-                <div className="h-48 bg-gray-200 rounded"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
+              <div className="text-sm text-slate-500">Loading...</div>
+            </div>
+          </div>
+        </header>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-slate-200 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-slate-200 rounded w-1/2 mb-8"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-3 space-y-6">
+                <div className="h-32 bg-slate-200 rounded-xl"></div>
+                <div className="h-48 bg-slate-200 rounded-xl"></div>
+              </div>
+              <div className="lg:col-span-6 space-y-6">
+                <div className="h-64 bg-slate-200 rounded-xl"></div>
+                <div className="h-32 bg-slate-200 rounded-xl"></div>
+                <div className="h-32 bg-slate-200 rounded-xl"></div>
+              </div>
+              <div className="lg:col-span-3 space-y-6">
+                <div className="h-48 bg-slate-200 rounded-xl"></div>
+                <div className="h-32 bg-slate-200 rounded-xl"></div>
+                <div className="h-32 bg-slate-200 rounded-xl"></div>
               </div>
             </div>
           </div>
@@ -196,92 +217,191 @@ export default function OpportunityDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={goBack} className="w-full">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Go Back
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Premium Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-center min-h-96">
+            <Card className="w-full max-w-md bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+              <CardHeader>
+                <CardTitle className="text-red-500">Error</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600 mb-4">{error}</p>
+                <Button onClick={goBack} className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Go Back
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!opportunity) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader>
-            <CardTitle>Opportunity Not Found</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">
-              The opportunity you&apos;re looking for doesn&apos;t exist or has been
-              removed.
-            </p>
-            <Button onClick={goBack} className="w-full">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Go Back
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Premium Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-center min-h-96">
+            <Card className="w-full max-w-md bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+              <CardHeader>
+                <CardTitle>Opportunity Not Found</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600 mb-4">
+                  The opportunity you&apos;re looking for doesn&apos;t exist or has been removed.
+                </p>
+                <Button onClick={goBack} className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Go Back
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-6xl mx-auto py-8 px-4">
-        {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Opportunities", href: "/opportunities" },
-            { label: opportunity.title },
-          ]}
-        />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Premium Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">U</span>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                UroCareerz
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm" onClick={goBack} className="text-slate-600 hover:text-slate-900">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={goBack}
-            className="mb-6 hover:bg-blue-100"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Go Back
-          </Button>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Navigation */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24 space-y-6">
+              {/* Back Navigation Card */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardContent className="p-4">
+                  <Button 
+                    onClick={goBack}
+                    variant="ghost" 
+                    className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-100 p-2"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
 
-          <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
+              {/* Quick Actions */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    onClick={handleApply}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Apply Now
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleSaveOpportunity}
+                    disabled={saving}
+                    className={cn(
+                      "w-full bg-white/80 border-slate-200 hover:bg-white transition-colors",
+                      isSaved ? "text-pink-600 border-pink-200" : "text-slate-600"
+                    )}
+                  >
+                    {saving ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    ) : isSaved ? (
+                      <BookmarkCheck className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Bookmark className="h-4 w-4 mr-2" />
+                    )}
+                    {isSaved ? 'Saved' : 'Save'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-6 space-y-6">
+            {/* Opportunity Header */}
+            <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
                     {getTypeBadge(opportunity.opportunityType.name) && (
                       <Badge 
                         variant="secondary" 
-                        className={`text-xs font-medium ${getTypeBadge(opportunity.opportunityType.name)?.colorClass || 'bg-gray-100 text-gray-800'}`}
+                        className={cn(
+                          "text-xs font-medium",
+                          getTypeBadge(opportunity.opportunityType.name)?.colorClass || 'bg-slate-100 text-slate-800'
+                        )}
                       >
                         {getTypeBadge(opportunity.opportunityType.name)?.name || opportunity.opportunityType.name}
                       </Badge>
                     )}
                     {opportunity.status === "PENDING" && (
-                      <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                      <Badge variant="outline" className="text-amber-600 border-amber-600">
                         Pending Approval
                       </Badge>
                     )}
                   </div>
                   
-                  <CardTitle className="text-3xl font-bold text-gray-900 mb-3">
+                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                     {opportunity.title}
-                  </CardTitle>
+                  </h1>
                   
-                  <div className="flex flex-wrap items-center gap-4 text-gray-600 text-sm">
+                  <div className="flex flex-wrap items-center gap-4 text-slate-600 text-sm">
                     {opportunity.location && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
@@ -300,47 +420,17 @@ export default function OpportunityDetailPage() {
                     )}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="flex gap-3 ml-6">
-                  <Button
-                    variant="outline"
-                    onClick={handleSaveOpportunity}
-                    disabled={saving}
-                    className="hover:bg-blue-50 border-blue-200 text-blue-700"
-                  >
-                    {isSaved ? (
-                      <>
-                        <BookmarkCheck className="h-4 w-4 mr-2" />
-                        Saved
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark className="h-4 w-4 mr-2" />
-                        Save
-                      </>
-                    )}
-                  </Button>
-                  <Button onClick={handleApply} className="bg-blue-600 hover:bg-blue-700">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Apply Now
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
             {/* Description */}
-            <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
+            <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold text-gray-900">Description</CardTitle>
+                <CardTitle className="text-xl font-bold text-slate-900">Description</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
                     {opportunity.description}
                   </p>
                 </div>
@@ -349,13 +439,13 @@ export default function OpportunityDetailPage() {
 
             {/* Requirements */}
             {opportunity.requirements && (
-              <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-xl font-semibold text-gray-900">Requirements</CardTitle>
+                  <CardTitle className="text-xl font-bold text-slate-900">Requirements</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
                       {opportunity.requirements}
                     </p>
                   </div>
@@ -365,13 +455,13 @@ export default function OpportunityDetailPage() {
 
             {/* Benefits */}
             {opportunity.benefits && (
-              <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-xl font-semibold text-gray-900">Benefits</CardTitle>
+                  <CardTitle className="text-xl font-bold text-slate-900">Benefits</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
                       {opportunity.benefits}
                     </p>
                   </div>
@@ -380,109 +470,111 @@ export default function OpportunityDetailPage() {
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Info */}
-            <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">Quick Info</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {opportunity.experienceLevel && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <User className="h-5 w-5 text-blue-600" />
+          {/* Right Sidebar */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24 space-y-6">
+              {/* Quick Info */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-slate-900">Quick Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {opportunity.experienceLevel && (
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <User className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">Experience Level</p>
+                        <p className="text-sm text-slate-600">
+                          {getExperienceLevelLabel(opportunity.experienceLevel)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {opportunity.duration && (
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">Duration</p>
+                        <p className="text-sm text-slate-600">
+                          {opportunity.duration}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {opportunity.compensation && (
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <div className="h-5 w-5 text-blue-600 font-bold text-lg">₹</div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">Compensation</p>
+                        <p className="text-sm text-slate-600">
+                          {opportunity.compensation}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {opportunity.applicationDeadline && (
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <Calendar className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">
+                          Application Deadline
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {formatDate(opportunity.applicationDeadline)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Mentor Info */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-slate-900">Posted by</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
+                    <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <User className="h-6 w-6 text-blue-600" />
+                    </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Experience Level</p>
-                      <p className="text-sm text-gray-600">
-                        {getExperienceLevelLabel(opportunity.experienceLevel)}
+                      <p className="font-semibold text-slate-900">
+                        Dr. {opportunity.creator.firstName}{" "}
+                        {opportunity.creator.lastName}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {opportunity.creator.email}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {opportunity.creator.role}
                       </p>
                     </div>
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                {opportunity.duration && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Duration</p>
-                      <p className="text-sm text-gray-600">
-                        {opportunity.duration}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {opportunity.compensation && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="h-5 w-5 text-blue-600 font-bold text-lg">₹</div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Compensation</p>
-                      <p className="text-sm text-gray-600">
-                        {opportunity.compensation}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {opportunity.applicationDeadline && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Application Deadline
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {formatDate(opportunity.applicationDeadline)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Mentor Info */}
-            <Card className="shadow-sm border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">Posted by</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      Dr. {opportunity.creator.firstName}{" "}
-                      {opportunity.creator.lastName}
+              {/* Apply CTA */}
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/60 shadow-lg shadow-slate-900/5">
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <h3 className="font-bold text-blue-900 mb-2">
+                      Ready to Apply?
+                    </h3>
+                    <p className="text-sm text-blue-700 mb-4">
+                      Submit your application for this opportunity
                     </p>
-                    <p className="text-sm text-gray-600">
-                      {opportunity.creator.email}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {opportunity.creator.role}
-                    </p>
+                    <Button onClick={handleApply} className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Apply Now
+                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Apply CTA */}
-            <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <h3 className="font-semibold text-blue-900 mb-2">
-                    Ready to Apply?
-                  </h3>
-                  <p className="text-sm text-blue-700 mb-4">
-                    Submit your application for this opportunity
-                  </p>
-                  <Button onClick={handleApply} className="w-full bg-blue-600 hover:bg-blue-700">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Apply Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

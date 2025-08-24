@@ -282,217 +282,272 @@ export default function DiscussionThreadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Premium Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-4">
-              {user === null ? (
-                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-slate-600 font-medium">
+                  Welcome, {user.firstName || user.email}
                 </span>
               )}
-              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
-              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
-            </div>
-            <div className="md:hidden flex items-center justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const shouldLogout = confirm("Would you like to logout?");
-                  if (shouldLogout) handleLogout();
-                }}
-                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+              <Link href="/profile" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                Profile
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
+                Logout
               </Button>
             </div>
           </div>
         </div>
       </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
-              Dashboard
-            </Link>
-            <span>/</span>
-            <Link href="/discussions" className="hover:text-blue-600 transition-colors">
-              Discussions
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">Discussion</span>
-          </nav>
-        </div>
-
-        {/* Back Button and Status Controls */}
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/discussions")}
-            className="mb-4 bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:border-blue-500"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Discussions
-          </Button>
-
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="bg-white/50">
-                {categoryLabels[thread.category] || thread.category}
-              </Badge>
-              <Badge
-                variant={thread.status === "PINNED" ? "default" : "outline"}
-                className={thread.status === "PINNED" ? "bg-yellow-100 text-yellow-800" : "bg-white/50"}
-              >
-                {statusLabels[thread.status] || thread.status}
-              </Badge>
-            </div>
-
-            {user && (
-              <DiscussionStatusControls
-                discussionId={thread.id}
-                currentStatus={thread.status as "ACTIVE" | "CLOSED" | "ARCHIVED"}
-                isAuthor={user.id === thread.author.id}
-                isAdmin={user.role === "ADMIN"}
-                onStatusChange={handleStatusChange}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Thread Content */}
-        <Card className="mb-6 bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle className="text-xl md:text-2xl mb-2 text-gray-900">
-                  {thread.title}
-                </CardTitle>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <User className="h-4 w-4" />
-                    <span>
-                      {thread.author.firstName} {thread.author.lastName}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span suppressHydrationWarning>
-                      {new Date(thread.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    <span>{thread.viewCount} views</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="prose max-w-none">
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {thread.content}
-              </p>
-            </div>
-
-            {thread.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {thread.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs bg-white/50">
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Comments Section */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-gray-600" />
-            <h2 className="text-xl font-semibold text-gray-900">
-              Comments ({thread.comments.length})
-            </h2>
-          </div>
-
-          {/* Add Comment */}
-          <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
-            <CardContent className="pt-6">
-              <Textarea
-                placeholder="Add your comment..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="min-h-[100px] mb-4 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
-              />
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleSubmitComment}
-                  disabled={!comment.trim() || submitting}
-                  className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
-                >
-                  {submitting ? "Posting..." : "Post Comment"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Comments List */}
-          <div className="space-y-4">
-            {thread.comments.length === 0 ? (
-              <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
-                <CardContent className="pt-6">
-                  <p className="text-center text-gray-500">
-                    No comments yet. Be the first to comment!
-                  </p>
+      
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Navigation */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24 space-y-6">
+              {/* Back Navigation */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardContent className="p-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/dashboard")}
+                    className="w-full bg-white/80 border-slate-200 hover:bg-white"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Dashboard
+                  </Button>
                 </CardContent>
               </Card>
-            ) : (
-              thread.comments.map((comment) => (
-                <Card key={comment.id} className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium text-gray-900">
-                          {comment.author.firstName} {comment.author.lastName}
-                        </span>
-                      </div>
-                      <span className="text-sm text-gray-500" suppressHydrationWarning>
-                        {new Date(comment.createdAt).toLocaleDateString('en-US', {
+
+              {/* Discussion Info */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Discussion Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="bg-white/50">
+                      {categoryLabels[thread.category] || thread.category}
+                    </Badge>
+                    <Badge
+                      variant={thread.status === "PINNED" ? "default" : "outline"}
+                      className={thread.status === "PINNED" ? "bg-yellow-100 text-yellow-800" : "bg-white/50"}
+                    >
+                      {statusLabels[thread.status] || thread.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span>{thread.author.firstName} {thread.author.lastName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span suppressHydrationWarning>
+                        {new Date(thread.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric'
                         })}
                       </span>
                     </div>
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                      {comment.content}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      <span>{thread.viewCount} views</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4" />
+                      <span>{thread.comments.length} comments</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Status Controls */}
+              {user && (
+                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold text-slate-900">Discussion Controls</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <DiscussionStatusControls
+                      discussionId={thread.id}
+                      currentStatus={thread.status as "ACTIVE" | "CLOSED" | "ARCHIVED"}
+                      isAuthor={user.id === thread.author.id}
+                      isAdmin={user.role === "ADMIN"}
+                      onStatusChange={handleStatusChange}
+                    />
                   </CardContent>
                 </Card>
-              ))
-            )}
+              )}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-6">
+            <div className="space-y-6">
+              {/* Thread Content */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                    {thread.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose max-w-none">
+                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {thread.content}
+                    </p>
+                  </div>
+
+                  {thread.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-slate-200">
+                      {thread.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                          #{tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Add Comment */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Add Comment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    placeholder="Add your comment..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="min-h-[100px] mb-4 bg-white/80 border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleSubmitComment}
+                      disabled={!comment.trim() || submitting}
+                      className="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
+                    >
+                      {submitting ? "Posting..." : "Post Comment"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Comments List */}
+              <div className="space-y-4">
+                {thread.comments.length === 0 ? (
+                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                    <CardContent className="p-8 text-center">
+                      <MessageCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                      <p className="text-slate-600">No comments yet. Be the first to comment!</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  thread.comments.map((comment) => (
+                    <Card key={comment.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-slate-500" />
+                            <span className="font-medium text-slate-900">
+                              {comment.author.firstName} {comment.author.lastName}
+                            </span>
+                            <Badge variant="outline" className="text-xs bg-white/50">
+                              {comment.author.role}
+                            </Badge>
+                          </div>
+                          <span className="text-sm text-slate-500" suppressHydrationWarning>
+                            {new Date(comment.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                          {comment.content}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar - Additional Info */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24 space-y-6">
+              {/* Quick Actions */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    onClick={() => router.push("/dashboard")}  
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Dashboard
+                  </Button>
+                  <Button 
+                    onClick={() => router.push("/discussions")}
+                    variant="outline" 
+                    className="w-full bg-white/80 border-slate-200 hover:bg-white"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    All Discussions
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Author Info */}
+              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Author</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
+                      <span className="text-white font-semibold text-sm">
+                        {thread.author.firstName?.[0] || 'U'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        {thread.author.firstName} {thread.author.lastName}
+                      </p>
+                      <Badge variant="outline" className="text-xs bg-white/50">
+                        {thread.author.role}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

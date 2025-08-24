@@ -309,25 +309,30 @@ export default function SubmissionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Premium Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">U</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
               </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Loading...</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-slate-500 font-medium animate-pulse">Loading...</span>
               </div>
             </div>
           </div>
         </header>
-        <div className="container mx-auto py-8 px-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading your submissions...</p>
+              <p className="text-slate-600 font-medium">Loading your submissions...</p>
             </div>
           </div>
         </div>
@@ -336,68 +341,61 @@ export default function SubmissionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Premium Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">U</span>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                UroCareerz
+              </span>
             </Link>
-            <div className="hidden md:flex items-center gap-4">
-              {user === null ? (
-                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+            
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-slate-600 font-medium">
+                  Welcome, {user.firstName || user.email}
                 </span>
               )}
-              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
-              <Button variant="outline" onClick={handleLogout} className="text-gray-700 hover:text-red-600 transition-colors">Logout</Button>
-            </div>
-            <div className="md:hidden flex items-center justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const shouldLogout = confirm("Would you like to logout?");
-                  if (shouldLogout) handleLogout();
-                }}
-                className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+              <Link href="/profile" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                Profile
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
+                Logout
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}
         <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+          <nav className="flex items-center space-x-2 text-sm text-slate-500">
+            <Link href="/dashboard" className="hover:text-blue-600 transition-colors font-medium">
               Dashboard
             </Link>
             <span>/</span>
-            <span className="text-gray-900 font-medium">My Submissions</span>
+            <span className="text-slate-900 font-semibold">My Submissions</span>
           </nav>
         </div>
 
         {/* Page Header */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              My <span className="bg-gradient-to-tr from-green-600 to-emerald-500 bg-clip-text text-transparent">Submissions</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+              My <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">Submissions</span>
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-6">
               Track opportunities you've submitted for admin review and community contribution.
             </p>
             <Button
               onClick={() => router.push("/dashboard/mentee/submit-opportunity")}
-              className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+              className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600 rounded-xl px-6"
             >
               Submit New Opportunity
             </Button>
@@ -425,18 +423,18 @@ export default function SubmissionsPage() {
               { 
                 title: "Pending Review", 
                 count: counts.pending, 
-                color: "text-yellow-600", 
+                color: "text-amber-600", 
                 icon: "⏳",
                 status: "PENDING",
-                bgColor: "hover:bg-yellow-50"
+                bgColor: "hover:bg-amber-50"
               },
               { 
                 title: "Approved", 
                 count: counts.approved, 
-                color: "text-green-600", 
+                color: "text-emerald-600", 
                 icon: "✅",
                 status: "APPROVED",
-                bgColor: "hover:bg-green-50"
+                bgColor: "hover:bg-emerald-50"
               },
               { 
                 title: "Rejected", 
@@ -449,12 +447,12 @@ export default function SubmissionsPage() {
             ].map((item, index) => (
               <div 
                 key={index} 
-                className={`bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center cursor-pointer transition-all duration-200 ${item.bgColor} ${selectedStatus === item.status ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
+                className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${item.bgColor} ${selectedStatus === item.status ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
                 onClick={() => handleStatusCardClick(item.status)}
               >
                 <div className="text-2xl mb-2">{item.icon}</div>
                 <div className={`text-2xl font-bold ${item.color} mb-1`}>{item.count}</div>
-                <div className="text-sm text-gray-600">{item.title}</div>
+                <div className="text-sm text-slate-600 font-medium">{item.title}</div>
               </div>
             ));
           })()}
