@@ -2422,51 +2422,58 @@ export default function MentorDashboardPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Application Review Modal (unchanged) */}
-      {showReviewModal && selectedApplication && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Review Application</h2>
-                <Button variant="ghost" size="sm" onClick={() => {setShowReviewModal(false);setSelectedApplication(null);}}>✕</Button>
-            </div>
-            <div className="space-y-4">
-              {/* Application Details */}
-              <div className="border-b pb-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">{selectedApplication.menteeName}</h3>
-                  <p className="text-sm text-gray-600 mb-1"><strong>Email:</strong> {selectedApplication.menteeEmail}</p>
-                  <p className="text-sm text-gray-600 mb-1" suppressHydrationWarning>
-                    <strong>Applied:</strong> {new Date(selectedApplication.appliedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-1"><strong>Status:</strong> {selectedApplication.status}</p>
-                {selectedApplication.coverLetter && (
-                  <div className="mt-3">
-                      <p className="text-sm font-medium text-gray-900 mb-1">Cover Letter:</p>
-                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{selectedApplication.coverLetter}</p>
+        {/* Application Review Modal */}
+        <Dialog open={showReviewModal} onOpenChange={(open) => {
+          if (!open) {
+            setShowReviewModal(false);
+            setSelectedApplication(null);
+          }
+        }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-gray-900">
+                Review Application
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedApplication && (
+              <div className="space-y-4">
+                {/* Application Details */}
+                <div className="border-b pb-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">{selectedApplication.menteeName}</h3>
+                    <p className="text-sm text-gray-600 mb-1"><strong>Email:</strong> {selectedApplication.menteeEmail}</p>
+                    <p className="text-sm text-gray-600 mb-1" suppressHydrationWarning>
+                      <strong>Applied:</strong> {new Date(selectedApplication.appliedAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-1"><strong>Status:</strong> {selectedApplication.status}</p>
+                  {selectedApplication.coverLetter && (
+                    <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-900 mb-1">Cover Letter:</p>
+                        <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{selectedApplication.coverLetter}</p>
+                    </div>
+                  )}
+                </div>
+                {/* Resume Section */}
+                {selectedApplication.resumeUrl && (
+                  <div className="border-b pb-4">
+                    <h4 className="font-medium text-gray-900 mb-2">Resume</h4>
+                      <Button variant="outline" size="sm" onClick={() => window.open(selectedApplication.resumeUrl, "_blank")}>View Resume</Button>
                   </div>
                 )}
+                {/* Review Actions */}
+                <div className="flex justify-end space-x-3 pt-4">
+                    <Button variant="outline" onClick={() => {setShowReviewModal(false);setSelectedApplication(null);}} disabled={reviewing}>Cancel</Button>
+                    <Button variant="destructive" onClick={() => handleUpdateApplicationStatus("REJECTED")} disabled={reviewing}>{reviewing ? "Rejecting..." : "Reject Application"}</Button>
+                    <Button className="btn-primary" onClick={() => handleUpdateApplicationStatus("ACCEPTED")} disabled={reviewing}>{reviewing ? "Accepting..." : "Accept Application"}</Button>
+                  </div>
               </div>
-              {/* Resume Section */}
-              {selectedApplication.resumeUrl && (
-                <div className="border-b pb-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Resume</h4>
-                    <Button variant="outline" size="sm" onClick={() => window.open(selectedApplication.resumeUrl, "_blank")}>View Resume</Button>
-                </div>
-              )}
-              {/* Review Actions */}
-              <div className="flex justify-end space-x-3 pt-4">
-                  <Button variant="outline" onClick={() => {setShowReviewModal(false);setSelectedApplication(null);}} disabled={reviewing}>Cancel</Button>
-                  <Button variant="destructive" onClick={() => handleUpdateApplicationStatus("REJECTED")} disabled={reviewing}>{reviewing ? "Rejecting..." : "Reject Application"}</Button>
-                  <Button className="btn-primary" onClick={() => handleUpdateApplicationStatus("ACCEPTED")} disabled={reviewing}>{reviewing ? "Accepting..." : "Accept Application"}</Button>
-                </div>
-            </div>
-          </div>
-        </div>
-      )}
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

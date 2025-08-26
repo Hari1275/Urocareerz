@@ -123,25 +123,37 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Opportunities API: Request received');
+    
     // Verify authentication
     const token = request.cookies.get("token")?.value;
+    console.log('Opportunities API: Token found:', !!token);
+    console.log('Opportunities API: Token length:', token?.length || 0);
+    
     if (!token) {
+      console.log('Opportunities API: No token found');
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
+      console.log('Opportunities API: JWT_SECRET not defined');
       return NextResponse.json(
         { error: "JWT_SECRET is not defined" },
         { status: 500 }
       );
     }
 
+    console.log('Opportunities API: Attempting to verify token');
     const decoded = await verifyEdgeToken(token, secret);
+    console.log('Opportunities API: Token decoded:', !!decoded);
     
     if (!decoded) {
+      console.log('Opportunities API: Token verification failed');
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
+
+    console.log('Opportunities API: User ID from token:', decoded.userId);
 
     // Get user
     const user = await prisma.user.findUnique({
@@ -153,11 +165,61 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get query parameters for pagination
+    // Get query parameters for pagination and filters
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = (page - 1) * limit;
+    
+    // Get filter parameters
+    const search = searchParams.get('search') || '';
+    const experience = searchParams.get('experience') || '';
+    const type = searchParams.get('type') || '';
+    const saved = searchParams.get('saved') || '';
+
+    // Build filter conditions
+    const buildFilterConditions = (baseWhere: any = {}, userId?: string) => {
+      const conditions: any = { ...baseWhere };
+      
+      // Search filter (title, description, location)
+      if (search) {
+        conditions.OR = [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { location: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+      
+      // Experience level filter
+      if (experience) {
+        conditions.experienceLevel = experience;
+      }
+      
+      // Opportunity type filter
+      if (type) {
+        // Convert type name to ID by looking up the opportunity type
+        conditions.opportunityType = {
+          name: { equals: type, mode: 'insensitive' }
+        };
+      }
+      
+      // Saved filter (only for mentees)
+      if (saved === 'saved' && userId) {
+        conditions.savedOpportunities = {
+          some: {
+            userId: userId
+          }
+        };
+      } else if (saved === 'not_saved' && userId) {
+        conditions.savedOpportunities = {
+          none: {
+            userId: userId
+          }
+        };
+      }
+      
+      return conditions;
+    };
 
     // Get opportunities based on user role with pagination
     let opportunities;
@@ -165,9 +227,11 @@ export async function GET(request: NextRequest) {
     
     if (user.role === "MENTOR") {
       // Mentors see their own opportunities
+      const whereConditions = buildFilterConditions({ creatorId: user.id }, user.id);
+      
       const [opportunitiesData, countData] = await Promise.all([
         (prisma.opportunity.findMany({
-          where: { creatorId: user.id } as any,
+          where: whereConditions as any,
           include: {
             creator: {
               select: {
@@ -184,13 +248,24 @@ export async function GET(request: NextRequest) {
                 color: true,
               },
             },
+            savedOpportunities: {
+              select: {
+                userId: true,
+              },
+            },
+            _count: {
+              select: {
+                applications: true,
+                savedOpportunities: true,
+              },
+            },
           } as any,
           orderBy: { createdAt: "desc" },
           skip,
           take: limit,
         }) as any),
         (prisma.opportunity.count({
-          where: { creatorId: user.id } as any,
+          where: whereConditions as any,
         }) as any)
       ]);
       
@@ -198,39 +273,11 @@ export async function GET(request: NextRequest) {
       totalCount = countData;
     } else if (user.role === "ADMIN") {
       // Admins see all opportunities
-      const [opportunitiesData, countData] = await Promise.all([
-        (prisma.opportunity.findMany({
-          include: {
-            creator: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-                role: true,
-              },
-            },
-            opportunityType: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
-              },
-            },
-          } as any,
-          orderBy: { createdAt: "desc" },
-          skip,
-          take: limit,
-        }) as any),
-        (prisma.opportunity.count() as any)
-      ]);
+      const whereConditions = buildFilterConditions({}, user.id);
       
-      opportunities = opportunitiesData;
-      totalCount = countData;
-    } else {
-      // Mentees see only approved opportunities
       const [opportunitiesData, countData] = await Promise.all([
         (prisma.opportunity.findMany({
-          where: { status: "APPROVED" },
+          where: whereConditions as any,
           include: {
             creator: {
               select: {
@@ -245,6 +292,17 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 color: true,
+              },
+            },
+            savedOpportunities: {
+              select: {
+                userId: true,
+              },
+            },
+            _count: {
+              select: {
+                applications: true,
+                savedOpportunities: true,
               },
             },
           } as any,
@@ -253,7 +311,53 @@ export async function GET(request: NextRequest) {
           take: limit,
         }) as any),
         (prisma.opportunity.count({
-          where: { status: "APPROVED" },
+          where: whereConditions as any,
+        }) as any)
+      ]);
+      
+      opportunities = opportunitiesData;
+      totalCount = countData;
+    } else {
+      // Mentees see only approved opportunities
+      const whereConditions = buildFilterConditions({ status: "APPROVED" }, user.id);
+      
+      const [opportunitiesData, countData] = await Promise.all([
+        (prisma.opportunity.findMany({
+          where: whereConditions as any,
+          include: {
+            creator: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                role: true,
+              },
+            },
+            opportunityType: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+            savedOpportunities: {
+              select: {
+                userId: true,
+              },
+            },
+            _count: {
+              select: {
+                applications: true,
+                savedOpportunities: true,
+              },
+            },
+          } as any,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }) as any),
+        (prisma.opportunity.count({
+          where: whereConditions as any,
         }) as any)
       ]);
       

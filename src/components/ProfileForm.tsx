@@ -68,6 +68,18 @@ export default function ProfileForm({
   const [newInterest, setNewInterest] = useState("");
   const isInitialized = useRef(false);
 
+  // Reset initialization when component unmounts or profile changes
+  useEffect(() => {
+    return () => {
+      isInitialized.current = false;
+    };
+  }, []);
+
+  // Also reset when profile ID changes
+  useEffect(() => {
+    isInitialized.current = false;
+  }, [profile?.id]);
+
   // Helper to check if form is pristine (no uploaded files or filenames)
   const isFormPristine = () => {
     return (
@@ -594,7 +606,7 @@ export default function ProfileForm({
             <h3 className="text-lg font-semibold text-gray-900">Professional Information</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="specialty" className="text-sm font-medium text-gray-700">Specialty</Label>
               <Input
@@ -617,7 +629,7 @@ export default function ProfileForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="workplace" className="text-sm font-medium text-gray-700">Workplace</Label>
               <div className="relative">
@@ -672,7 +684,7 @@ export default function ProfileForm({
           <h3 className="text-lg font-semibold text-gray-900">Files & Documents</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Avatar Upload */}
           <div className="space-y-3">
             <Label className="text-sm font-medium text-gray-700">Profile Picture</Label>
@@ -760,22 +772,22 @@ export default function ProfileForm({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
-        <Button
-          type="submit"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="flex-1 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600 h-12"
-        >
-          {isSubmitting ? "Saving..." : "Save Profile"}
-        </Button>
+      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-gray-200">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
+          className="flex-1 h-11 sm:h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
         >
           Cancel
+        </Button>
+        <Button
+          type="submit"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="flex-1 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600 h-11 sm:h-12"
+        >
+          {isSubmitting ? "Saving..." : "Save Profile"}
         </Button>
       </div>
     </div>

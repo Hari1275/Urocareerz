@@ -135,10 +135,10 @@ export default function ProfileDisplay({
   return (
     <div className="space-y-6">
       {/* Profile Picture Section */}
-      <div className="flex items-center gap-6">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
         <div className="relative">
           {getAvatarUrl() ? (
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
               <img
                 src={getAvatarUrl()!}
                 alt="Profile"
@@ -149,17 +149,17 @@ export default function ProfileDisplay({
               />
             </div>
           ) : (
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-400 flex items-center justify-center border-4 border-white shadow-lg">
-              <User className="w-12 h-12 text-white" />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-400 flex items-center justify-center border-4 border-white shadow-lg">
+              <User className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
             </div>
           )}
         </div>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">
+        <div className="flex-1 text-center sm:text-left">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
             {profile?.user?.firstName} {profile?.user?.lastName}
           </h2>
-          <p className="text-gray-600 mb-2">{profile?.user?.email}</p>
-          <div className="flex items-center gap-2">
+          <p className="text-gray-600 mb-2 text-sm sm:text-base">{profile?.user?.email}</p>
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2">
             <Badge 
               variant="outline" 
               className={profile?.user?.role === "MENTOR" 

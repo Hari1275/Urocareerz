@@ -12,12 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DiscussionThreadForm from "@/components/DiscussionThreadForm";
 import DiscussionThreadsList from "@/components/DiscussionThreadsList";
+import ProfileForm from "@/components/ProfileForm";
+import ProfileDisplay from "@/components/ProfileDisplay";
 import {
   LayoutDashboard,
   Search,
   FileText,
   Send,
   Bookmark,
+  BookmarkCheck,
   MessageSquare,
   User,
   TrendingUp,
@@ -38,6 +41,7 @@ import {
   XCircle,
   AlertCircle,
   Filter,
+  Edit3,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -216,6 +220,7 @@ export default function MenteeDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   
   // Dashboard data
   const [savedOpportunities, setSavedOpportunities] = useState<SavedOpportunity[]>([]);
@@ -226,6 +231,7 @@ export default function MenteeDashboardPage() {
     submittedOpportunities: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [recentOpportunities, setRecentOpportunities] = useState<Opportunity[]>([]);
   
   // Opportunities data
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -257,6 +263,39 @@ export default function MenteeDashboardPage() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
   
+  // Pagination states
+  const [opportunityPagination, setOpportunityPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    pages: 0,
+    loading: false,
+  });
+  
+  const [savedPagination, setSavedPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0,
+    loading: false,
+  });
+  
+  const [applicationsPagination, setApplicationsPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0,
+    loading: false,
+  });
+  
+  const [submissionsPagination, setSubmissionsPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0,
+    loading: false,
+  });
+  
   // Apply modal state
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [selectedOpportunityForApply, setSelectedOpportunityForApply] = useState<Opportunity | null>(null);
@@ -264,6 +303,16 @@ export default function MenteeDashboardPage() {
   const [coverLetter, setCoverLetter] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [saveLoading, setSaveLoading] = useState<{[key: string]: boolean}>({});
+  
+  // Opportunity details modal state
+  const [showOpportunityModal, setShowOpportunityModal] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [opportunityModalLoading, setOpportunityModalLoading] = useState(false);
+  const [opportunityIsSaved, setOpportunityIsSaved] = useState(false);
+
+  // Profile editing modal state
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Check user role and redirect if necessary
   const checkUserRole = async () => {
@@ -282,9 +331,21 @@ export default function MenteeDashboardPage() {
           router.push("/dashboard/mentor");
           return;
         }
+      } else if (response.status === 401) {
+        // Token is expired or invalid, redirect to login
+        console.log("Token expired, redirecting to login");
+        router.push("/login");
+        return;
+      } else {
+        console.error("Error checking user role:", response.status);
+        // For other errors, also redirect to login for safety
+        router.push("/login");
+        return;
       }
     } catch (error) {
       console.error("Error checking user role:", error);
+      // Network errors or other issues, redirect to login
+      router.push("/login");
     }
   };
 
@@ -295,6 +356,10 @@ export default function MenteeDashboardPage() {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setProfile(profileData.profile);
+      } else if (profileResponse.status === 401) {
+        // Token expired, redirect to login
+        router.push("/login");
+        return;
       }
 
       // Fetch saved opportunities
@@ -310,6 +375,10 @@ export default function MenteeDashboardPage() {
           ...prev,
           savedOpportunities: savedOpportunitiesArray.length,
         }));
+      } else if (savedResponse.status === 401) {
+        // Token expired, redirect to login
+        router.push("/login");
+        return;
       }
 
       // Fetch applications
@@ -326,17 +395,10 @@ export default function MenteeDashboardPage() {
           totalApplications: applications.length,
           pendingApplications: pendingApps.length,
         }));
-        
-        // Create recent activity from applications
-        const recentApps = applications.slice(0, 3).map((app: any) => ({
-          id: app.id,
-          type: 'application' as const,
-          title: `Applied to ${app.opportunity.title}`,
-          description: `Application status: ${app.status}`,
-          timestamp: app.createdAt,
-        }));
-        
-        setRecentActivity(recentApps);
+      } else if (applicationsResponse.status === 401) {
+        // Token expired, redirect to login
+        router.push("/login");
+        return;
       }
 
       // Fetch opportunities
@@ -344,6 +406,13 @@ export default function MenteeDashboardPage() {
       if (opportunitiesResponse.ok) {
         const opportunitiesData = await opportunitiesResponse.json();
         setOpportunities(opportunitiesData.opportunities || []);
+      }
+
+      // Fetch recent opportunities by mentors (latest 5)
+      const recentOpportunitiesResponse = await fetch("/api/opportunities?limit=5&sort=newest");
+      if (recentOpportunitiesResponse.ok) {
+        const recentOpportunitiesData = await recentOpportunitiesResponse.json();
+        setRecentOpportunities(recentOpportunitiesData.opportunities || []);
       }
 
       // Fetch opportunity types
@@ -362,6 +431,10 @@ export default function MenteeDashboardPage() {
           ...prev,
           submittedOpportunities: submissionsData.opportunities?.length || 0,
         }));
+      } else if (submissionsResponse.status === 401) {
+        // Token expired, redirect to login
+        router.push("/login");
+        return;
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -396,6 +469,135 @@ export default function MenteeDashboardPage() {
       setDiscussionsLoading(false);
     }
   };
+  
+  const fetchOpportunities = async (page = 1, reset = false) => {
+    if (activeSection !== 'opportunities') return;
+    
+    setOpportunityPagination(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: opportunityPagination.limit.toString(),
+        search: searchTerm,
+        experience: experienceFilter !== 'all' ? experienceFilter : '',
+        type: typeFilter !== 'all' ? typeFilter : '',
+        saved: savedFilter !== 'all' ? savedFilter : ''
+      });
+      
+      const response = await fetch(`/api/opportunities?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        const newOpportunities = data.opportunities || [];
+        
+        setOpportunities(prev => reset ? newOpportunities : [...prev, ...newOpportunities]);
+        setOpportunityPagination({
+          page: data.pagination?.page || page,
+          limit: data.pagination?.limit || opportunityPagination.limit,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching opportunities:', error);
+      setOpportunityPagination(prev => ({ ...prev, loading: false }));
+    }
+  };
+  
+  const fetchSavedOpportunities = async (page = 1, reset = false) => {
+    if (activeSection !== 'saved') return;
+    
+    setSavedPagination(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: savedPagination.limit.toString()
+      });
+      
+      const response = await fetch(`/api/saved-opportunities?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        const newSavedOpportunities = data.savedOpportunities || [];
+        
+        setSavedOpportunities(prev => reset ? newSavedOpportunities : [...prev, ...newSavedOpportunities]);
+        setSavedPagination({
+          page: data.pagination?.page || page,
+          limit: data.pagination?.limit || savedPagination.limit,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching saved opportunities:', error);
+      setSavedPagination(prev => ({ ...prev, loading: false }));
+    }
+  };
+  
+  const fetchApplications = async (page = 1, reset = false) => {
+    if (activeSection !== 'applications') return;
+    
+    setApplicationsPagination(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: applicationsPagination.limit.toString()
+      });
+      
+      const response = await fetch(`/api/applications?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        const newApplications = data.applications || [];
+        
+        setApplications(prev => reset ? newApplications : [...prev, ...newApplications]);
+        setApplicationsPagination({
+          page: data.pagination?.page || page,
+          limit: data.pagination?.limit || applicationsPagination.limit,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      setApplicationsPagination(prev => ({ ...prev, loading: false }));
+    }
+  };
+  
+  const fetchSubmissions = async (page = 1, reset = false) => {
+    if (activeSection !== 'submissions') return;
+    
+    setSubmissionsPagination(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: submissionsPagination.limit.toString(),
+        status: selectedStatus !== 'all' ? selectedStatus : ''
+      });
+      
+      const response = await fetch(`/api/mentee-opportunities?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        const newSubmissions = data.opportunities || [];
+        
+        setSubmissions(prev => reset ? newSubmissions : [...prev, ...newSubmissions]);
+        setSubmissionsPagination({
+          page: data.pagination?.page || page,
+          limit: data.pagination?.limit || submissionsPagination.limit,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      setSubmissionsPagination(prev => ({ ...prev, loading: false }));
+    }
+  };
 
   useEffect(() => {
     const initDashboard = async () => {
@@ -407,10 +609,36 @@ export default function MenteeDashboardPage() {
   }, []);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
     if (activeSection === 'discussions') {
       fetchDiscussions();
+    } else if (activeSection === 'opportunities') {
+      fetchOpportunities(1, true);
+    } else if (activeSection === 'saved') {
+      fetchSavedOpportunities(1, true);
+    } else if (activeSection === 'applications') {
+      fetchApplications(1, true);
+    } else if (activeSection === 'submissions') {
+      fetchSubmissions(1, true);
     }
   }, [activeSection]);
+  
+  // Handle filter changes for opportunities
+  useEffect(() => {
+    if (activeSection === 'opportunities') {
+      fetchOpportunities(1, true);
+    }
+  }, [searchTerm, experienceFilter, typeFilter, savedFilter]);
+  
+  // Handle status filter for submissions
+  useEffect(() => {
+    if (activeSection === 'submissions') {
+      fetchSubmissions(1, true);
+    }
+  }, [selectedStatus]);
 
   const handleLogout = async () => {
     try {
@@ -420,6 +648,31 @@ export default function MenteeDashboardPage() {
       }
     } catch (error) {
       console.error("Error logging out:", error);
+    }
+  };
+  
+  // Load more functions for infinite scroll
+  const loadMoreOpportunities = () => {
+    if (opportunityPagination.page < opportunityPagination.pages && !opportunityPagination.loading) {
+      fetchOpportunities(opportunityPagination.page + 1, false);
+    }
+  };
+  
+  const loadMoreSaved = () => {
+    if (savedPagination.page < savedPagination.pages && !savedPagination.loading) {
+      fetchSavedOpportunities(savedPagination.page + 1, false);
+    }
+  };
+  
+  const loadMoreApplications = () => {
+    if (applicationsPagination.page < applicationsPagination.pages && !applicationsPagination.loading) {
+      fetchApplications(applicationsPagination.page + 1, false);
+    }
+  };
+  
+  const loadMoreSubmissions = () => {
+    if (submissionsPagination.page < submissionsPagination.pages && !submissionsPagination.loading) {
+      fetchSubmissions(submissionsPagination.page + 1, false);
     }
   };
 
@@ -543,6 +796,120 @@ export default function MenteeDashboardPage() {
     setCvFile(null);
   };
 
+  const handleShowOpportunityDetails = async (opportunityId: string) => {
+    try {
+      setOpportunityModalLoading(true);
+      setShowOpportunityModal(true);
+      
+      // Fetch detailed opportunity data
+      const response = await fetch(`/api/opportunities/${opportunityId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedOpportunity(data.opportunity);
+        setOpportunityIsSaved(savedOpportunityIds.includes(opportunityId));
+      } else {
+        console.error('Failed to fetch opportunity details');
+      }
+    } catch (error) {
+      console.error('Error fetching opportunity details:', error);
+    } finally {
+      setOpportunityModalLoading(false);
+    }
+  };
+
+  const handleCloseOpportunityModal = () => {
+    setShowOpportunityModal(false);
+    setSelectedOpportunity(null);
+    setOpportunityIsSaved(false);
+  };
+
+  const handleSaveOpportunityFromModal = async () => {
+    if (!selectedOpportunity) return;
+    
+    try {
+      const isSaved = opportunityIsSaved;
+      const method = isSaved ? "DELETE" : "POST";
+
+      const response = await fetch("/api/saved-opportunities", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ opportunityId: selectedOpportunity.id }),
+      });
+
+      if (response.ok) {
+        setOpportunityIsSaved(!isSaved);
+        if (isSaved) {
+          setSavedOpportunityIds((prev) =>
+            prev.filter((id) => id !== selectedOpportunity.id)
+          );
+        } else {
+          setSavedOpportunityIds((prev) => [...prev, selectedOpportunity.id]);
+        }
+        // Refresh dashboard data to update stats
+        fetchDashboardData();
+      } else {
+        throw new Error('Failed to save opportunity');
+      }
+    } catch (err) {
+      console.error("Failed to save opportunity:", err);
+      alert(err instanceof Error ? err.message : "Failed to save opportunity. Please try again.");
+    }
+  };
+
+  const handleApplyFromModal = () => {
+    if (!selectedOpportunity) return;
+    setSelectedOpportunityForApply(selectedOpportunity);
+    setCoverLetter("");
+    setCvFile(null);
+    setShowOpportunityModal(false);
+    setShowApplyModal(true);
+  };
+
+  // Profile editing handlers
+  const handleEditProfile = () => {
+    setIsEditingProfile(false); // Reset loading state
+    setShowProfileModal(true);
+  };
+
+  const handleCloseProfileModal = () => {
+    setShowProfileModal(false);
+    setIsEditingProfile(false); // Reset loading state when closing
+  };
+
+  const handleSubmitProfile = async (profileData: any) => {
+    try {
+      setIsEditingProfile(true);
+      const method = profile ? "PUT" : "POST";
+      const response = await fetch("/api/profile", {
+        method,
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save profile");
+      }
+
+      const savedProfile = await response.json();
+      setProfile(savedProfile.profile);
+      setShowProfileModal(false);
+      
+      // Refresh dashboard data to update profile strength
+      await fetchDashboardData();
+    } catch (err: any) {
+      console.error("Error saving profile:", err);
+      alert(err.message || "Failed to save profile. Please try again.");
+    } finally {
+      setIsEditingProfile(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING":
@@ -645,73 +1012,145 @@ export default function MenteeDashboardPage() {
     );
   }
 
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-14 sm:h-16">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-xs sm:text-sm">U</span>
+                </div>
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="h-8 w-16 bg-slate-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-slate-200 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+              <div className="lg:col-span-3 hidden lg:block">
+                <div className="space-y-4">
+                  <div className="h-20 bg-slate-200 rounded-xl"></div>
+                  <div className="h-64 bg-slate-200 rounded-xl"></div>
+                </div>
+              </div>
+              <div className="lg:col-span-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="h-24 bg-slate-200 rounded-xl"></div>
+                    <div className="h-24 bg-slate-200 rounded-xl"></div>
+                    <div className="h-24 bg-slate-200 rounded-xl"></div>
+                    <div className="h-24 bg-slate-200 rounded-xl"></div>
+                  </div>
+                  <div className="h-48 bg-slate-200 rounded-xl"></div>
+                </div>
+              </div>
+              <div className="lg:col-span-3 hidden lg:block">
+                <div className="space-y-4">
+                  <div className="h-32 bg-slate-200 rounded-xl"></div>
+                  <div className="h-32 bg-slate-200 rounded-xl"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Premium Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
                 className="lg:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors"
               >
-                <div className="w-5 h-5 flex flex-col justify-between">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 flex flex-col justify-between">
                   <div className="w-full h-0.5 bg-slate-600 rounded"></div>
                   <div className="w-full h-0.5 bg-slate-600 rounded"></div>
                   <div className="w-full h-0.5 bg-slate-600 rounded"></div>
                 </div>
               </button>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">U</span>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-xs sm:text-sm">U</span>
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
                   UroCareerz
                 </span>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {user && (
-                <span className="text-sm text-slate-600 font-medium">
-                  Welcome, {user.firstName || user.email}
-                </span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-white shadow-md">
+                    <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-xs sm:text-sm">
+                      {user?.firstName?.[0] || user?.email?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden sm:block">
+                    <p className="text-xs sm:text-sm text-slate-900 font-medium truncate max-w-[120px] md:max-w-[160px]">
+                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email}
+                    </p>
+                    <p className="text-xs text-slate-500">Mentee</p>
+                  </div>
+                </div>
               )}
-              <Link href="/profile" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+              <Button 
+                onClick={handleEditProfile}
+                variant="outline" 
+                size="sm" 
+                className="hidden md:flex text-xs bg-white/80 border-slate-200 hover:bg-white"
+              >
+                <Edit3 className="h-3 w-3 mr-1" />
                 Profile
-              </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
-                Logout
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-xs sm:text-sm text-slate-600 hover:text-red-600 px-2 sm:px-3">
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">Exit</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
       
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* Left Sidebar - Navigation */}
           <div className={cn(
             "lg:col-span-3",
             "lg:block",
-            isMobileSidebarOpen ? "block" : "hidden"
+            isClient && isMobileSidebarOpen ? "block" : "hidden lg:block"
           )}>
-            <div className="sticky top-24 space-y-6">
+            <div className="sticky top-20 sm:top-24 space-y-4 sm:space-y-6">
               {/* Profile Card */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12 border-2 border-white shadow-md">
-                      <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-white shadow-md">
+                      <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm sm:text-base">
                         {user?.firstName?.[0] || user?.email?.[0] || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 truncate">
+                      <p className="font-semibold text-slate-900 truncate text-sm sm:text-base">
                         {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email}
                       </p>
-                      <p className="text-sm text-slate-500">Mentee</p>
+                      <p className="text-xs sm:text-sm text-slate-500">Mentee</p>
                     </div>
                   </div>
                 </CardContent>
@@ -727,18 +1166,21 @@ export default function MenteeDashboardPage() {
                       return (
                         <button
                           key={item.id}
-                          onClick={() => setActiveSection(item.id)}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setIsMobileSidebarOpen(false); // Close mobile menu after selection
+                          }}
                           className={cn(
-                            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                            "w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
                             isActive
                               ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25"
                               : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                           )}
                         >
-                          <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-500")} />
-                          <span>{item.label}</span>
+                          <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", isActive ? "text-white" : "text-slate-500")} />
+                          <span className="truncate">{item.label}</span>
                           {item.id === 'applications' && stats.pendingApplications > 0 && (
-                            <Badge variant="secondary" className="ml-auto h-5 min-w-[20px] text-xs">
+                            <Badge variant="secondary" className="ml-auto h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] text-xs">
                               {stats.pendingApplications}
                             </Badge>
                           )}
@@ -750,29 +1192,35 @@ export default function MenteeDashboardPage() {
                   <Separator className="my-4" />
                   
                   <button
-                    onClick={() => setActiveSection('submit-opportunity')}
+                    onClick={() => {
+                      setActiveSection('submit-opportunity');
+                      setIsMobileSidebarOpen(false); // Close mobile menu
+                    }}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                      "w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
                       activeSection === 'submit-opportunity'
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     )}
                   >
-                    <Plus className={cn("h-5 w-5", activeSection === 'submit-opportunity' ? "text-white" : "text-slate-500")} />
-                    <span>Submit Opportunity</span>
+                    <Plus className={cn("h-4 w-4 sm:h-5 sm:w-5", activeSection === 'submit-opportunity' ? "text-white" : "text-slate-500")} />
+                    <span className="truncate">Submit Opportunity</span>
                   </button>
                   
                   <button
-                    onClick={() => setActiveSection('discussions')}
+                    onClick={() => {
+                      setActiveSection('discussions');
+                      setIsMobileSidebarOpen(false); // Close mobile menu
+                    }}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                      "w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
                       activeSection === 'discussions'
                         ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     )}
                   >
-                    <MessageSquare className={cn("h-5 w-5", activeSection === 'discussions' ? "text-white" : "text-slate-500")} />
-                    <span>Discussions</span>
+                    <MessageSquare className={cn("h-4 w-4 sm:h-5 sm:w-5", activeSection === 'discussions' ? "text-white" : "text-slate-500")} />
+                    <span className="truncate">Discussions</span>
                   </button>
                 </CardContent>
               </Card>
@@ -781,94 +1229,159 @@ export default function MenteeDashboardPage() {
           {/* Main Content */}
           <div className="lg:col-span-6">
             {activeSection === 'dashboard' && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
                     Welcome back, {user?.firstName || 'there'}!
                   </h1>
-                  <p className="text-slate-600">Here's what's happening with your career journey today.</p>
+                  <p className="text-sm sm:text-base text-slate-600">Here's what's happening with your career journey today.</p>
                 </div>
 
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
-                          <FileText className="h-6 w-6 text-white" />
+                    <CardContent className="p-3 sm:p-6">
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
+                          <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-slate-900">{stats.totalApplications}</p>
-                          <p className="text-sm text-slate-600">Applications</p>
+                          <p className="text-lg sm:text-2xl font-bold text-slate-900">{stats.totalApplications}</p>
+                          <p className="text-xs sm:text-sm text-slate-600">Applications</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg">
-                          <Clock className="h-6 w-6 text-white" />
+                    <CardContent className="p-3 sm:p-6">
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg">
+                          <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-slate-900">{stats.pendingApplications}</p>
-                          <p className="text-sm text-slate-600">Pending</p>
+                          <p className="text-lg sm:text-2xl font-bold text-slate-900">{stats.pendingApplications}</p>
+                          <p className="text-xs sm:text-sm text-slate-600">Pending</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 shadow-lg">
-                          <Heart className="h-6 w-6 text-white" />
+                    <CardContent className="p-3 sm:p-6">
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 shadow-lg">
+                          <Heart className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-slate-900">{stats.savedOpportunities}</p>
-                          <p className="text-sm text-slate-600">Saved</p>
+                          <p className="text-lg sm:text-2xl font-bold text-slate-900">{stats.savedOpportunities}</p>
+                          <p className="text-xs sm:text-sm text-slate-600">Saved</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg">
-                          <Send className="h-6 w-6 text-white" />
+                    <CardContent className="p-3 sm:p-6">
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg">
+                          <Send className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-slate-900">{stats.submittedOpportunities}</p>
-                          <p className="text-sm text-slate-600">Submitted</p>
+                          <p className="text-lg sm:text-2xl font-bold text-slate-900">{stats.submittedOpportunities}</p>
+                          <p className="text-xs sm:text-sm text-slate-600">Submitted</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* Recent Activity */}
+                {/* Recent Opportunities by Mentors */}
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                   <CardHeader>
-                    <CardTitle className="text-xl font-bold text-slate-900 tracking-tight">Recent Activity</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-gradient-to-tr from-green-500 to-emerald-500">
+                          <TrendingUp className="h-5 w-5 text-white" />
+                        </div>
+                        Recent Opportunities
+                      </CardTitle>
+                      {recentOpportunities.length > 0 && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => setActiveSection('opportunities')}
+                          variant="outline"
+                          className="bg-white/80 border-slate-200 hover:bg-white"
+                        >
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          View All
+                        </Button>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    {recentActivity.length > 0 ? (
+                    {recentOpportunities.length > 0 ? (
                       <div className="space-y-4">
-                        {recentActivity.map((activity, index) => (
-                          <div key={activity.id} className="flex items-start gap-4">
-                            <div className="p-2 rounded-lg bg-slate-100">
-                              {activity.type === 'application' && <FileText className="h-4 w-4 text-slate-600" />}
-                              {activity.type === 'save' && <Heart className="h-4 w-4 text-slate-600" />}
-                              {activity.type === 'submission' && <Send className="h-4 w-4 text-slate-600" />}
+                        {recentOpportunities.map((opportunity) => (
+                          <div 
+                            key={opportunity.id} 
+                            className="flex items-start gap-4 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer"
+                            onClick={() => handleShowOpportunityDetails(opportunity.id)}
+                          >
+                            <div className="p-2 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-500">
+                              <Briefcase className="h-4 w-4 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-900 text-sm">{activity.title}</p>
-                              <p className="text-sm text-slate-600">{activity.description}</p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {new Date(activity.timestamp).toLocaleDateString()}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1">
+                                  <p className="font-medium text-slate-900 text-sm line-clamp-1">{opportunity.title}</p>
+                                  <p className="text-xs text-slate-600 line-clamp-2 mt-1">{opportunity.description}</p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <Badge variant="secondary" className="text-xs" style={{
+                                      backgroundColor: opportunity.opportunityType?.color ? `${opportunity.opportunityType.color}20` : '#f1f5f9',
+                                      color: opportunity.opportunityType?.color || '#64748b',
+                                      borderColor: opportunity.opportunityType?.color || '#e2e8f0'
+                                    }}>
+                                      {opportunity.opportunityType?.name || 'No Type'}
+                                    </Badge>
+                                    {opportunity.location && (
+                                      <div className="flex items-center gap-1 text-xs text-slate-500">
+                                        <MapPin className="h-3 w-3" />
+                                        <span>{opportunity.location}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSaveOpportunity(opportunity.id);
+                                    }}
+                                    disabled={saveLoading[opportunity.id]}
+                                    className={cn(
+                                      "h-6 w-6 p-0 border-slate-200",
+                                      savedOpportunityIds.includes(opportunity.id)
+                                        ? "bg-pink-50 text-pink-600 border-pink-200"
+                                        : "hover:bg-slate-50"
+                                    )}
+                                  >
+                                    {saveLoading[opportunity.id] ? (
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b border-pink-600"></div>
+                                    ) : (
+                                      <Heart className={cn(
+                                        "h-3 w-3",
+                                        savedOpportunityIds.includes(opportunity.id) ? "fill-current" : ""
+                                      )} />
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-2">
+                                Posted by Dr. {opportunity.creator.firstName} {opportunity.creator.lastName} • {formatDate(opportunity.createdAt)}
                               </p>
                             </div>
                           </div>
@@ -876,13 +1389,15 @@ export default function MenteeDashboardPage() {
                       </div>
                     ) : (
                       <div className="text-center py-8">
-                        <Clock className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                        <p className="text-slate-600">No recent activity yet</p>
-                        <p className="text-sm text-slate-500">Start applying for opportunities to see your activity here</p>
+                        <TrendingUp className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                        <p className="text-slate-600">No recent opportunities yet</p>
+                        <p className="text-sm text-slate-500">Check back later for new opportunities from mentors</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
+
+
               </div>
             )}
 
@@ -898,7 +1413,7 @@ export default function MenteeDashboardPage() {
                 {/* Search and Filters */}
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <Input
                         placeholder="Search opportunities..."
                         value={searchTerm}
@@ -911,9 +1426,9 @@ export default function MenteeDashboardPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Levels</SelectItem>
-                          <SelectItem value="entry">Entry Level</SelectItem>
-                          <SelectItem value="mid">Mid-Career</SelectItem>
-                          <SelectItem value="senior">Senior Level</SelectItem>
+                          <SelectItem value="ENTRY">Entry Level</SelectItem>
+                          <SelectItem value="MID">Mid-Career</SelectItem>
+                          <SelectItem value="SENIOR">Senior Level</SelectItem>
                         </SelectContent>
                       </Select>
                       <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -927,68 +1442,143 @@ export default function MenteeDashboardPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <Select value={savedFilter} onValueChange={setSavedFilter}>
+                        <SelectTrigger className="bg-white/80">
+                          <SelectValue placeholder="Saved Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Opportunities</SelectItem>
+                          <SelectItem value="saved">Saved Only</SelectItem>
+                          <SelectItem value="not_saved">Not Saved</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Opportunities Grid */}
                 <div className="grid gap-6">
-                  {filteredOpportunities.map((opportunity) => (
-                    <Card key={opportunity.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-300">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-slate-900 mb-2">{opportunity.title}</h3>
-                            <p className="text-slate-600 text-sm line-clamp-2 mb-3">{opportunity.description}</p>
-                            <div className="flex items-center gap-3 mb-2">
-                              {opportunity.opportunityType && (
-                                <Badge variant="secondary" className="rounded-lg">
-                                  {opportunity.opportunityType.name}
-                                </Badge>
-                              )}
-                              {opportunity.location && (
-                                <div className="flex items-center gap-1 text-sm text-slate-500">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>{opportunity.location}</span>
-                                </div>
-                              )}
+                  {opportunityPagination.loading && opportunities.length === 0 ? (
+                    <div className="space-y-6">
+                      {[...Array(6)].map((_, i) => (
+                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                          <CardContent className="p-6">
+                            <div className="animate-pulse space-y-4">
+                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
+                              <div className="h-4 bg-slate-200 rounded w-full"></div>
+                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                              <div className="flex gap-2">
+                                <div className="h-6 bg-slate-200 rounded w-20"></div>
+                                <div className="h-6 bg-slate-200 rounded w-24"></div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSaveOpportunity(opportunity.id)}
-                              disabled={saveLoading[opportunity.id]}
-                              className={cn(
-                                "border-slate-200",
-                                savedOpportunityIds.includes(opportunity.id)
-                                  ? "bg-pink-50 text-pink-600 border-pink-200"
-                                  : "hover:bg-slate-50"
-                              )}
-                            >
-                              {saveLoading[opportunity.id] ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
-                              ) : (
-                                <Heart className={cn(
-                                  "h-4 w-4",
-                                  savedOpportunityIds.includes(opportunity.id) ? "fill-current" : ""
-                                )} />
-                              )}
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleApplyClick(opportunity)}
-                              disabled={userApplications.includes(opportunity.id)}
-                              className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all duration-200"
-                            >
-                              {userApplications.includes(opportunity.id) ? "Applied" : "Apply Now"}
-                            </Button>
-                          </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : opportunities.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
+                        <Search className="h-12 w-12 text-slate-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">No opportunities found</h3>
+                      <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                        Try adjusting your search criteria or check back later for new opportunities.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {opportunities.map((opportunity) => (
+                        <Card key={opportunity.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => handleShowOpportunityDetails(opportunity.id)}>
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-bold text-slate-900 mb-2 hover:text-blue-600 transition-colors">{opportunity.title}</h3>
+                                <p className="text-slate-600 text-sm line-clamp-2 mb-3">{opportunity.description}</p>
+                                <div className="flex items-center gap-3 mb-2">
+                                  {opportunity.opportunityType && (
+                                    <Badge variant="secondary" className="rounded-lg">
+                                      {opportunity.opportunityType.name}
+                                    </Badge>
+                                  )}
+                                  {opportunity.location && (
+                                    <div className="flex items-center gap-1 text-sm text-slate-500">
+                                      <MapPin className="h-4 w-4" />
+                                      <span>{opportunity.location}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSaveOpportunity(opportunity.id);
+                                  }}
+                                  disabled={saveLoading[opportunity.id]}
+                                  className={cn(
+                                    "border-slate-200",
+                                    savedOpportunityIds.includes(opportunity.id)
+                                      ? "bg-pink-50 text-pink-600 border-pink-200"
+                                      : "hover:bg-slate-50"
+                                  )}
+                                >
+                                  {saveLoading[opportunity.id] ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
+                                  ) : (
+                                    <Heart className={cn(
+                                      "h-4 w-4",
+                                      savedOpportunityIds.includes(opportunity.id) ? "fill-current" : ""
+                                    )} />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleApplyClick(opportunity);
+                                  }}
+                                  disabled={userApplications.includes(opportunity.id)}
+                                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all duration-200"
+                                >
+                                  {userApplications.includes(opportunity.id) ? "Applied" : "Apply Now"}
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Load More Button */}
+                      {opportunityPagination.page < opportunityPagination.pages && (
+                        <div className="text-center mt-8">
+                          <Button
+                            onClick={loadMoreOpportunities}
+                            disabled={opportunityPagination.loading}
+                            variant="outline"
+                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
+                          >
+                            {opportunityPagination.loading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+                                Loading more...
+                              </>
+                            ) : (
+                              <>
+                                Load More Opportunities
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                          <p className="text-xs text-slate-500 mt-2">
+                            Showing {opportunities.length} of {opportunityPagination.total} opportunities
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -1001,7 +1591,25 @@ export default function MenteeDashboardPage() {
                 </div>
                 
                 <div className="space-y-6">
-                  {applications.length === 0 ? (
+                  {applicationsPagination.loading && applications.length === 0 ? (
+                    <div className="space-y-6">
+                      {[...Array(5)].map((_, i) => (
+                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                          <CardContent className="p-6">
+                            <div className="animate-pulse space-y-4">
+                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
+                              <div className="h-4 bg-slate-200 rounded w-full"></div>
+                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                              <div className="flex gap-2">
+                                <div className="h-6 bg-slate-200 rounded w-20"></div>
+                                <div className="h-6 bg-slate-200 rounded w-24"></div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : applications.length === 0 ? (
                     <div className="text-center py-16">
                       <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
                         <FileText className="h-12 w-12 text-slate-400" />
@@ -1015,42 +1623,71 @@ export default function MenteeDashboardPage() {
                       </Button>
                     </div>
                   ) : (
-                    applications.map((application) => (
-                      <Card key={application.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-bold text-slate-900 mb-2">{application.opportunity.title}</h3>
-                              <p className="text-slate-600 text-sm mb-3">{application.opportunity.description}</p>
-                              <div className="flex items-center gap-3 mb-2">
-                                {getStatusBadge(application.status)}
-                                <div className="flex items-center gap-1 text-sm text-slate-500">
-                                  <Calendar className="h-4 w-4" />
-                                  <span>Applied {formatDate(application.createdAt)}</span>
+                    <>
+                      {applications.map((application) => (
+                        <Card key={application.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-bold text-slate-900 mb-2">{application.opportunity.title}</h3>
+                                <p className="text-slate-600 text-sm mb-3">{application.opportunity.description}</p>
+                                <div className="flex items-center gap-3 mb-2">
+                                  {getStatusBadge(application.status)}
+                                  <div className="flex items-center gap-1 text-sm text-slate-500">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Applied {formatDate(application.createdAt)}</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => navigateToOpportunity(application.opportunity.id)}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Button>
-                              {application.status === "PENDING" && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleWithdrawApplication(application.id)}
-                                  disabled={withdrawingId === application.id}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  {withdrawingId === application.id ? "Withdrawing..." : "Withdraw"}
+                              <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleShowOpportunityDetails(application.opportunity.id)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View
                                 </Button>
-                              )}
+                                {application.status === "PENDING" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleWithdrawApplication(application.id)}
+                                    disabled={withdrawingId === application.id}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    {withdrawingId === application.id ? "Withdrawing..." : "Withdraw"}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Load More Button */}
+                      {applicationsPagination.page < applicationsPagination.pages && (
+                        <div className="text-center mt-8">
+                          <Button
+                            onClick={loadMoreApplications}
+                            disabled={applicationsPagination.loading}
+                            variant="outline"
+                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
+                          >
+                            {applicationsPagination.loading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+                                Loading more...
+                              </>
+                            ) : (
+                              <>
+                                Load More Applications
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                          <p className="text-xs text-slate-500 mt-2">
+                            Showing {applications.length} of {applicationsPagination.total} applications
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -1100,25 +1737,87 @@ export default function MenteeDashboardPage() {
 
                 {/* Submissions List */}
                 <div className="space-y-4">
-                  {filteredSubmissions.map((submission) => (
-                    <Card key={submission.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-slate-900 mb-2">{submission.title}</h3>
-                            <p className="text-slate-600 text-sm mb-3 line-clamp-2">{submission.description}</p>
-                            <div className="flex items-center gap-3">
-                              {getStatusBadge(submission.status)}
-                              <div className="flex items-center gap-1 text-sm text-slate-500">
-                                <Calendar className="h-4 w-4" />
-                                <span>Submitted {formatDate(submission.createdAt)}</span>
+                  {submissionsPagination.loading && submissions.length === 0 ? (
+                    <div className="space-y-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                          <CardContent className="p-6">
+                            <div className="animate-pulse space-y-4">
+                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
+                              <div className="h-4 bg-slate-200 rounded w-full"></div>
+                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                              <div className="flex gap-2">
+                                <div className="h-6 bg-slate-200 rounded w-20"></div>
+                                <div className="h-6 bg-slate-200 rounded w-24"></div>
                               </div>
                             </div>
-                          </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : submissions.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-emerald-100 to-teal-200 flex items-center justify-center">
+                        <Send className="h-12 w-12 text-emerald-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">No submissions yet</h3>
+                      <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                        Start contributing to the community by submitting opportunities you've found.
+                      </p>
+                      <Button onClick={() => setActiveSection('submit-opportunity')} className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+                        Submit Opportunity
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {submissions.map((submission) => (
+                        <Card key={submission.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-bold text-slate-900 mb-2">{submission.title}</h3>
+                                <p className="text-slate-600 text-sm mb-3 line-clamp-2">{submission.description}</p>
+                                <div className="flex items-center gap-3">
+                                  {getStatusBadge(submission.status)}
+                                  <div className="flex items-center gap-1 text-sm text-slate-500">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Submitted {formatDate(submission.createdAt)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Load More Button */}
+                      {submissionsPagination.page < submissionsPagination.pages && (
+                        <div className="text-center mt-8">
+                          <Button
+                            onClick={loadMoreSubmissions}
+                            disabled={submissionsPagination.loading}
+                            variant="outline"
+                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
+                          >
+                            {submissionsPagination.loading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+                                Loading more...
+                              </>
+                            ) : (
+                              <>
+                                Load More Submissions
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                          <p className="text-xs text-slate-500 mt-2">
+                            Showing {submissions.length} of {submissionsPagination.total} submissions
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -1133,7 +1832,25 @@ export default function MenteeDashboardPage() {
                 </div>
                 
                 <div className="space-y-4">
-                  {savedOpportunities.length === 0 ? (
+                  {savedPagination.loading && savedOpportunities.length === 0 ? (
+                    <div className="space-y-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                          <CardContent className="p-6">
+                            <div className="animate-pulse space-y-4">
+                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
+                              <div className="h-4 bg-slate-200 rounded w-full"></div>
+                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                              <div className="flex gap-2">
+                                <div className="h-6 bg-slate-200 rounded w-20"></div>
+                                <div className="h-6 bg-slate-200 rounded w-24"></div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : savedOpportunities.length === 0 ? (
                     <div className="text-center py-16">
                       <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-pink-100 to-rose-200 flex items-center justify-center">
                         <Heart className="h-12 w-12 text-pink-400" />
@@ -1147,49 +1864,81 @@ export default function MenteeDashboardPage() {
                       </Button>
                     </div>
                   ) : (
-                    savedOpportunities.map((saved) => (
-                      <Card key={saved.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-bold text-slate-900 mb-2">{saved.opportunity.title}</h3>
-                              <p className="text-slate-600 text-sm mb-3 line-clamp-2">{saved.opportunity.description}</p>
-                              <div className="flex items-center gap-3">
-                                <Badge 
-                                  variant="secondary" 
-                                  className="border"
-                                  style={{
-                                    backgroundColor: saved.opportunity.opportunityType?.color ? `${saved.opportunity.opportunityType.color}20` : '#f1f5f9',
-                                    color: saved.opportunity.opportunityType?.color || '#64748b',
-                                    borderColor: saved.opportunity.opportunityType?.color || '#e2e8f0'
-                                  }}
-                                >
-                                  {saved.opportunity.opportunityType?.name || 'No Type'}
-                                </Badge>
-                                <div className="flex items-center gap-1 text-sm text-slate-500">
-                                  <Heart className="h-4 w-4" />
-                                  <span>Saved {formatDate(saved.savedAt)}</span>
+                    <>
+                      {savedOpportunities.map((saved) => (
+                        <Card key={saved.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-bold text-slate-900 mb-2">{saved.opportunity.title}</h3>
+                                <p className="text-slate-600 text-sm mb-3 line-clamp-2">{saved.opportunity.description}</p>
+                                <div className="flex items-center gap-3">
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="border"
+                                    style={{
+                                      backgroundColor: saved.opportunity.opportunityType?.color ? `${saved.opportunity.opportunityType.color}20` : '#f1f5f9',
+                                      color: saved.opportunity.opportunityType?.color || '#64748b',
+                                      borderColor: saved.opportunity.opportunityType?.color || '#e2e8f0'
+                                    }}
+                                  >
+                                    {saved.opportunity.opportunityType?.name || 'No Type'}
+                                  </Badge>
+                                  <div className="flex items-center gap-1 text-sm text-slate-500">
+                                    <Heart className="h-4 w-4" />
+                                    <span>Saved {formatDate(saved.savedAt)}</span>
+                                  </div>
                                 </div>
                               </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShowOpportunityDetails(saved.opportunity.id);
+                                }}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSaveOpportunity(saved.opportunity.id)}
+                                  className="text-pink-600 hover:text-pink-700"
+                                >
+                                  <Heart className="h-4 w-4 fill-current" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => navigateToOpportunity(saved.opportunity.id)}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSaveOpportunity(saved.opportunity.id)}
-                                className="text-pink-600 hover:text-pink-700"
-                              >
-                                <Heart className="h-4 w-4 fill-current" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Load More Button */}
+                      {savedPagination.page < savedPagination.pages && (
+                        <div className="text-center mt-8">
+                          <Button
+                            onClick={loadMoreSaved}
+                            disabled={savedPagination.loading}
+                            variant="outline"
+                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
+                          >
+                            {savedPagination.loading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+                                Loading more...
+                              </>
+                            ) : (
+                              <>
+                                Load More Saved Opportunities
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                          <p className="text-xs text-slate-500 mt-2">
+                            Showing {savedOpportunities.length} of {savedPagination.total} saved opportunities
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -1285,57 +2034,56 @@ export default function MenteeDashboardPage() {
 
           {/* Right Sidebar - Widgets */}
           <div className="lg:col-span-3">
-            <div className="sticky top-24 space-y-6">
+            <div className="sticky top-20 sm:top-24 space-y-4 sm:space-y-6">
               {/* Profile Strength */}
-              <ProfileStrength user={user} profile={profile} />
+              <ProfileStrength user={user} profile={profile} onEdit={handleEditProfile} />
 
               {/* Quick Actions */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
+                  <CardTitle className="text-base sm:text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2 sm:space-y-3">
                   <Button 
                     onClick={() => setActiveSection('submit-opportunity')}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md text-xs sm:text-sm"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Submit Opportunity
                   </Button>
                   <Button 
                     onClick={() => setActiveSection('opportunities')}
                     variant="outline" 
-                    className="w-full bg-white/80 border-slate-200 hover:bg-white"
+                    className="w-full bg-white/80 border-slate-200 hover:bg-white text-xs sm:text-sm"
                   >
-                    <Search className="h-4 w-4 mr-2" />
+                    <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Browse Opportunities
                   </Button>
-                  <Link href="/profile">
-                    <Button 
-                      variant="outline" 
-                      className="w-full bg-white/80 border-slate-200 hover:bg-white"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={handleEditProfile}
+                    variant="outline" 
+                    className="w-full bg-white/80 border-slate-200 hover:bg-white text-xs sm:text-sm"
+                  >
+                    <Edit3 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                    Edit Profile
+                  </Button>
                 </CardContent>
               </Card>
 
               {/* Recent Saved Opportunities */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                    <Bookmark className="h-5 w-5 text-pink-500" />
+                  <CardTitle className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
+                    <Bookmark className="h-4 w-4 sm:h-5 sm:w-5 text-pink-500" />
                     Recent Saves
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {savedOpportunities.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {savedOpportunities.slice(0, 3).map((saved) => (
-                        <div key={saved.id} className="p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                          <h4 className="font-medium text-slate-900 text-sm mb-1 line-clamp-1">
+                        <div key={saved.id} className="p-2 sm:p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
+                          <h4 className="font-medium text-slate-900 text-xs sm:text-sm mb-1 line-clamp-1">
                             {saved.opportunity.title}
                           </h4>
                           <p className="text-xs text-slate-600 line-clamp-2">
@@ -1356,10 +2104,10 @@ export default function MenteeDashboardPage() {
                             <Button 
                               size="sm" 
                               variant="ghost" 
-                              className="h-6 w-6 p-0 text-slate-500 hover:text-blue-600"
-                              onClick={() => navigateToOpportunity(saved.opportunity.id)}
+                              className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-slate-500 hover:text-blue-600"
+                              onClick={() => handleShowOpportunityDetails(saved.opportunity.id)}
                             >
-                              <ArrowRight className="h-3 w-3" />
+                              <ArrowRight className="h-2 w-2 sm:h-3 sm:w-3" />
                             </Button>
                           </div>
                         </div>
@@ -1367,21 +2115,21 @@ export default function MenteeDashboardPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs sm:text-sm"
                         onClick={() => setActiveSection('saved')}
                       >
                         View All Saved
-                        <ArrowRight className="h-4 w-4 ml-2" />
+                        <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-2" />
                       </Button>
                     </div>
                   ) : (
-                    <div className="text-center py-6">
-                      <Bookmark className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-600">No saved opportunities yet</p>
+                    <div className="text-center py-4 sm:py-6">
+                      <Bookmark className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-xs sm:text-sm text-slate-600">No saved opportunities yet</p>
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        className="mt-2 text-blue-600 hover:text-blue-700"
+                        className="mt-2 text-blue-600 hover:text-blue-700 text-xs sm:text-sm"
                         onClick={() => setActiveSection('opportunities')}
                       >
                         Browse Opportunities
@@ -1464,6 +2212,263 @@ export default function MenteeDashboardPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Opportunity Details Modal */}
+      <Dialog open={showOpportunityModal} onOpenChange={handleCloseOpportunityModal}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          {opportunityModalLoading ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Loading Opportunity
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-slate-600">Loading opportunity details...</span>
+              </div>
+            </>
+          ) : selectedOpportunity ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                  {selectedOpportunity.title}
+                </DialogTitle>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    {selectedOpportunity.opportunityType && (
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs font-medium"
+                        style={{
+                          backgroundColor: selectedOpportunity.opportunityType.color ? `${selectedOpportunity.opportunityType.color}20` : undefined,
+                          color: selectedOpportunity.opportunityType.color || undefined,
+                          borderColor: selectedOpportunity.opportunityType.color || undefined
+                        }}
+                      >
+                        {selectedOpportunity.opportunityType.name}
+                      </Badge>
+                    )}
+                    {selectedOpportunity.status === "PENDING" && (
+                      <Badge variant="outline" className="text-amber-600 border-amber-600">
+                        Pending Approval
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-4 text-slate-600 text-sm">
+                    {selectedOpportunity.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>{selectedOpportunity.location}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Posted {formatDate(selectedOpportunity.createdAt)}</span>
+                    </div>
+                    {selectedOpportunity.experienceLevel && (
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        <span>{getExperienceLevelLabel(selectedOpportunity.experienceLevel)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Description */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Description</h3>
+                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    {selectedOpportunity.description}
+                  </p>
+                </div>
+
+                {/* Requirements */}
+                {selectedOpportunity.requirements && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Requirements</h3>
+                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {selectedOpportunity.requirements}
+                    </p>
+                  </div>
+                )}
+
+                {/* Benefits */}
+                {selectedOpportunity.benefits && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Benefits</h3>
+                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {selectedOpportunity.benefits}
+                    </p>
+                  </div>
+                )}
+
+                {/* Quick Info Grid */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Quick Info</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedOpportunity.experienceLevel && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <User className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Experience Level</p>
+                          <p className="text-sm text-slate-600">
+                            {getExperienceLevelLabel(selectedOpportunity.experienceLevel)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedOpportunity.duration && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Duration</p>
+                          <p className="text-sm text-slate-600">
+                            {selectedOpportunity.duration}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedOpportunity.compensation && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <div className="h-5 w-5 text-blue-600 font-bold text-lg">₹</div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Compensation</p>
+                          <p className="text-sm text-slate-600">
+                            {selectedOpportunity.compensation}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedOpportunity.applicationDeadline && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">
+                            Application Deadline
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {formatDate(selectedOpportunity.applicationDeadline)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mentor Info */}
+                {selectedOpportunity.creator && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Posted by</h3>
+                    <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
+                      <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <User className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">
+                          Dr. {selectedOpportunity.creator.firstName}{" "}
+                          {selectedOpportunity.creator.lastName}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {selectedOpportunity.creator.email}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {selectedOpportunity.creator.role}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Modal Actions */}
+              <div className="flex gap-3 pt-6 border-t">
+                <Button
+                  variant="outline"
+                  onClick={handleSaveOpportunityFromModal}
+                  className={cn(
+                    "flex-1",
+                    opportunityIsSaved ? "text-pink-600 border-pink-200" : "text-slate-600"
+                  )}
+                >
+                  {opportunityIsSaved ? (
+                    <>
+                      <BookmarkCheck className="h-4 w-4 mr-2" />
+                      Saved
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleApplyFromModal}
+                  disabled={userApplications.includes(selectedOpportunity.id)}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
+                >
+                  {userApplications.includes(selectedOpportunity.id) ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Applied
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Apply Now
+                    </>
+                  )}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Opportunity Details
+                </DialogTitle>
+              </DialogHeader>
+              <div className="text-center py-8">
+                <p className="text-slate-600">Failed to load opportunity details</p>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Editing Modal */}
+      <Dialog open={showProfileModal} onOpenChange={handleCloseProfileModal}>
+        <DialogContent className="sm:max-w-4xl w-[95vw] max-w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+              </div>
+              Edit Profile
+            </DialogTitle>
+            <DialogDescription className="text-sm sm:text-base text-slate-600">
+              Update your profile information to help others find and connect with you.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-2 sm:py-4">
+            <ProfileForm
+              key={showProfileModal ? 'editing' : 'closed'}
+              profile={profile ? { ...profile, user } : { user }}
+              onSubmit={handleSubmitProfile}
+              isSubmitting={isEditingProfile}
+              onCancel={handleCloseProfileModal}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

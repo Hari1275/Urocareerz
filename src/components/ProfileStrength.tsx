@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Target, Edit3 } from "lucide-react";
 
 interface User {
   id: string;
@@ -33,6 +34,7 @@ interface ProfileStrengthProps {
   user?: User | null;
   profile?: Profile | null;
   className?: string;
+  onEdit?: () => void;
 }
 
 interface ProfileField {
@@ -43,7 +45,7 @@ interface ProfileField {
   required?: boolean;
 }
 
-export default function ProfileStrength({ user, profile, className }: ProfileStrengthProps) {
+export default function ProfileStrength({ user, profile, className, onEdit }: ProfileStrengthProps) {
   const [profileFields, setProfileFields] = useState<ProfileField[]>([]);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -187,9 +189,22 @@ export default function ProfileStrength({ user, profile, className }: ProfileStr
     return (
       <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 ${className || ""}`}>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <Target className="h-5 w-5 text-blue-500" />
-            Profile Strength
+          <CardTitle className="text-lg font-semibold text-slate-900 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-500" />
+              Profile Strength
+            </div>
+            {onEdit && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={onEdit}
+                className="text-xs bg-white/80 border-slate-200 hover:bg-white"
+              >
+                <Edit3 className="h-3 w-3 mr-1" />
+                Edit
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
