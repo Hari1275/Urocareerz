@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import SharedHeader from "@/components/shared-header";
+import DashboardSidebar from "@/components/dashboard-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1069,163 +1070,27 @@ export default function MenteeDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Premium Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <button
-                onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                className="lg:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors"
-              >
-                <div className="w-4 h-4 sm:w-5 sm:h-5 flex flex-col justify-between">
-                  <div className="w-full h-0.5 bg-slate-600 rounded"></div>
-                  <div className="w-full h-0.5 bg-slate-600 rounded"></div>
-                  <div className="w-full h-0.5 bg-slate-600 rounded"></div>
-                </div>
-              </button>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-xs sm:text-sm">U</span>
-                </div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
-                  UroCareerz
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 sm:gap-4">
-              {user && (
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-white shadow-md">
-                    <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-xs sm:text-sm">
-                      {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden sm:block">
-                    <p className="text-xs sm:text-sm text-slate-900 font-medium truncate max-w-[120px] md:max-w-[160px]">
-                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email}
-                    </p>
-                    <p className="text-xs text-slate-500">Mentee</p>
-                  </div>
-                </div>
-              )}
-              <Button 
-                onClick={handleEditProfile}
-                variant="outline" 
-                size="sm" 
-                className="hidden md:flex text-xs bg-white/80 border-slate-200 hover:bg-white"
-              >
-                <Edit3 className="h-3 w-3 mr-1" />
-                Profile
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="text-xs sm:text-sm text-slate-600 hover:text-red-600 px-2 sm:px-3">
-                <span className="hidden sm:inline">Logout</span>
-                <span className="sm:hidden">Exit</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header */}
+      <SharedHeader 
+        onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        isMobileMenuOpen={isMobileSidebarOpen}
+      />
       
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-          {/* Left Sidebar - Navigation */}
-          <div className={cn(
-            "lg:col-span-3",
-            "lg:block",
-            isClient && isMobileSidebarOpen ? "block" : "hidden lg:block"
-          )}>
-            <div className="sticky top-20 sm:top-24 space-y-4 sm:space-y-6">
-              {/* Profile Card */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-white shadow-md">
-                      <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm sm:text-base">
-                        {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 truncate text-sm sm:text-base">
-                        {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email}
-                      </p>
-                      <p className="text-xs sm:text-sm text-slate-500">Mentee</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Navigation Menu */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardContent className="p-4">
-                  <nav className="space-y-2">
-                    {menuItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = activeSection === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setIsMobileSidebarOpen(false); // Close mobile menu after selection
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
-                            isActive
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                          )}
-                        >
-                          <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", isActive ? "text-white" : "text-slate-500")} />
-                          <span className="truncate">{item.label}</span>
-                          {item.id === 'applications' && stats.pendingApplications > 0 && (
-                            <Badge variant="secondary" className="ml-auto h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] text-xs">
-                              {stats.pendingApplications}
-                            </Badge>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </nav>
-                  
-                  <Separator className="my-4" />
-                  
-                  <button
-                    onClick={() => {
-                      setActiveSection('submit-opportunity');
-                      setIsMobileSidebarOpen(false); // Close mobile menu
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
-                      activeSection === 'submit-opportunity'
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    )}
-                  >
-                    <Plus className={cn("h-4 w-4 sm:h-5 sm:w-5", activeSection === 'submit-opportunity' ? "text-white" : "text-slate-500")} />
-                    <span className="truncate">Submit Opportunity</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      setActiveSection('discussions');
-                      setIsMobileSidebarOpen(false); // Close mobile menu
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
-                      activeSection === 'discussions'
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    )}
-                  >
-                    <MessageSquare className={cn("h-4 w-4 sm:h-5 sm:w-5", activeSection === 'discussions' ? "text-white" : "text-slate-500")} />
-                    <span className="truncate">Discussions</span>
-                  </button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          {/* Sidebar */}
+          <DashboardSidebar
+            activeSection={activeSection}
+            onSectionChange={(section) => {
+              setActiveSection(section);
+              setIsMobileSidebarOpen(false);
+            }}
+            stats={{
+              pendingApplications: stats.pendingApplications
+            }}
+            isOpen={isMobileSidebarOpen}
+            onClose={() => setIsMobileSidebarOpen(false)}
+          />
           {/* Main Content */}
           <div className="lg:col-span-6">
             {activeSection === 'dashboard' && (

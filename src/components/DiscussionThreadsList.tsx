@@ -166,7 +166,11 @@ export default function DiscussionThreadsList({
       {/* Threads List */}
       <div className="space-y-4">
         {threads.map((thread) => (
-          <Card key={thread.id} className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+          <Card 
+            key={thread.id} 
+            className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200 cursor-pointer hover:bg-white/80 hover:border-blue-200"
+            onClick={() => router.push(`/discussions/${thread.id}`)}
+          >
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -207,10 +211,7 @@ export default function DiscussionThreadsList({
                     )}
                   </div>
 
-                  <h3
-                    className="text-lg font-semibold text-gray-900 mb-3 cursor-pointer hover:text-blue-600 transition-colors"
-                    onClick={() => router.push(`/discussions/${thread.id}`)}
-                  >
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
                     {thread.title}
                   </h3>
 

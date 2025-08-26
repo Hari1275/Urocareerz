@@ -166,7 +166,6 @@ export async function POST(req: NextRequest) {
 
     // Prepare profile data
     const profileData: Record<string, unknown> = {
-      userId: decoded?.userId,
       bio: body.bio || null,
       location: body.location || null,
       avatar: convertFileKeyToUrl(body.avatar),

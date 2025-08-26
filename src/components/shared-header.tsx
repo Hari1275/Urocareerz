@@ -4,6 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Menu, X, Settings, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface User {
   id: string;
@@ -16,9 +25,16 @@ interface User {
 interface SharedHeaderProps {
   showUserInfo?: boolean;
   className?: string;
+  onMobileMenuToggle?: () => void;
+  isMobileMenuOpen?: boolean;
 }
 
-export default function SharedHeader({ showUserInfo = true, className = "" }: SharedHeaderProps) {
+export default function SharedHeader({ 
+  showUserInfo = true, 
+  className = "",
+  onMobileMenuToggle,
+  isMobileMenuOpen = false
+}: SharedHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +72,10 @@ export default function SharedHeader({ showUserInfo = true, className = "" }: Sh
     }
   };
 
+  const handleEditProfile = () => {
+    router.push("/profile");
+  };
+
   // Ensure we're on the client side before fetching data
   useEffect(() => {
     setIsClient(true);
@@ -73,69 +93,97 @@ export default function SharedHeader({ showUserInfo = true, className = "" }: Sh
       : user.firstName || user.lastName || user.email || "User")
     : "User";
 
-  return (
-    <header className={`bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl ${className}`}>
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">
-              UroCareerz
-            </span>
-          </Link>
-          
-          {showUserInfo && (
-            <>
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-4">
-                {isLoading ? (
-                  <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-                ) : (
-                  <span className="text-sm text-gray-600 font-medium">
-                    Welcome, <span className="text-gray-900 font-semibold">{userName}</span>
-                  </span>
-                )}
-                <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Profile
-                </Link>
-                <Button 
-                  variant="outline" 
-                  onClick={handleLogout} 
-                  className="text-gray-700 hover:text-red-600 transition-colors"
-                >
-                  Logout
-                </Button>
-              </div>
+  const userInitials = user
+    ? (user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()
+    : 'U';
 
-              {/* Mobile Navigation */}
-              <div className="md:hidden flex items-center justify-end gap-2 w-full">
-                <div className="flex flex-row items-center gap-x-1 min-w-0 max-w-xs flex-shrink overflow-hidden">
-                  {isLoading ? (
-                    <span className="text-xs text-gray-400 animate-pulse">Loading...</span>
-                  ) : (
-                    <>
-                      <span className="text-xs text-gray-500 whitespace-nowrap">Welcome,</span>
-                      <span className="text-sm text-gray-900 font-medium truncate max-w-[6rem] ml-1">
-                        {userName}
-                      </span>
-                    </>
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const shouldLogout = confirm("Would you like to logout?");
-                    if (shouldLogout) handleLogout();
-                  }}
-                  className="p-2 text-gray-700 hover:text-red-600 transition-colors flex-shrink-0"
-                  aria-label="Logout"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                </Button>
+  return (
+    <header className={`bg-white/80 backdrop-blur-md shadow-md border-b border-slate-200/60 sticky top-0 z-50 ${className}`}>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Left Section: Mobile Menu + Logo */}
+          <div className="flex items-center gap-3">
+            {/* Mobile Menu Button */}
+            {onMobileMenuToggle && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onMobileMenuToggle}
+                className="lg:hidden p-2 hover:bg-slate-100"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-5 w-5 text-slate-600" />
+                ) : (
+                  <Menu className="h-5 w-5 text-slate-600" />
+                )}
+              </Button>
+            )}
+            
+            {/* Logo */}
+            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">U</span>
               </div>
-            </>
+              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                UroCareerz
+              </span>
+            </Link>
+          </div>
+          
+          {/* Right Section: User Menu */}
+          {showUserInfo && (
+            <div className="flex items-center gap-3">
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse" />
+                  <div className="hidden sm:block w-20 h-4 bg-slate-200 rounded animate-pulse" />
+                </div>
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 p-1 h-auto hover:bg-slate-100">
+                      <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
+                        <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="hidden sm:block text-left">
+                        <p className="text-sm font-medium text-slate-900 truncate max-w-[120px]">
+                          {user.firstName || user.email}
+                        </p>
+                        <p className="text-xs text-slate-500 capitalize">
+                          {user.role.toLowerCase()}
+                        </p>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center gap-2 p-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{userName}</p>
+                        <p className="text-xs text-slate-500 capitalize">{user.role.toLowerCase()}</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleEditProfile}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
           )}
         </div>
       </div>
