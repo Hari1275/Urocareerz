@@ -39,7 +39,12 @@ interface MenteeOpportunityFormData {
   sourceName: string;
 }
 
-export default function MenteeOpportunityForm() {
+interface MenteeOpportunityFormProps {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export default function MenteeOpportunityForm({ onSuccess, onCancel }: MenteeOpportunityFormProps = {}) {
   const router = useRouter();
   const { toast } = useToast();
   const { opportunityTypes, loading: typesLoading, getTypeBadge } = useOpportunityTypes();
@@ -124,8 +129,13 @@ export default function MenteeOpportunityForm() {
         sourceName: "",
       });
 
-      // Redirect to mentee dashboard or opportunities list
-      router.push("/dashboard");
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        // Fallback to redirect if no callback provided
+        router.push("/dashboard/mentee");
+      }
     } catch (error) {
       console.error("Error submitting opportunity:", error);
       toast({
@@ -377,7 +387,7 @@ export default function MenteeOpportunityForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.back()}
+              onClick={onCancel || (() => router.back())}
               disabled={loading}
             >
               Cancel

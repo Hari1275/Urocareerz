@@ -48,8 +48,9 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { useNavigation } from "@/hooks/use-navigation";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import MenteeOpportunityForm from "@/components/MenteeOpportunityForm";
-import { LoadingSpinner, LoadingPage, LoadingCard } from "@/components/ui/loading-spinner";
+import { LoadingSpinner, LoadingPage, LoadingCard, LoadingButton, LoadingText } from "@/components/ui/loading-spinner";
 import ProfileStrength from "@/components/ProfileStrength";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -157,6 +158,9 @@ interface MenteeOpportunity {
     firstName: string;
     lastName: string;
   };
+  adminFeedback?: string;
+  sourceUrl?: string;
+  sourceName?: string;
 }
 
 interface DiscussionThread {
@@ -181,6 +185,80 @@ interface DiscussionThread {
 }
 
 type ActiveSection = 'dashboard' | 'opportunities' | 'applications' | 'submissions' | 'saved' | 'submit-opportunity' | 'discussions' | 'new-discussion';
+
+// Infinite Scroll Trigger Component
+interface InfiniteScrollTriggerProps {
+  onLoadMore: () => void;
+  loading: boolean;
+  totalItems: number;
+  currentItems: number;
+  loadingText?: string;
+  buttonText?: string;
+  progressColor?: string;
+}
+
+function InfiniteScrollTrigger({ 
+  onLoadMore, 
+  loading, 
+  totalItems, 
+  currentItems, 
+  loadingText = "Loading more...",
+  buttonText = "Load More",
+  progressColor = "from-emerald-500 to-teal-500"
+}: InfiniteScrollTriggerProps) {
+  const { ref, isIntersecting } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '100px'
+  });
+
+  useEffect(() => {
+    if (isIntersecting && !loading) {
+      onLoadMore();
+    }
+  }, [isIntersecting, loading, onLoadMore]);
+
+  return (
+    <div ref={ref} className="text-center mt-6 sm:mt-8">
+      {loading ? (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2 text-slate-600">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+            <span className="text-sm font-medium">{loadingText}</span>
+          </div>
+        </div>
+      ) : (
+        <Button
+          onClick={onLoadMore}
+          variant="outline"
+          className="bg-white/80 border-slate-200 hover:bg-white px-6 sm:px-8 py-2 sm:py-3"
+        >
+          <span className="text-sm sm:text-base">{buttonText}</span>
+          <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
+      )}
+      
+      {/* Progress Indicator */}
+      <div className="mt-3 space-y-2">
+        <p className="text-xs text-slate-500">
+          Showing {currentItems} of {totalItems} items
+        </p>
+        <div className="w-full max-w-xs mx-auto">
+          <div className="w-full bg-slate-200 rounded-full h-1.5">
+            <div 
+              className={`bg-gradient-to-r ${progressColor} h-1.5 rounded-full transition-all duration-300`}
+              style={{ 
+                width: `${Math.min((currentItems / totalItems) * 100, 100)}%` 
+              }}
+            ></div>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {Math.round((currentItems / totalItems) * 100)}% loaded
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const menuItems = [
   {
@@ -262,6 +340,8 @@ export default function MenteeDashboardPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [savedFilter, setSavedFilter] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [submissionSearchTerm, setSubmissionSearchTerm] = useState("");
+  const [submissionTypeFilter, setSubmissionTypeFilter] = useState("all");
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
   
   // Pagination states
@@ -300,21 +380,28 @@ export default function MenteeDashboardPage() {
   // Apply modal state
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [selectedOpportunityForApply, setSelectedOpportunityForApply] = useState<Opportunity | null>(null);
-  const [applyLoading, setApplyLoading] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
-  const [saveLoading, setSaveLoading] = useState<{[key: string]: boolean}>({});
+  const [applyLoading, setApplyLoading] = useState(false);
   
-  // Opportunity details modal state
+  // Opportunity modal state
   const [showOpportunityModal, setShowOpportunityModal] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [opportunityModalLoading, setOpportunityModalLoading] = useState(false);
   const [opportunityIsSaved, setOpportunityIsSaved] = useState(false);
-
-  // Profile editing modal state
+  
+  // Profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-
+  
+  // Submission modal state
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [showEditSubmissionModal, setShowEditSubmissionModal] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<MenteeOpportunity | null>(null);
+  const [editingSubmission, setEditingSubmission] = useState<Partial<MenteeOpportunity>>({});
+  const [submissionModalLoading, setSubmissionModalLoading] = useState(false);
+  const [savingSubmission, setSavingSubmission] = useState(false);
+  const [saveLoading, setSaveLoading] = useState<{[key: string]: boolean}>({});
   // Check user role and redirect if necessary
   const checkUserRole = async () => {
     try {
@@ -601,6 +688,10 @@ export default function MenteeDashboardPage() {
   };
 
   useEffect(() => {
+    // Set client flag immediately to prevent hydration mismatches
+    setIsClient(true);
+    
+    // Initialize dashboard after client is set
     const initDashboard = async () => {
       await checkUserRole();
       await fetchDashboardData();
@@ -610,10 +701,8 @@ export default function MenteeDashboardPage() {
   }, []);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
+    if (!isClient) return;
+    
     if (activeSection === 'discussions') {
       fetchDiscussions();
     } else if (activeSection === 'opportunities') {
@@ -625,21 +714,19 @@ export default function MenteeDashboardPage() {
     } else if (activeSection === 'submissions') {
       fetchSubmissions(1, true);
     }
-  }, [activeSection]);
+  }, [activeSection, isClient]);
   
   // Handle filter changes for opportunities
   useEffect(() => {
-    if (activeSection === 'opportunities') {
-      fetchOpportunities(1, true);
-    }
-  }, [searchTerm, experienceFilter, typeFilter, savedFilter]);
+    if (!isClient || activeSection !== 'opportunities') return;
+    fetchOpportunities(1, true);
+  }, [searchTerm, experienceFilter, typeFilter, savedFilter, isClient]);
   
   // Handle status filter for submissions
   useEffect(() => {
-    if (activeSection === 'submissions') {
-      fetchSubmissions(1, true);
-    }
-  }, [selectedStatus]);
+    if (!isClient || activeSection !== 'submissions') return;
+    fetchSubmissions(1, true);
+  }, [selectedStatus, isClient]);
 
   const handleLogout = async () => {
     try {
@@ -670,12 +757,7 @@ export default function MenteeDashboardPage() {
       fetchApplications(applicationsPagination.page + 1, false);
     }
   };
-  
-  const loadMoreSubmissions = () => {
-    if (submissionsPagination.page < submissionsPagination.pages && !submissionsPagination.loading) {
-      fetchSubmissions(submissionsPagination.page + 1, false);
-    }
-  };
+
 
   const handleSaveOpportunity = async (opportunityId: string) => {
     setSaveLoading(prev => ({ ...prev, [opportunityId]: true }));
@@ -868,6 +950,99 @@ export default function MenteeDashboardPage() {
     setShowApplyModal(true);
   };
 
+  // Submission handlers
+  const handleViewSubmission = (submission: MenteeOpportunity) => {
+    setSelectedSubmission(submission);
+    setShowSubmissionModal(true);
+  };
+
+  const handleEditSubmission = (submission: MenteeOpportunity) => {
+    setSelectedSubmission(submission);
+    setEditingSubmission({
+      title: submission.title,
+      description: submission.description,
+      location: submission.location,
+      experienceLevel: submission.experienceLevel,
+      requirements: submission.requirements,
+      benefits: submission.benefits,
+      duration: submission.duration,
+      compensation: submission.compensation,
+      applicationDeadline: submission.applicationDeadline,
+      sourceUrl: submission.sourceUrl,
+      sourceName: submission.sourceName,
+    });
+    setShowEditSubmissionModal(true);
+  };
+
+  const handleDeleteSubmission = async (submissionId: string) => {
+    if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/mentee-opportunities/${submissionId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        await fetchSubmissions(1, true); // Refresh submissions
+        setShowSubmissionModal(false);
+        setSelectedSubmission(null);
+        fetchDashboardData(); // Refresh dashboard stats
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete submission');
+      }
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete submission');
+    }
+  };
+
+  const handleSaveSubmission = async () => {
+    if (!selectedSubmission) return;
+    
+    setSavingSubmission(true);
+    try {
+      const requestBody = {
+        ...editingSubmission,
+        opportunityTypeId: selectedSubmission.opportunityType.id,
+      };
+      
+      const response = await fetch(`/api/mentee-opportunities/${selectedSubmission.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.ok) {
+        await fetchSubmissions(1, true); // Refresh submissions
+        setShowEditSubmissionModal(false);
+        setSelectedSubmission(null);
+        setEditingSubmission({});
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update submission');
+      }
+    } catch (error) {
+      console.error('Error updating submission:', error);
+      alert(error instanceof Error ? error.message : 'Failed to update submission');
+    } finally {
+      setSavingSubmission(false);
+    }
+  };
+
+  const handleCloseSubmissionModals = () => {
+    setShowSubmissionModal(false);
+    setShowEditSubmissionModal(false);
+    setSelectedSubmission(null);
+    setEditingSubmission({});
+  };
+
   // Profile editing handlers
   const handleEditProfile = () => {
     setIsEditingProfile(false); // Reset loading state
@@ -952,12 +1127,12 @@ export default function MenteeDashboardPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    // Use a consistent date format to prevent hydration mismatches
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -999,72 +1174,26 @@ export default function MenteeDashboardPage() {
   });
 
   const filteredSubmissions = submissions.filter((submission) => {
-    if (selectedStatus === "all") return true;
-    return submission.status === selectedStatus;
+    const matchesStatus = selectedStatus === "all" || submission.status === selectedStatus;
+    const matchesSearch = submissionSearchTerm === "" || 
+      submission.title.toLowerCase().includes(submissionSearchTerm.toLowerCase()) ||
+      submission.description.toLowerCase().includes(submissionSearchTerm.toLowerCase());
+    const matchesType = submissionTypeFilter === "all" || 
+      (submission.opportunityType && submission.opportunityType.name === submissionTypeFilter);
+    
+    return matchesStatus && matchesSearch && matchesType;
   });
 
-  if (loading) {
+  // Show loading until both data is loaded and client is hydrated
+  if (loading || !isClient) {
     return (
       <LoadingPage 
         title="Loading your dashboard..." 
-        description="Fetching your profile, applications, and opportunities"
+        description="Preparing your personalized experience with opportunities, applications, and profile insights"
         size="lg"
+        variant="elegant"
+        color="blue"
       />
-    );
-  }
-
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-14 sm:h-16">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-xs sm:text-sm">U</span>
-                </div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
-                  UroCareerz
-                </span>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-4">
-                <div className="h-8 w-16 bg-slate-200 rounded animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </header>
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-slate-200 rounded w-1/3"></div>
-            <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-              <div className="lg:col-span-3 hidden lg:block">
-                <div className="space-y-4">
-                  <div className="h-20 bg-slate-200 rounded-xl"></div>
-                  <div className="h-64 bg-slate-200 rounded-xl"></div>
-                </div>
-              </div>
-              <div className="lg:col-span-6">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="h-24 bg-slate-200 rounded-xl"></div>
-                    <div className="h-24 bg-slate-200 rounded-xl"></div>
-                    <div className="h-24 bg-slate-200 rounded-xl"></div>
-                    <div className="h-24 bg-slate-200 rounded-xl"></div>
-                  </div>
-                  <div className="h-48 bg-slate-200 rounded-xl"></div>
-                </div>
-              </div>
-              <div className="lg:col-span-3 hidden lg:block">
-                <div className="space-y-4">
-                  <div className="h-32 bg-slate-200 rounded-xl"></div>
-                  <div className="h-32 bg-slate-200 rounded-xl"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     );
   }
 
@@ -1235,7 +1364,7 @@ export default function MenteeDashboardPage() {
                                     )}
                                   >
                                     {saveLoading[opportunity.id] ? (
-                                      <div className="animate-spin rounded-full h-3 w-3 border-b border-pink-600"></div>
+                                      <LoadingSpinner size="sm" variant="minimal" showText={false} className="h-4 w-4" />
                                     ) : (
                                       <Heart className={cn(
                                         "h-3 w-3",
@@ -1326,19 +1455,15 @@ export default function MenteeDashboardPage() {
                   {opportunityPagination.loading && opportunities.length === 0 ? (
                     <div className="space-y-6">
                       {[...Array(6)].map((_, i) => (
-                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                          <CardContent className="p-6">
-                            <div className="animate-pulse space-y-4">
-                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
-                              <div className="h-4 bg-slate-200 rounded w-full"></div>
-                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
-                              <div className="flex gap-2">
-                                <div className="h-6 bg-slate-200 rounded w-20"></div>
-                                <div className="h-6 bg-slate-200 rounded w-24"></div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <LoadingCard 
+                          key={i} 
+                          title="Loading opportunities..." 
+                          description="Finding the best matches for your career goals"
+                          className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
+                          size="md"
+                          variant="pulse"
+                          color="blue"
+                        />
                       ))}
                     </div>
                   ) : opportunities.length === 0 ? (
@@ -1391,7 +1516,7 @@ export default function MenteeDashboardPage() {
                                   )}
                                 >
                                   {saveLoading[opportunity.id] ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
+                                    <LoadingSpinner size="sm" variant="minimal" showText={false} className="h-4 w-4" />
                                   ) : (
                                     <Heart className={cn(
                                       "h-4 w-4",
@@ -1416,31 +1541,17 @@ export default function MenteeDashboardPage() {
                         </Card>
                       ))}
                       
-                      {/* Load More Button */}
+                      {/* Infinite Scroll Load More */}
                       {opportunityPagination.page < opportunityPagination.pages && (
-                        <div className="text-center mt-8">
-                          <Button
-                            onClick={loadMoreOpportunities}
-                            disabled={opportunityPagination.loading}
-                            variant="outline"
-                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
-                          >
-                            {opportunityPagination.loading ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
-                                Loading more...
-                              </>
-                            ) : (
-                              <>
-                                Load More Opportunities
-                                <ArrowRight className="h-4 w-4 ml-2" />
-                              </>
-                            )}
-                          </Button>
-                          <p className="text-xs text-slate-500 mt-2">
-                            Showing {opportunities.length} of {opportunityPagination.total} opportunities
-                          </p>
-                        </div>
+                        <InfiniteScrollTrigger
+                          onLoadMore={loadMoreOpportunities}
+                          loading={opportunityPagination.loading}
+                          totalItems={opportunityPagination.total}
+                          currentItems={opportunities.length}
+                          loadingText="Loading more opportunities..."
+                          buttonText="Load More Opportunities"
+                          progressColor="from-blue-500 to-indigo-500"
+                        />
                       )}
                     </>
                   )}
@@ -1459,19 +1570,15 @@ export default function MenteeDashboardPage() {
                   {applicationsPagination.loading && applications.length === 0 ? (
                     <div className="space-y-6">
                       {[...Array(5)].map((_, i) => (
-                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                          <CardContent className="p-6">
-                            <div className="animate-pulse space-y-4">
-                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
-                              <div className="h-4 bg-slate-200 rounded w-full"></div>
-                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
-                              <div className="flex gap-2">
-                                <div className="h-6 bg-slate-200 rounded w-20"></div>
-                                <div className="h-6 bg-slate-200 rounded w-24"></div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <LoadingCard 
+                          key={i} 
+                          title="Loading applications..." 
+                          description="Retrieving your application status and details"
+                          className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
+                          size="md"
+                          variant="dots"
+                          color="indigo"
+                        />
                       ))}
                     </div>
                   ) : applications.length === 0 ? (
@@ -1526,31 +1633,17 @@ export default function MenteeDashboardPage() {
                         </Card>
                       ))}
                       
-                      {/* Load More Button */}
+                      {/* Infinite Scroll Load More */}
                       {applicationsPagination.page < applicationsPagination.pages && (
-                        <div className="text-center mt-8">
-                          <Button
-                            onClick={loadMoreApplications}
-                            disabled={applicationsPagination.loading}
-                            variant="outline"
-                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
-                          >
-                            {applicationsPagination.loading ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
-                                Loading more...
-                              </>
-                            ) : (
-                              <>
-                                Load More Applications
-                                <ArrowRight className="h-4 w-4 ml-2" />
-                              </>
-                            )}
-                          </Button>
-                          <p className="text-xs text-slate-500 mt-2">
-                            Showing {applications.length} of {applicationsPagination.total} applications
-                          </p>
-                        </div>
+                        <InfiniteScrollTrigger
+                          onLoadMore={loadMoreApplications}
+                          loading={applicationsPagination.loading}
+                          totalItems={applicationsPagination.total}
+                          currentItems={applications.length}
+                          loadingText="Loading more applications..."
+                          buttonText="Load More Applications"
+                          progressColor="from-indigo-500 to-purple-500"
+                        />
                       )}
                     </>
                   )}
@@ -1558,134 +1651,7 @@ export default function MenteeDashboardPage() {
               </div>
             )}
 
-            {activeSection === 'submissions' && (
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
-                    My <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">Submissions</span>
-                  </h1>
-                  <p className="text-slate-600">Track opportunities you've submitted for admin review.</p>
-                </div>
-                
-                {/* Status Summary Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {(() => {
-                    const counts = {
-                      total: submissions.length,
-                      pending: submissions.filter(sub => sub.status === 'PENDING').length,
-                      approved: submissions.filter(sub => sub.status === 'APPROVED').length,
-                      rejected: submissions.filter(sub => sub.status === 'REJECTED').length,
-                    };
-                    return [
-                      { title: "Total", count: counts.total, color: "text-blue-600", icon: "📄", status: "all" },
-                      { title: "Pending", count: counts.pending, color: "text-amber-600", icon: "⏳", status: "PENDING" },
-                      { title: "Approved", count: counts.approved, color: "text-emerald-600", icon: "✅", status: "APPROVED" },
-                      { title: "Rejected", count: counts.rejected, color: "text-red-600", icon: "❌", status: "REJECTED" },
-                    ].map((item, index) => (
-                      <Card 
-                        key={index} 
-                        className={cn(
-                          "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl",
-                          selectedStatus === item.status ? 'ring-2 ring-blue-500' : ''
-                        )}
-                        onClick={() => setSelectedStatus(item.status)}
-                      >
-                        <CardContent className="p-6 text-center">
-                          <div className="text-2xl mb-2">{item.icon}</div>
-                          <div className={`text-2xl font-bold ${item.color} mb-1`}>{item.count}</div>
-                          <div className="text-sm text-slate-600 font-medium">{item.title}</div>
-                        </CardContent>
-                      </Card>
-                    ));
-                  })()}
-                </div>
 
-                {/* Submissions List */}
-                <div className="space-y-4">
-                  {submissionsPagination.loading && submissions.length === 0 ? (
-                    <div className="space-y-4">
-                      {[...Array(5)].map((_, i) => (
-                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                          <CardContent className="p-6">
-                            <div className="animate-pulse space-y-4">
-                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
-                              <div className="h-4 bg-slate-200 rounded w-full"></div>
-                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
-                              <div className="flex gap-2">
-                                <div className="h-6 bg-slate-200 rounded w-20"></div>
-                                <div className="h-6 bg-slate-200 rounded w-24"></div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : submissions.length === 0 ? (
-                    <div className="text-center py-16">
-                      <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-emerald-100 to-teal-200 flex items-center justify-center">
-                        <Send className="h-12 w-12 text-emerald-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">No submissions yet</h3>
-                      <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                        Start contributing to the community by submitting opportunities you've found.
-                      </p>
-                      <Button onClick={() => setActiveSection('submit-opportunity')} className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
-                        Submit Opportunity
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      {submissions.map((submission) => (
-                        <Card key={submission.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                          <CardContent className="p-6">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <h3 className="text-lg font-bold text-slate-900 mb-2">{submission.title}</h3>
-                                <p className="text-slate-600 text-sm mb-3 line-clamp-2">{submission.description}</p>
-                                <div className="flex items-center gap-3">
-                                  {getStatusBadge(submission.status)}
-                                  <div className="flex items-center gap-1 text-sm text-slate-500">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>Submitted {formatDate(submission.createdAt)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      
-                      {/* Load More Button */}
-                      {submissionsPagination.page < submissionsPagination.pages && (
-                        <div className="text-center mt-8">
-                          <Button
-                            onClick={loadMoreSubmissions}
-                            disabled={submissionsPagination.loading}
-                            variant="outline"
-                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
-                          >
-                            {submissionsPagination.loading ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
-                                Loading more...
-                              </>
-                            ) : (
-                              <>
-                                Load More Submissions
-                                <ArrowRight className="h-4 w-4 ml-2" />
-                              </>
-                            )}
-                          </Button>
-                          <p className="text-xs text-slate-500 mt-2">
-                            Showing {submissions.length} of {submissionsPagination.total} submissions
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
 
             {activeSection === 'saved' && (
               <div className="space-y-6">
@@ -1700,19 +1666,15 @@ export default function MenteeDashboardPage() {
                   {savedPagination.loading && savedOpportunities.length === 0 ? (
                     <div className="space-y-4">
                       {[...Array(5)].map((_, i) => (
-                        <Card key={i} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                          <CardContent className="p-6">
-                            <div className="animate-pulse space-y-4">
-                              <div className="h-6 bg-slate-200 rounded w-3/4"></div>
-                              <div className="h-4 bg-slate-200 rounded w-full"></div>
-                              <div className="h-4 bg-slate-200 rounded w-2/3"></div>
-                              <div className="flex gap-2">
-                                <div className="h-6 bg-slate-200 rounded w-20"></div>
-                                <div className="h-6 bg-slate-200 rounded w-24"></div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <LoadingCard 
+                          key={i} 
+                          title="Loading saved opportunities..." 
+                          description="Retrieving your bookmarked career opportunities"
+                          className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
+                          size="md"
+                          variant="pulse"
+                          color="purple"
+                        />
                       ))}
                     </div>
                   ) : savedOpportunities.length === 0 ? (
@@ -1777,31 +1739,17 @@ export default function MenteeDashboardPage() {
                         </Card>
                       ))}
                       
-                      {/* Load More Button */}
+                      {/* Infinite Scroll Load More */}
                       {savedPagination.page < savedPagination.pages && (
-                        <div className="text-center mt-8">
-                          <Button
-                            onClick={loadMoreSaved}
-                            disabled={savedPagination.loading}
-                            variant="outline"
-                            className="bg-white/80 border-slate-200 hover:bg-white px-8 py-3"
-                          >
-                            {savedPagination.loading ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
-                                Loading more...
-                              </>
-                            ) : (
-                              <>
-                                Load More Saved Opportunities
-                                <ArrowRight className="h-4 w-4 ml-2" />
-                              </>
-                            )}
-                          </Button>
-                          <p className="text-xs text-slate-500 mt-2">
-                            Showing {savedOpportunities.length} of {savedPagination.total} saved opportunities
-                          </p>
-                        </div>
+                        <InfiniteScrollTrigger
+                          onLoadMore={loadMoreSaved}
+                          loading={savedPagination.loading}
+                          totalItems={savedPagination.total}
+                          currentItems={savedOpportunities.length}
+                          loadingText="Loading more saved opportunities..."
+                          buttonText="Load More Saved Opportunities"
+                          progressColor="from-pink-500 to-rose-500"
+                        />
                       )}
                     </>
                   )}
@@ -1822,7 +1770,15 @@ export default function MenteeDashboardPage() {
                 
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                   <CardContent className="p-8">
-                    <MenteeOpportunityForm />
+                    <MenteeOpportunityForm 
+                      onSuccess={() => {
+                        // Switch to submissions tab and refresh data
+                        setActiveSection('submissions');
+                        fetchSubmissions(1, true);
+                        fetchDashboardData(); // Refresh dashboard stats
+                      }}
+                      onCancel={() => setActiveSection('dashboard')}
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -1854,8 +1810,11 @@ export default function MenteeDashboardPage() {
                 {discussionsLoading ? (
                   <LoadingCard 
                     title="Loading discussions..." 
+                    description="Connecting you with community conversations and expert insights"
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
-                    size="md"
+                    size="lg"
+                    variant="elegant"
+                    color="purple"
                   />
                 ) : (
                   <DiscussionThreadsList
@@ -1865,6 +1824,204 @@ export default function MenteeDashboardPage() {
                     onNewDiscussion={() => setActiveSection('new-discussion')}
                   />
                 )}
+              </div>
+            )}
+
+            {activeSection === 'submissions' && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-4">
+                    My <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Submissions</span>
+                  </h1>
+                  <p className="text-sm sm:text-base text-slate-600 mb-6 max-w-2xl mx-auto">
+                    Track and manage the opportunities you've submitted for review.
+                  </p>
+                </div>
+                
+                {/* Filters */}
+                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="space-y-4">
+                      {/* Search Row */}
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                        <div className="flex-1 min-w-0">
+                          <Input
+                            placeholder="Search submissions..."
+                            value={submissionSearchTerm}
+                            onChange={(e) => setSubmissionSearchTerm(e.target.value)}
+                            className="bg-white/80 w-full"
+                          />
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:w-auto">
+                          <div className="w-full sm:w-48">
+                            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                              <SelectTrigger className="bg-white/80 w-full">
+                                <SelectValue placeholder="Filter by Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="PENDING">Pending Review</SelectItem>
+                                <SelectItem value="APPROVED">Approved</SelectItem>
+                                <SelectItem value="REJECTED">Rejected</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="w-full sm:w-48">
+                            <Select value={submissionTypeFilter} onValueChange={setSubmissionTypeFilter}>
+                              <SelectTrigger className="bg-white/80 w-full">
+                                <SelectValue placeholder="Filter by Type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All Types</SelectItem>
+                                {opportunityTypes.map((type) => (
+                                  <SelectItem key={type.id} value={type.name}>{type.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Action Button Row */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-slate-100">
+                        <div className="text-xs text-slate-500 flex items-center gap-2">
+                          <span className="hidden sm:inline">💡 Tip:</span>
+                          <span>Use filters to find specific submissions quickly</span>
+                        </div>
+                        <Button 
+                          onClick={() => setActiveSection('submit-opportunity')}
+                          className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 px-6 py-2 w-full sm:w-auto"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Submit New Opportunity
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Submissions Grid */}
+                <div className="space-y-6">
+                  {submissionsPagination.loading && submissions.length === 0 ? (
+                    <div className="space-y-6">
+                      {[...Array(3)].map((_, i) => (
+                        <LoadingCard 
+                          key={i} 
+                          title="Loading submissions..." 
+                          description="Fetching your submitted opportunities"
+                          className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
+                          size="md"
+                          variant="pulse"
+                          color="emerald"
+                        />
+                      ))}
+                    </div>
+                  ) : filteredSubmissions.length === 0 ? (
+                    <div className="text-center py-12 sm:py-16">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
+                        <Send className="h-10 w-10 sm:h-12 sm:w-12 text-slate-400" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">No submissions found</h3>
+                      <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6 max-w-md mx-auto px-4">
+                        {selectedStatus === 'all' 
+                          ? "You haven't submitted any opportunities yet. Share opportunities you've discovered with the community!"
+                          : `No submissions with ${selectedStatus.toLowerCase()} status found.`
+                        }
+                      </p>
+                      <Button 
+                        onClick={() => setActiveSection('submit-opportunity')}
+                        className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Submit Your First Opportunity
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {filteredSubmissions.map((submission) => (
+                        <Card key={submission.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-300">
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                  <h3 className="text-base sm:text-lg font-bold text-slate-900 line-clamp-1">{submission.title}</h3>
+                                  {getStatusBadge(submission.status)}
+                                </div>
+                                <p className="text-slate-600 text-sm line-clamp-2 mb-3">{submission.description}</p>
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                                  {submission.opportunityType && (
+                                    <Badge 
+                                      variant="secondary" 
+                                      className="rounded-lg text-xs"
+                                      style={{
+                                        backgroundColor: submission.opportunityType.color ? `${submission.opportunityType.color}20` : '#f1f5f9',
+                                        color: submission.opportunityType.color || '#64748b',
+                                        borderColor: submission.opportunityType.color || '#e2e8f0'
+                                      }}
+                                    >
+                                      {submission.opportunityType.name}
+                                    </Badge>
+                                  )}
+                                  {submission.location && (
+                                    <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-500">
+                                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                                      <span className="truncate max-w-32 sm:max-w-none">{submission.location}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-500">
+                                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <span>Submitted {formatDate(submission.createdAt)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleViewSubmission(submission)}
+                                  className="border-slate-200 hover:bg-slate-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                                >
+                                  <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <span className="hidden sm:ml-2 sm:inline">View</span>
+                                </Button>
+                                {submission.status === 'PENDING' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEditSubmission(submission)}
+                                    className="border-slate-200 hover:bg-slate-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                                  >
+                                    <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <span className="hidden sm:ml-2 sm:inline">Edit</span>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {submission.status === 'REJECTED' && submission.adminFeedback && (
+                              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-sm font-medium text-red-800 mb-1">Admin Feedback:</p>
+                                <p className="text-sm text-red-700">{submission.adminFeedback}</p>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Infinite Scroll Load More */}
+                      {submissionsPagination.page < submissionsPagination.pages && (
+                        <InfiniteScrollTrigger
+                          onLoadMore={() => fetchSubmissions(submissionsPagination.page + 1)}
+                          loading={submissionsPagination.loading}
+                          totalItems={submissionsPagination.total}
+                          currentItems={submissions.length}
+                          loadingText="Loading more submissions..."
+                          buttonText="Load More Submissions"
+                          progressColor="from-emerald-500 to-teal-500"
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             )}
 
@@ -2067,10 +2224,7 @@ export default function MenteeDashboardPage() {
                 disabled={applyLoading || !coverLetter.trim()}
               >
                 {applyLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Submitting...
-                  </>
+                  <LoadingButton size="md" className="flex-1" />
                 ) : (
                   'Submit Application'
                 )}
@@ -2087,12 +2241,16 @@ export default function MenteeDashboardPage() {
             <>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
-                  Loading Opportunity
+                  Loading Opportunity Details
                 </DialogTitle>
               </DialogHeader>
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-slate-600">Loading opportunity details...</span>
+                <LoadingSpinner 
+                  size="lg" 
+                  variant="elegant" 
+                  color="blue"
+                  text="Loading opportunity details..."
+                />
               </div>
             </>
           ) : selectedOpportunity ? (
@@ -2306,6 +2464,407 @@ export default function MenteeDashboardPage() {
                 <p className="text-slate-600">Failed to load opportunity details</p>
               </div>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Submission View Modal */}
+      <Dialog open={showSubmissionModal} onOpenChange={() => setShowSubmissionModal(false)}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedSubmission ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                  {selectedSubmission.title}
+                </DialogTitle>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    {selectedSubmission.opportunityType && (
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs font-medium"
+                        style={{
+                          backgroundColor: selectedSubmission.opportunityType.color ? `${selectedSubmission.opportunityType.color}20` : undefined,
+                          color: selectedSubmission.opportunityType.color || undefined,
+                          borderColor: selectedSubmission.opportunityType.color || undefined
+                        }}
+                      >
+                        {selectedSubmission.opportunityType.name}
+                      </Badge>
+                    )}
+                    {getStatusBadge(selectedSubmission.status)}
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-4 text-slate-600 text-sm">
+                    {selectedSubmission.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>{selectedSubmission.location}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Submitted {formatDate(selectedSubmission.createdAt)}</span>
+                    </div>
+                    {selectedSubmission.experienceLevel && (
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        <span>{getExperienceLevelLabel(selectedSubmission.experienceLevel)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Description */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Description</h3>
+                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    {selectedSubmission.description}
+                  </p>
+                </div>
+
+                {/* Requirements */}
+                {selectedSubmission.requirements && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Requirements</h3>
+                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {selectedSubmission.requirements}
+                    </p>
+                  </div>
+                )}
+
+                {/* Benefits */}
+                {selectedSubmission.benefits && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Benefits</h3>
+                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {selectedSubmission.benefits}
+                    </p>
+                  </div>
+                )}
+
+                {/* Quick Info Grid */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Quick Info</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedSubmission.experienceLevel && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <User className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Experience Level</p>
+                          <p className="text-sm text-slate-600">
+                            {getExperienceLevelLabel(selectedSubmission.experienceLevel)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedSubmission.duration && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Duration</p>
+                          <p className="text-sm text-slate-600">
+                            {selectedSubmission.duration}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedSubmission.compensation && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <div className="h-5 w-5 text-blue-600 font-bold text-lg">₹</div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Compensation</p>
+                          <p className="text-sm text-slate-600">
+                            {selectedSubmission.compensation}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedSubmission.applicationDeadline && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">
+                            Application Deadline
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {formatDate(selectedSubmission.applicationDeadline)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Source Information */}
+                {(selectedSubmission.sourceUrl || selectedSubmission.sourceName) && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Source Information</h3>
+                    <div className="space-y-2">
+                      {selectedSubmission.sourceName && (
+                        <p className="text-sm text-slate-600">
+                          <span className="font-medium">Source:</span> {selectedSubmission.sourceName}
+                        </p>
+                      )}
+                      {selectedSubmission.sourceUrl && (
+                        <p className="text-sm">
+                          <span className="font-medium text-slate-600">URL:</span>{' '}
+                          <a 
+                            href={selectedSubmission.sourceUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-700 underline"
+                          >
+                            {selectedSubmission.sourceUrl}
+                          </a>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Feedback */}
+                {selectedSubmission.status === 'REJECTED' && selectedSubmission.adminFeedback && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Admin Feedback</h3>
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-red-800">{selectedSubmission.adminFeedback}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Modal Actions */}
+              <div className="flex gap-3 pt-6 border-t">
+                <Button
+                  variant="outline"
+                  onClick={handleCloseSubmissionModals}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+                {selectedSubmission.status === 'PENDING' && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDeleteSubmission(selectedSubmission.id)}
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      Delete
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowSubmissionModal(false);
+                        handleEditSubmission(selectedSubmission);
+                      }}
+                      className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
+                    >
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Edit Submission
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Submission Details
+                </DialogTitle>
+              </DialogHeader>
+              <div className="text-center py-8">
+                <p className="text-slate-600">Failed to load submission details</p>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Submission Edit Modal */}
+      <Dialog open={showEditSubmissionModal} onOpenChange={() => setShowEditSubmissionModal(false)}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500">
+                <Edit3 className="h-5 w-5 text-white" />
+              </div>
+              Edit Submission
+            </DialogTitle>
+            <DialogDescription className="text-slate-600">
+              Update your submission details. Changes will be reviewed by our admin team.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSubmission && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveSubmission();
+            }} className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-title">Opportunity Title *</Label>
+                  <Input
+                    id="edit-title"
+                    value={editingSubmission.title || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., Research Assistant Position"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-location">Location</Label>
+                  <Input
+                    id="edit-location"
+                    value={editingSubmission.location || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="e.g., New York, NY or Remote"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description *</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingSubmission.description || ''}
+                  onChange={(e) => setEditingSubmission(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Provide a detailed description of the opportunity..."
+                  rows={4}
+                  required
+                />
+              </div>
+
+              {/* Experience Level and Duration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-experienceLevel">Experience Level</Label>
+                  <Select
+                    value={editingSubmission.experienceLevel || 'not-specified'}
+                    onValueChange={(value) => setEditingSubmission(prev => ({ ...prev, experienceLevel: value === 'not-specified' ? undefined : value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select experience level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="not-specified">Not specified</SelectItem>
+                      <SelectItem value="ENTRY">Entry Level</SelectItem>
+                      <SelectItem value="MID">Mid Level</SelectItem>
+                      <SelectItem value="SENIOR">Senior Level</SelectItem>
+                      <SelectItem value="EXPERT">Expert Level</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-duration">Duration</Label>
+                  <Input
+                    id="edit-duration"
+                    value={editingSubmission.duration || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, duration: e.target.value }))}
+                    placeholder="e.g., 6 months, 1 year"
+                  />
+                </div>
+              </div>
+
+              {/* Requirements and Benefits */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-requirements">Requirements</Label>
+                  <Textarea
+                    id="edit-requirements"
+                    value={editingSubmission.requirements || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, requirements: e.target.value }))}
+                    placeholder="List the requirements for this opportunity..."
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-benefits">Benefits</Label>
+                  <Textarea
+                    id="edit-benefits"
+                    value={editingSubmission.benefits || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, benefits: e.target.value }))}
+                    placeholder="List the benefits of this opportunity..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* Compensation and Deadline */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-compensation">Compensation</Label>
+                  <Input
+                    id="edit-compensation"
+                    value={editingSubmission.compensation || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, compensation: e.target.value }))}
+                    placeholder="50,000/year, Stipend provided, Free"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-applicationDeadline">Application Deadline</Label>
+                  <Input
+                    id="edit-applicationDeadline"
+                    type="date"
+                    value={editingSubmission.applicationDeadline ? new Date(editingSubmission.applicationDeadline).toISOString().split('T')[0] : ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, applicationDeadline: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Source Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-sourceName">Source Name</Label>
+                  <Input
+                    id="edit-sourceName"
+                    value={editingSubmission.sourceName || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, sourceName: e.target.value }))}
+                    placeholder="e.g., LinkedIn, Company Website"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-sourceUrl">Source URL</Label>
+                  <Input
+                    id="edit-sourceUrl"
+                    type="url"
+                    value={editingSubmission.sourceUrl || ''}
+                    onChange={(e) => setEditingSubmission(prev => ({ ...prev, sourceUrl: e.target.value }))}
+                    placeholder="https://example.com/opportunity"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 pt-6 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseSubmissionModals}
+                  disabled={savingSubmission}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={savingSubmission || !editingSubmission.title || !editingSubmission.description}
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
+                >
+                  {savingSubmission ? (
+                    <LoadingSpinner size="sm" variant="minimal" showText={false} className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Edit3 className="h-4 w-4 mr-2" />
+                  )}
+                  {savingSubmission ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
           )}
         </DialogContent>
       </Dialog>

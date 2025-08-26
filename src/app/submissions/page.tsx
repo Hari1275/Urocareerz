@@ -1046,11 +1046,12 @@ export default function SubmissionsPage() {
                 </div>
                 <div>
                   <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
-                  <Select value={editingOpportunity.experienceLevel || ''} onValueChange={(value) => setEditingOpportunity(prev => ({ ...prev, experienceLevel: value }))}>
+                  <Select value={editingOpportunity.experienceLevel || 'not-specified'} onValueChange={(value) => setEditingOpportunity(prev => ({ ...prev, experienceLevel: value === 'not-specified' ? undefined : value }))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="not-specified">Not specified</SelectItem>
                       <SelectItem value="entry">Entry Level</SelectItem>
                       <SelectItem value="mid">Mid Level</SelectItem>
                       <SelectItem value="senior">Senior Level</SelectItem>
@@ -1063,11 +1064,12 @@ export default function SubmissionsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="duration" className="text-sm font-medium text-gray-700">Duration</Label>
-                  <Select value={editingOpportunity.duration || ''} onValueChange={(value) => setEditingOpportunity(prev => ({ ...prev, duration: value }))}>
+                  <Select value={editingOpportunity.duration || 'not-specified'} onValueChange={(value) => setEditingOpportunity(prev => ({ ...prev, duration: value === 'not-specified' ? undefined : value }))}>
                     <SelectTrigger className="mt-1 text-gray-900">
                       <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="not-specified" className="text-gray-900">Not specified</SelectItem>
                       <SelectItem value="1-3 months" className="text-gray-900">1-3 months</SelectItem>
                       <SelectItem value="3-6 months" className="text-gray-900">3-6 months</SelectItem>
                       <SelectItem value="6 months" className="text-gray-900">6 months</SelectItem>
