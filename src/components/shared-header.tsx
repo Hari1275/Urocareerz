@@ -27,13 +27,15 @@ interface SharedHeaderProps {
   className?: string;
   onMobileMenuToggle?: () => void;
   isMobileMenuOpen?: boolean;
+  onEditProfile?: () => void;
 }
 
-export default function SharedHeader({ 
-  showUserInfo = true, 
+export default function SharedHeader({
+  showUserInfo = true,
   className = "",
   onMobileMenuToggle,
-  isMobileMenuOpen = false
+  isMobileMenuOpen = false,
+  onEditProfile,
 }: SharedHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -73,6 +75,10 @@ export default function SharedHeader({
   };
 
   const handleEditProfile = () => {
+    if (onEditProfile) {
+      onEditProfile();
+      return;
+    }
     router.push("/profile");
   };
 
@@ -87,18 +93,20 @@ export default function SharedHeader({
     }
   }, [isClient, showUserInfo, user]);
 
-  const userName = user 
-    ? (user.firstName && user.lastName 
-      ? `${user.firstName} ${user.lastName}` 
-      : user.firstName || user.lastName || user.email || "User")
+  const userName = user
+    ? user.firstName && user.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user.firstName || user.lastName || user.email || "User"
     : "User";
 
   const userInitials = user
-    ? (user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()
-    : 'U';
+    ? (user.firstName?.[0] || user.email?.[0] || "U").toUpperCase()
+    : "U";
 
   return (
-    <header className={`bg-white/80 backdrop-blur-md shadow-md border-b border-slate-200/60 sticky top-0 z-50 ${className}`}>
+    <header
+      className={`bg-white/80 backdrop-blur-md shadow-md border-b border-slate-200/60 sticky top-0 z-50 ${className}`}
+    >
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left Section: Mobile Menu + Logo */}
@@ -119,9 +127,12 @@ export default function SharedHeader({
                 )}
               </Button>
             )}
-            
+
             {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 flex-shrink-0"
+            >
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">U</span>
               </div>
@@ -130,7 +141,7 @@ export default function SharedHeader({
               </span>
             </Link>
           </div>
-          
+
           {/* Right Section: User Menu */}
           {showUserInfo && (
             <div className="flex items-center gap-3">
@@ -142,7 +153,10 @@ export default function SharedHeader({
               ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 p-1 h-auto hover:bg-slate-100">
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2 p-1 h-auto hover:bg-slate-100"
+                    >
                       <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
                         <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm">
                           {userInitials}
@@ -167,7 +181,9 @@ export default function SharedHeader({
                       </Avatar>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium">{userName}</p>
-                        <p className="text-xs text-slate-500 capitalize">{user.role.toLowerCase()}</p>
+                        <p className="text-xs text-slate-500 capitalize">
+                          {user.role.toLowerCase()}
+                        </p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
@@ -176,7 +192,10 @@ export default function SharedHeader({
                       <span>Profile Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-red-600 focus:text-red-600"
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Sign out</span>
                     </DropdownMenuItem>
@@ -189,4 +208,4 @@ export default function SharedHeader({
       </div>
     </header>
   );
-} 
+}

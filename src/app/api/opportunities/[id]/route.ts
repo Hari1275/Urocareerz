@@ -175,3 +175,66 @@ export async function GET(
     );
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: opportunityId } = await params;
+
+    const token = req.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+
+    const decoded = await verifyEdgeToken(token, secret);
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { error: "User ID not found in token" },
+        { status: 401 }
+      );
+    }
+
+    // Fetch opportunity
+    const existing = await prisma.opportunity.findUnique({
+      where: { id: opportunityId },
+    });
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 }
+      );
+    }
+
+    // Only creator can delete
+    if ((existing as any).creatorId !== decoded.userId) {
+      return NextResponse.json(
+        { error: "You can only delete your own opportunities" },
+        { status: 403 }
+      );
+    }
+
+    // Soft delete by setting deletedAt
+    await prisma.opportunity.update({
+      where: { id: opportunityId },
+      data: { deletedAt: new Date() },
+    } as any);
+
+    return NextResponse.json({ message: "Opportunity deleted" });
+  } catch (error) {
+    console.error("Error deleting opportunity:", error);
+    return NextResponse.json(
+      { error: "Failed to delete opportunity" },
+      { status: 500 }
+    );
+  }
+}

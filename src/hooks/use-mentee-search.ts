@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 
 export interface Mentee {
@@ -40,10 +42,10 @@ export function useMenteeSearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
-    location: '',
-    experienceLevel: '',
-    interests: ''
+    query: "",
+    location: "",
+    experienceLevel: "",
+    interests: "",
   });
   const [pagination, setPagination] = useState<SearchPagination>({
     page: 1,
@@ -51,7 +53,7 @@ export function useMenteeSearch() {
     total: 0,
     totalPages: 0,
     hasNext: false,
-    hasPrev: false
+    hasPrev: false,
   });
 
   // Debounced search function
@@ -67,23 +69,23 @@ export function useMenteeSearch() {
           experienceLevel: searchFilters.experienceLevel,
           interests: searchFilters.interests,
           page: page.toString(),
-          limit: pagination.limit.toString()
+          limit: pagination.limit.toString(),
         });
 
         const response = await fetch(`/api/mentees/search?${params}`, {
-          credentials: 'include'
+          credentials: "include",
         });
 
         if (!response.ok) {
-          throw new Error('Failed to search mentees');
+          throw new Error("Failed to search mentees");
         }
 
         const data = await response.json();
         setMentees(data.mentees);
         setPagination(data.pagination);
       } catch (err) {
-        console.error('Search error:', err);
-        setError(err instanceof Error ? err.message : 'Search failed');
+        console.error("Search error:", err);
+        setError(err instanceof Error ? err.message : "Search failed");
         setMentees([]);
       } finally {
         setLoading(false);
@@ -93,29 +95,35 @@ export function useMenteeSearch() {
   );
 
   // Update filters and trigger search
-  const updateFilters = useCallback((newFilters: Partial<SearchFilters>) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
-    debouncedSearch(updatedFilters, 1);
-  }, [filters, debouncedSearch]);
+  const updateFilters = useCallback(
+    (newFilters: Partial<SearchFilters>) => {
+      const updatedFilters = { ...filters, ...newFilters };
+      setFilters(updatedFilters);
+      setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page
+      debouncedSearch(updatedFilters, 1);
+    },
+    [filters, debouncedSearch]
+  );
 
   // Change page
-  const changePage = useCallback((newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
-    debouncedSearch(filters, newPage);
-  }, [filters, debouncedSearch]);
+  const changePage = useCallback(
+    (newPage: number) => {
+      setPagination((prev) => ({ ...prev, page: newPage }));
+      debouncedSearch(filters, newPage);
+    },
+    [filters, debouncedSearch]
+  );
 
   // Clear search
   const clearSearch = useCallback(() => {
     const clearedFilters = {
-      query: '',
-      location: '',
-      experienceLevel: '',
-      interests: ''
+      query: "",
+      location: "",
+      experienceLevel: "",
+      interests: "",
     };
     setFilters(clearedFilters);
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
     debouncedSearch(clearedFilters, 1);
   }, [debouncedSearch]);
 
@@ -132,7 +140,7 @@ export function useMenteeSearch() {
     pagination,
     updateFilters,
     changePage,
-    clearSearch
+    clearSearch,
   };
 }
 
@@ -146,4 +154,4 @@ function debounce<T extends (...args: any[]) => any>(
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
-} 
+}
