@@ -31,6 +31,11 @@ interface DiscussionThreadFormData {
   tags: string[];
 }
 
+interface DiscussionThreadFormProps {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
 const categoryOptions = [
   { value: "GENERAL", label: "General Discussion" },
   { value: "CASE_DISCUSSION", label: "Case Discussion" },
@@ -40,7 +45,7 @@ const categoryOptions = [
   { value: "RESOURCES", label: "Resources & Tools" },
 ];
 
-export default function DiscussionThreadForm() {
+export default function DiscussionThreadForm({ onSuccess, onCancel }: DiscussionThreadFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -133,8 +138,12 @@ export default function DiscussionThreadForm() {
         description: "Your discussion thread has been created successfully.",
       });
 
-      // Return to previous screen (dashboard/mentee → discussions tab)
-      router.back();
+      // Use the onSuccess callback if provided, otherwise fall back to router.back()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.back();
+      }
     } catch (error) {
       console.error("Error creating discussion:", error);
       toast({
@@ -147,6 +156,22 @@ export default function DiscussionThreadForm() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.back();
+    }
+  };
+
+  const handleBack = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.back();
     }
   };
 
@@ -352,7 +377,7 @@ export default function DiscussionThreadForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.back()}
+          onClick={handleBack}
           disabled={loading}
           className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:border-blue-500 w-full sm:w-auto"
         >
@@ -362,7 +387,7 @@ export default function DiscussionThreadForm() {
         <div className="flex gap-3 w-full sm:w-auto">
           <Button
             variant="outline"
-            onClick={() => router.push("/dashboard")}
+            onClick={handleCancel}
             className="text-gray-700 hover:text-blue-600 transition-colors"
           >
             Cancel

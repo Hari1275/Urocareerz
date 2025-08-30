@@ -2491,7 +2491,14 @@ export default function MenteeDashboardPage() {
                 </div>
 
                 {/* Discussion Form */}
-                <DiscussionThreadForm />
+                <DiscussionThreadForm
+                  onSuccess={() => {
+                    // Switch back to discussions tab and refresh the discussions
+                    setActiveSection("discussions");
+                    fetchDiscussions();
+                  }}
+                  onCancel={() => setActiveSection("discussions")}
+                />
               </div>
             )}
           </div>
