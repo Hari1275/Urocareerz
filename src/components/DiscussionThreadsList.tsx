@@ -88,15 +88,17 @@ export default function DiscussionThreadsList({
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    const categoryParam = category === "ALL" ? "all" : category;
-    const statusParam = selectedStatus === "ACTIVE" ? "all" : selectedStatus;
+    const categoryParam = category === "ALL" ? undefined : category;
+    const statusParam =
+      selectedStatus === "ACTIVE" ? undefined : selectedStatus;
     onRefresh(categoryParam, statusParam);
   };
 
   const handleStatusChange = (status: string) => {
     setSelectedStatus(status);
-    const categoryParam = selectedCategory === "ALL" ? "all" : selectedCategory;
-    const statusParam = status === "ACTIVE" ? "all" : status;
+    const categoryParam =
+      selectedCategory === "ALL" ? undefined : selectedCategory;
+    const statusParam = status === "ACTIVE" ? undefined : status;
     onRefresh(categoryParam, statusParam);
   };
 
@@ -137,9 +139,12 @@ export default function DiscussionThreadsList({
       {/* Filters and Actions */}
       <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-900">Discussion Filters</CardTitle>
+          <CardTitle className="text-xl font-bold text-gray-900">
+            Discussion Filters
+          </CardTitle>
           <CardDescription>
-            Filter discussions by category and status to find relevant conversations
+            Filter discussions by category and status to find relevant
+            conversations
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -175,7 +180,11 @@ export default function DiscussionThreadsList({
             </div>
 
             <Button
-              onClick={() => onNewDiscussion ? onNewDiscussion() : router.push("/discussions/new")}
+              onClick={() =>
+                onNewDiscussion
+                  ? onNewDiscussion()
+                  : router.push("/discussions/new")
+              }
               className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
             >
               Start New Discussion
@@ -189,22 +198,24 @@ export default function DiscussionThreadsList({
         {threads.map((thread) => (
           <Card
             key={thread.id}
-            className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200 cursor-pointer hover:bg-white/80 hover:border-blue-200"
-            onClick={() => router.push(`/discussions/${thread.id}`)}
+            className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100"
           >
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-3">
                     {thread.isPinned && (
-                      <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-yellow-100 text-yellow-800"
+                      >
                         📌 Pinned
                       </Badge>
                     )}
                     <Badge
                       className={`text-xs ${categoryColors[
                         thread.category as keyof typeof categoryColors
-                      ] || categoryColors.GENERAL
+                        ] || categoryColors.GENERAL
                         }`}
                     >
                       {categoryLabels[
@@ -223,7 +234,10 @@ export default function DiscussionThreadsList({
                           </Badge>
                         ))}
                         {thread.tags.length > 3 && (
-                          <Badge variant="outline" className="text-xs bg-white/50">
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-white/50"
+                          >
                             +{thread.tags.length - 3}
                           </Badge>
                         )}
@@ -242,17 +256,40 @@ export default function DiscussionThreadsList({
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center space-x-4">
                       <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
                         </svg>
                         {thread.author.firstName} {thread.author.lastName}
-                        <Badge variant="outline" className="ml-2 text-xs bg-white/50">
+                        <Badge
+                          variant="outline"
+                          className="ml-2 text-xs bg-white/50"
+                        >
                           {thread.author.role}
                         </Badge>
                       </span>
                       <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                         {formatDate(thread.createdAt)}
                       </span>
@@ -260,18 +297,58 @@ export default function DiscussionThreadsList({
 
                     <div className="flex items-center space-x-4">
                       <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
                         </svg>
                         {thread.viewCount} views
                       </span>
                       <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
                         </svg>
                         {thread._count.comments} comments
                       </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(
+                            `/discussions/${thread.id}`,
+                            "_blank",
+                            "noopener,noreferrer"
+                          );
+                        }}
+                        className="bg-white/80 hover:bg-white"
+                      >
+                        View
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -289,7 +366,7 @@ export default function DiscussionThreadsList({
               <div className="text-4xl mb-2">💬</div>
               <h3 className="text-lg font-medium mb-2">No discussions found</h3>
               <p className="text-sm">
-                {selectedCategory && selectedCategory !== "ALL"
+                {selectedCategory
                   ? `No discussions in the "${categoryLabels[
                   selectedCategory as keyof typeof categoryLabels
                   ]
@@ -298,7 +375,11 @@ export default function DiscussionThreadsList({
               </p>
             </div>
             <Button
-              onClick={() => onNewDiscussion ? onNewDiscussion() : router.push("/discussions/new")}
+              onClick={() =>
+                onNewDiscussion
+                  ? onNewDiscussion()
+                  : router.push("/discussions/new")
+              }
               className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
             >
               Start First Discussion

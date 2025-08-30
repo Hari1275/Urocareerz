@@ -86,7 +86,10 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { content } = body;
+    const { content, parentId } = body as {
+      content?: string;
+      parentId?: string;
+    };
 
     // Validate required fields
     if (!content) {
@@ -104,12 +107,27 @@ export async function POST(
       );
     }
 
-    // Create comment
+    // If replying to a comment, validate parent belongs to same thread
+    if (parentId) {
+      const parent = await prisma.discussionComment.findUnique({
+        where: { id: parentId },
+        select: { id: true, threadId: true },
+      });
+      if (!parent || parent.threadId !== threadId) {
+        return NextResponse.json(
+          { error: "Invalid parent comment" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Create comment or reply
     const comment = await prisma.discussionComment.create({
       data: {
         content,
         authorId: userId,
         threadId,
+        parentId: parentId || null,
       },
       include: {
         author: {

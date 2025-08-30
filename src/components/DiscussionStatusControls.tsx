@@ -221,25 +221,25 @@ export default function DiscussionStatusControls({
             <AlertDialogTitle>Confirm Action</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to {pendingAction?.description}?
-              {pendingAction?.status === "CLOSED" && (
-                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> Closing a discussion will prevent new
-                    comments from being added, but existing comments will remain
-                    visible.
-                  </p>
-                </div>
-              )}
-              {pendingAction?.status === "ARCHIVED" && (
-                <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                  <p className="text-sm text-gray-800">
-                    <strong>Note:</strong> Archiving a discussion will hide it
-                    from the main discussion list and prevent any new activity.
-                  </p>
-                </div>
-              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {pendingAction?.status === "CLOSED" && (
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-yellow-800">
+                <strong>Note:</strong> Closing a discussion will prevent new
+                comments from being added, but existing comments will remain
+                visible.
+              </p>
+            </div>
+          )}
+          {pendingAction?.status === "ARCHIVED" && (
+            <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
+              <p className="text-sm text-gray-800">
+                <strong>Note:</strong> Archiving a discussion will hide it from
+                the main discussion list and prevent any new activity.
+              </p>
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
             <AlertDialogAction

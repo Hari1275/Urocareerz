@@ -189,6 +189,7 @@ model DiscussionThread {
   tags        String[]
   status      DiscussionStatus @default(ACTIVE)
   isPinned    Boolean  @default(false)
+  viewCount   Int      @default(0)
   authorId    String   @db.ObjectId
   deletedAt   DateTime? // Soft delete field
   createdAt   DateTime @default(now())
@@ -200,12 +201,14 @@ model DiscussionThread {
 }
 
 enum DiscussionCategory {
+
   GENERAL
   CASE_DISCUSSION
   CAREER_ADVICE
   TECHNICAL
   NETWORKING
   RESOURCES
+
 }
 
 enum DiscussionStatus {
@@ -219,12 +222,15 @@ model DiscussionComment {
   content   String
   authorId  String   @db.ObjectId
   threadId  String   @db.ObjectId
+  parentId  String?  @db.ObjectId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   // Relationships
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   thread    DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parent    DiscussionComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   DiscussionComment[] @relation("CommentReplies")
 }
 
 model AuditLog {

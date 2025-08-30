@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate category
+    // Validate category (keep in sync with prisma enum DiscussionCategory)
     const validCategories = [
       "GENERAL",
       "CASE_DISCUSSION",

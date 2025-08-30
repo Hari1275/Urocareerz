@@ -52,6 +52,10 @@ export default function DiscussionThreadForm() {
     tags: [],
   });
   const [tagInput, setTagInput] = useState("");
+  const MIN_TITLE = 5;
+  const MAX_TITLE = 200;
+  const MIN_CONTENT = 10;
+  const MAX_CONTENT = 5000;
 
   const handleInputChange = (
     field: keyof DiscussionThreadFormData,
@@ -91,10 +95,17 @@ export default function DiscussionThreadForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.content) {
+    const titleLen = formData.title.trim().length;
+    const contentLen = formData.content.trim().length;
+    if (
+      titleLen < MIN_TITLE ||
+      titleLen > MAX_TITLE ||
+      contentLen < MIN_CONTENT ||
+      contentLen > MAX_CONTENT
+    ) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields.",
+        description: `Title (${MIN_TITLE}-${MAX_TITLE}) and content (${MIN_CONTENT}-${MAX_CONTENT}) length required`,
         variant: "destructive",
       });
       return;
@@ -122,8 +133,8 @@ export default function DiscussionThreadForm() {
         description: "Your discussion thread has been created successfully.",
       });
 
-      // Redirect to the new discussion thread
-      router.push(`/discussions/${data.thread.id}`);
+      // Return to previous screen (dashboard/mentee → discussions tab)
+      router.back();
     } catch (error) {
       console.error("Error creating discussion:", error);
       toast({
@@ -144,16 +155,22 @@ export default function DiscussionThreadForm() {
       {/* Form Card */}
       <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-900">Discussion Details</CardTitle>
+          <CardTitle className="text-xl font-bold text-gray-900">
+            Discussion Details
+          </CardTitle>
           <CardDescription>
-            Fill in the details below to start your discussion with the community.
+            Fill in the details below to start your discussion with the
+            community.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="title"
+                className="text-sm font-medium text-gray-700"
+              >
                 Discussion Title *
               </Label>
               <Input
@@ -164,11 +181,22 @@ export default function DiscussionThreadForm() {
                 className="bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>
+                  Min {MIN_TITLE} • Max {MAX_TITLE}
+                </span>
+                <span>
+                  {formData.title.length}/{MAX_TITLE}
+                </span>
+              </div>
             </div>
 
             {/* Category */}
             <div className="space-y-2">
-              <Label htmlFor="category" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="category"
+                className="text-sm font-medium text-gray-700"
+              >
                 Category *
               </Label>
               <Select
@@ -190,7 +218,10 @@ export default function DiscussionThreadForm() {
 
             {/* Content */}
             <div className="space-y-2">
-              <Label htmlFor="content" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="content"
+                className="text-sm font-medium text-gray-700"
+              >
                 Discussion Content *
               </Label>
               <Textarea
@@ -203,14 +234,21 @@ export default function DiscussionThreadForm() {
                 required
               />
               <div className="flex justify-between items-center text-sm text-gray-500">
-                <span>Share your thoughts, questions, or case details with the community</span>
-                <span>{formData.content.length}/5000 characters</span>
+                <span>
+                  Min {MIN_CONTENT} • Max {MAX_CONTENT}
+                </span>
+                <span>
+                  {formData.content.length}/{MAX_CONTENT} characters
+                </span>
               </div>
             </div>
 
             {/* Tags */}
             <div className="space-y-2">
-              <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="tags"
+                className="text-sm font-medium text-gray-700"
+              >
                 Tags (Optional)
               </Label>
               <div className="flex gap-2">
@@ -254,7 +292,8 @@ export default function DiscussionThreadForm() {
                 </div>
               )}
               <p className="text-sm text-gray-500">
-                {formData.tags.length}/5 tags maximum • Tags help others discover your discussion
+                {formData.tags.length}/5 tags maximum • Tags help others
+                discover your discussion
               </p>
             </div>
           </form>
@@ -264,32 +303,45 @@ export default function DiscussionThreadForm() {
       {/* Guidelines Card */}
       <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">Discussion Guidelines</CardTitle>
+          <CardTitle className="text-lg font-semibold text-gray-900">
+            Discussion Guidelines
+          </CardTitle>
           <CardDescription>
-            Please follow these guidelines to ensure a positive community experience.
+            Please follow these guidelines to ensure a positive community
+            experience.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-600">Be respectful and professional in your communication</p>
+              <p className="text-sm text-gray-600">
+                Be respectful and professional in your communication
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-600">Provide clear and relevant information</p>
+              <p className="text-sm text-gray-600">
+                Provide clear and relevant information
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-600">Use appropriate categories to help others find your discussion</p>
+              <p className="text-sm text-gray-600">
+                Use appropriate categories to help others find your discussion
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-600">Avoid sharing personal or sensitive information</p>
+              <p className="text-sm text-gray-600">
+                Avoid sharing personal or sensitive information
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-600">Keep discussions focused and on-topic</p>
+              <p className="text-sm text-gray-600">
+                Keep discussions focused and on-topic
+              </p>
             </div>
           </div>
         </CardContent>
@@ -300,7 +352,7 @@ export default function DiscussionThreadForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/discussions")}
+          onClick={() => router.back()}
           disabled={loading}
           className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:border-blue-500 w-full sm:w-auto"
         >
@@ -308,11 +360,23 @@ export default function DiscussionThreadForm() {
           Back to Discussions
         </Button>
         <div className="flex gap-3 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => router.push("/dashboard")} className="text-gray-700 hover:text-blue-600 transition-colors">Cancel</Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/dashboard")}
+            className="text-gray-700 hover:text-blue-600 transition-colors"
+          >
+            Cancel
+          </Button>
           <Button
             type="submit"
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={
+              loading ||
+              formData.title.trim().length < MIN_TITLE ||
+              formData.title.length > MAX_TITLE ||
+              formData.content.trim().length < MIN_CONTENT ||
+              formData.content.length > MAX_CONTENT
+            }
             className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600 w-full sm:w-auto"
           >
             {loading ? "Creating..." : "Create Discussion"}
