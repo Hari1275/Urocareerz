@@ -241,21 +241,6 @@ export default function MentorSearchPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
-              Dashboard
-            </Link>
-            <span>/</span>
-            <Link href="/dashboard/mentor" className="hover:text-blue-600 transition-colors">
-              Mentor Dashboard
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">Find Mentees</span>
-          </nav>
-        </div>
-
         {/* Page Header */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="text-center">

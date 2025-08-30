@@ -472,12 +472,19 @@ export default function ProfileForm({
           <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
             <User className="w-4 h-4 text-blue-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Basic Information
+          </h3>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
+            <Label
+              htmlFor="firstName"
+              className="text-sm font-medium text-gray-700"
+            >
+              First Name
+            </Label>
             <Input
               id="firstName"
               value={profile?.user?.firstName || ""}
@@ -486,7 +493,12 @@ export default function ProfileForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
+            <Label
+              htmlFor="lastName"
+              className="text-sm font-medium text-gray-700"
+            >
+              Last Name
+            </Label>
             <Input
               id="lastName"
               value={profile?.user?.lastName || ""}
@@ -497,7 +509,9 @@ export default function ProfileForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bio" className="text-sm font-medium text-gray-700">Bio</Label>
+          <Label htmlFor="bio" className="text-sm font-medium text-gray-700">
+            Bio
+          </Label>
           <Textarea
             id="bio"
             value={formData.bio}
@@ -508,7 +522,12 @@ export default function ProfileForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+          <Label
+            htmlFor="location"
+            className="text-sm font-medium text-gray-700"
+          >
+            Location
+          </Label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -529,11 +548,18 @@ export default function ProfileForm({
             <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
               <GraduationCap className="w-4 h-4 text-green-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Education & Interests</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Education & Interests
+            </h3>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="education" className="text-sm font-medium text-gray-700">Education</Label>
+            <Label
+              htmlFor="education"
+              className="text-sm font-medium text-gray-700"
+            >
+              Education
+            </Label>
             <Input
               id="education"
               value={formData.education}
@@ -544,18 +570,27 @@ export default function ProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="purposeOfRegistration" className="text-sm font-medium text-gray-700">Purpose of Registration</Label>
+            <Label
+              htmlFor="purposeOfRegistration"
+              className="text-sm font-medium text-gray-700"
+            >
+              Purpose of Registration
+            </Label>
             <Textarea
               id="purposeOfRegistration"
               value={formData.purposeOfRegistration}
-              onChange={(e) => handleInputChange("purposeOfRegistration", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("purposeOfRegistration", e.target.value)
+              }
               placeholder="Why are you joining our platform?"
               className="input-primary min-h-[100px] resize-none"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">Interests</Label>
+            <Label className="text-sm font-medium text-gray-700">
+              Interests
+            </Label>
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Input
@@ -603,12 +638,19 @@ export default function ProfileForm({
             <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
               <Award className="w-4 h-4 text-purple-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Professional Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Professional Information
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="specialty" className="text-sm font-medium text-gray-700">Specialty</Label>
+              <Label
+                htmlFor="specialty"
+                className="text-sm font-medium text-gray-700"
+              >
+                Specialty
+              </Label>
               <Input
                 id="specialty"
                 value={formData.specialty}
@@ -618,11 +660,18 @@ export default function ProfileForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="subSpecialty" className="text-sm font-medium text-gray-700">Sub-specialty</Label>
+              <Label
+                htmlFor="subSpecialty"
+                className="text-sm font-medium text-gray-700"
+              >
+                Sub-specialty
+              </Label>
               <Input
                 id="subSpecialty"
                 value={formData.subSpecialty}
-                onChange={(e) => handleInputChange("subSpecialty", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("subSpecialty", e.target.value)
+                }
                 placeholder="Your sub-specialty"
                 className="input-primary h-11"
               />
@@ -631,25 +680,39 @@ export default function ProfileForm({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="workplace" className="text-sm font-medium text-gray-700">Workplace</Label>
+              <Label
+                htmlFor="workplace"
+                className="text-sm font-medium text-gray-700"
+              >
+                Workplace
+              </Label>
               <div className="relative">
                 <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="workplace"
                   value={formData.workplace}
-                  onChange={(e) => handleInputChange("workplace", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("workplace", e.target.value)
+                  }
                   placeholder="Hospital/Institution"
                   className="input-primary h-11 pl-10"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="yearsOfExperience" className="text-sm font-medium text-gray-700">Years of Experience</Label>
+              <Label
+                htmlFor="yearsOfExperience"
+                className="text-sm font-medium text-gray-700"
+              >
+                Years of Experience
+              </Label>
               <Input
                 id="yearsOfExperience"
                 type="number"
                 value={formData.yearsOfExperience}
-                onChange={(e) => handleInputChange("yearsOfExperience", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("yearsOfExperience", e.target.value)
+                }
                 placeholder="Number of years"
                 className="input-primary h-11"
               />
@@ -657,10 +720,17 @@ export default function ProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="availabilityStatus" className="text-sm font-medium text-gray-700">Availability Status</Label>
+            <Label
+              htmlFor="availabilityStatus"
+              className="text-sm font-medium text-gray-700"
+            >
+              Availability Status
+            </Label>
             <Select
               value={formData.availabilityStatus}
-              onValueChange={(value) => handleInputChange("availabilityStatus", value)}
+              onValueChange={(value) =>
+                handleInputChange("availabilityStatus", value)
+              }
             >
               <SelectTrigger className="input-primary h-11">
                 <SelectValue />
@@ -681,24 +751,42 @@ export default function ProfileForm({
           <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
             <Target className="w-4 h-4 text-orange-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">Files & Documents</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Files & Documents
+          </h3>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Avatar Upload */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium text-gray-700">Profile Picture</Label>
+            <Label className="text-sm font-medium text-gray-700">
+              Profile Picture
+            </Label>
             <div className="space-y-3">
               {getAvatarUrl() && (
                 <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-6 h-6 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-green-800">Avatar uploaded</p>
-                    <p className="text-xs text-green-600">{formData.avatarFileName || "Profile picture"}</p>
+                    <p className="text-sm font-medium text-green-800">
+                      Avatar uploaded
+                    </p>
+                    <p className="text-xs text-green-600">
+                      {formData.avatarFileName || "Profile picture"}
+                    </p>
                   </div>
                   <Button
                     type="button"
@@ -727,47 +815,65 @@ export default function ProfileForm({
             </div>
           </div>
 
-          {/* Resume Upload */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-gray-700">Resume/CV</Label>
+          {/* Resume Upload (Mentee only) */}
+          {profile?.user?.role === "MENTEE" && (
             <div className="space-y-3">
-              {getResumeUrl() && (
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+              <Label className="text-sm font-medium text-gray-700">
+                Resume/CV
+              </Label>
+              <div className="space-y-3">
+                {getResumeUrl() && (
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-800">
+                        Resume uploaded
+                      </p>
+                      <p className="text-xs text-blue-600">
+                        {formData.resumeFileName || "Resume document"}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResumeDelete}
+                      disabled={isDeletingResume}
+                      className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                    >
+                      {isDeletingResume ? "Deleting..." : "Remove"}
+                    </Button>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-800">Resume uploaded</p>
-                    <p className="text-xs text-blue-600">{formData.resumeFileName || "Resume document"}</p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleResumeDelete}
-                    disabled={isDeletingResume}
-                    className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                  >
-                    {isDeletingResume ? "Deleting..." : "Remove"}
-                  </Button>
-                </div>
-              )}
-              <FileUpload
-                onFileSelect={setSelectedResumeFile}
-                onFileUpload={handleResumeUpload}
-                selectedFile={selectedResumeFile}
-                uploadedFileUrl={getResumeUrl()}
-                uploadedFileName={formData.resumeFileName}
-                isUploading={isUploadingResume}
-                isDeleting={isDeletingResume}
-                accept=".pdf,.doc,.docx"
-                maxSize={10}
-                type="resume"
-              />
+                )}
+                <FileUpload
+                  onFileSelect={setSelectedResumeFile}
+                  onFileUpload={handleResumeUpload}
+                  selectedFile={selectedResumeFile}
+                  uploadedFileUrl={getResumeUrl()}
+                  uploadedFileName={formData.resumeFileName}
+                  isUploading={isUploadingResume}
+                  isDeleting={isDeletingResume}
+                  accept=".pdf,.doc,.docx"
+                  maxSize={10}
+                  type="resume"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

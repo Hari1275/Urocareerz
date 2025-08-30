@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SharedHeader from "@/components/shared-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -43,10 +44,10 @@ interface User {
 
 // Utility to read a cookie value by name (client-side only)
 function getCookie(name: string): string | undefined {
-  if (typeof document === 'undefined') return undefined;
+  if (typeof document === "undefined") return undefined;
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
 }
 
 export default function ProfilePage() {
@@ -175,10 +176,8 @@ export default function ProfilePage() {
       resume: combined.resume,
       avatarFileName: (combined as any).avatarFileName,
       resumeFileName: (combined as any).resumeFileName,
-      hasPlaceholderAvatar:
-        (combined as any).avatar === "https://example.com",
-      hasPlaceholderResume:
-        (combined as any).resume === "https://example.com",
+      hasPlaceholderAvatar: (combined as any).avatar === "https://example.com",
+      hasPlaceholderResume: (combined as any).resume === "https://example.com",
     });
     return combined;
   }, [profile, user]);
@@ -196,8 +195,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <LoadingPage 
-        title="Loading your profile..." 
+      <LoadingPage
+        title="Loading your profile..."
         description="Fetching your profile information and settings"
         size="lg"
       />
@@ -229,11 +228,13 @@ export default function ProfilePage() {
               <CardContent className="p-6 text-center">
                 <div className="text-red-500 mb-4">
                   <div className="text-4xl mb-2">⚠️</div>
-                  <h3 className="text-lg font-semibold mb-2 text-slate-900">Error Loading Profile</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-slate-900">
+                    Error Loading Profile
+                  </h3>
                   <p className="text-sm text-slate-600">{error}</p>
                 </div>
-                <Button 
-                  onClick={() => window.location.reload()} 
+                <Button
+                  onClick={() => window.location.reload()}
                   className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
                 >
                   Try Again
@@ -250,39 +251,16 @@ export default function ProfilePage() {
     return null; // Will redirect in useEffect
   }
 
+  const dashboardHref =
+    user?.role === "MENTOR"
+      ? "/dashboard/mentor"
+      : user?.role === "MENTEE"
+      ? "/dashboard/mentee"
+      : "/dashboard";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Premium Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">U</span>
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
-                  UroCareerz
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              {user && (
-                <span className="text-sm text-slate-600 font-medium">
-                  Welcome, {user.firstName || user.email}
-                </span>
-              )}
-              <Link href="/dashboard" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
-                Dashboard
-              </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <SharedHeader />
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -293,16 +271,14 @@ export default function ProfilePage() {
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardContent className="p-4">
                   <nav className="space-y-2">
-                    <Link 
-                      href="/dashboard" 
+                    <Link
+                      href={dashboardHref}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                     >
                       <ArrowLeft className="h-5 w-5" />
                       <span>Back to Dashboard</span>
                     </Link>
-                    <button 
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
-                    >
+                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg">
                       <User className="h-5 w-5" />
                       <span>Profile Settings</span>
                     </button>
@@ -321,9 +297,14 @@ export default function ProfilePage() {
               {/* Page Header */}
               <div className="text-center">
                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
-                  My <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Profile</span>
+                  My{" "}
+                  <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    Profile
+                  </span>
                 </h1>
-                <p className="text-slate-600">Manage your professional profile and account settings.</p>
+                <p className="text-slate-600">
+                  Manage your professional profile and account settings.
+                </p>
               </div>
               {/* Profile Content */}
               <div className="space-y-6">
@@ -357,7 +338,7 @@ export default function ProfilePage() {
                             </div>
                             Profile Information
                           </CardTitle>
-                          <Button 
+                          <Button
                             onClick={() => setIsEditing(true)}
                             className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
                           >
@@ -378,8 +359,18 @@ export default function ProfilePage() {
                       <CardHeader>
                         <CardTitle className="text-xl font-bold text-slate-900 flex items-center gap-3">
                           <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            <svg
+                              className="w-5 h-5 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                              />
                             </svg>
                           </div>
                           Account Security
@@ -389,16 +380,35 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-slate-100 hover:bg-white/80 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                              <svg
+                                className="w-5 h-5 text-blue-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                                />
                               </svg>
                             </div>
                             <div>
-                              <h3 className="font-semibold text-slate-900">Email Address</h3>
-                              <p className="text-sm text-slate-600">{user.email}</p>
+                              <h3 className="font-semibold text-slate-900">
+                                Email Address
+                              </h3>
+                              <p className="text-sm text-slate-600">
+                                {user.email}
+                              </p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" disabled className="bg-white/80 border-slate-200 text-slate-400">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="bg-white/80 border-slate-200 text-slate-400"
+                          >
                             Change Email
                           </Button>
                         </div>
@@ -409,7 +419,9 @@ export default function ProfilePage() {
                               <User className="w-5 h-5 text-purple-600" />
                             </div>
                             <div>
-                              <h3 className="font-semibold text-slate-900">Account Role</h3>
+                              <h3 className="font-semibold text-slate-900">
+                                Account Role
+                              </h3>
                               <p className="text-sm text-slate-600">
                                 {user.role === "MENTOR"
                                   ? "Mentor"
@@ -421,7 +433,12 @@ export default function ProfilePage() {
                               </p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" disabled className="bg-white/80 border-slate-200 text-slate-400">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="bg-white/80 border-slate-200 text-slate-400"
+                          >
                             Contact Support
                           </Button>
                         </div>
@@ -439,20 +456,22 @@ export default function ProfilePage() {
               {/* Quick Actions */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-slate-900">
+                    Quick Actions
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button 
+                  <Button
                     onClick={() => setIsEditing(true)}
                     disabled={isEditing}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
                   >
                     <User className="h-4 w-4 mr-2" />
-                    {isEditing ? 'Editing...' : 'Edit Profile'}
+                    {isEditing ? "Editing..." : "Edit Profile"}
                   </Button>
                   <Link href="/dashboard">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full bg-white/80 border-slate-200 hover:bg-white"
                     >
                       <ArrowLeft className="h-4 w-4 mr-2" />
@@ -465,16 +484,20 @@ export default function ProfilePage() {
               {/* Help & Support */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">Need Help?</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-slate-900">
+                    Need Help?
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="text-sm text-slate-600 space-y-2">
                     <p>Having trouble with your profile?</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full bg-white/80 border-slate-200 hover:bg-white"
-                      onClick={() => window.open('mailto:support@urocareerz.com', '_blank')}
+                      onClick={() =>
+                        window.open("mailto:support@urocareerz.com", "_blank")
+                      }
                     >
                       Contact Support
                     </Button>

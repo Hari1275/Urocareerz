@@ -118,8 +118,10 @@ export default function PostOpportunityPage() {
         throw new Error(errorData.error || "Failed to create opportunity");
       }
 
-      // Show success message and redirect
-      router.push("/dashboard/mentor?success=opportunity-posted");
+      // Redirect with query to mentor dashboard to show success and land on opportunities tab
+      router.push(
+        "/dashboard/mentor?success=opportunity-posted&tab=opportunities"
+      );
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -142,11 +144,18 @@ export default function PostOpportunityPage() {
         <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 flex-shrink-0"
+              >
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
               </Link>
               <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Loading...</span>
+                <span className="text-sm text-gray-500 font-medium">
+                  Loading...
+                </span>
               </div>
             </div>
           </div>
@@ -170,8 +179,13 @@ export default function PostOpportunityPage() {
         <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 flex-shrink-0"
+              >
+                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">
+                  UroCareerz
+                </span>
               </Link>
               <div className="hidden md:flex items-center gap-4">
                 <span className="text-sm text-gray-500 font-medium">Error</span>
@@ -208,15 +222,34 @@ export default function PostOpportunityPage() {
       <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 flex-shrink-0"
+            >
+              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">
+                UroCareerz
+              </span>
             </Link>
             <div className="hidden md:flex items-center gap-4">
               <span className="text-sm text-gray-600 font-medium">
-                Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
+                Welcome,{" "}
+                <span className="text-gray-900 font-semibold">
+                  {user.firstName || user.email || "User"}
+                </span>
               </span>
-              <Link href="/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</Link>
-              <Button variant="outline" onClick={() => router.push("/dashboard/mentor")} className="text-gray-700 hover:text-blue-600 transition-colors">Back to Dashboard</Button>
+              <Link
+                href="/profile"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Profile
+              </Link>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/dashboard/mentor")}
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Back to Dashboard
+              </Button>
             </div>
             <div className="md:hidden flex items-center justify-end">
               <Button
@@ -225,8 +258,18 @@ export default function PostOpportunityPage() {
                 onClick={() => router.push("/dashboard/mentor")}
                 className="p-2 text-gray-700 hover:text-blue-600 transition-colors flex-shrink-0"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
                 </svg>
               </Button>
             </div>
@@ -235,29 +278,18 @@ export default function PostOpportunityPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
-              Dashboard
-            </Link>
-            <span>/</span>
-            <Link href="/dashboard/mentor" className="hover:text-blue-600 transition-colors">
-              Mentor Dashboard
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">Post Opportunity</span>
-          </nav>
-        </div>
-
         {/* Page Header */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Post <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">Opportunity</span>
+              Post{" "}
+              <span className="bg-gradient-to-tr from-purple-600 to-indigo-500 bg-clip-text text-transparent">
+                Opportunity
+              </span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Create a new opportunity for mentees to apply to and help grow the community.
+              Create a new opportunity for mentees to apply to and help grow the
+              community.
             </p>
           </div>
         </div>
@@ -271,7 +303,8 @@ export default function PostOpportunityPage() {
                 Opportunity Details
               </CardTitle>
               <CardDescription>
-                Fill in the details below to create a new opportunity for mentees.
+                Fill in the details below to create a new opportunity for
+                mentees.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -282,7 +315,9 @@ export default function PostOpportunityPage() {
                     <Input
                       id="title"
                       value={formData.title}
-                      onChange={(e) => handleInputChange("title", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("title", e.target.value)
+                      }
                       placeholder="Enter opportunity title"
                       required
                     />
@@ -323,7 +358,9 @@ export default function PostOpportunityPage() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
                     placeholder="Enter detailed description"
                     rows={4}
                     required
@@ -336,7 +373,9 @@ export default function PostOpportunityPage() {
                     <Input
                       id="location"
                       value={formData.location}
-                      onChange={(e) => handleInputChange("location", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("location", e.target.value)
+                      }
                       placeholder="Enter location"
                     />
                   </div>
@@ -359,7 +398,9 @@ export default function PostOpportunityPage() {
                     <Input
                       id="duration"
                       value={formData.duration}
-                      onChange={(e) => handleInputChange("duration", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("duration", e.target.value)
+                      }
                       placeholder="e.g., 6 months, 1 year"
                     />
                   </div>
@@ -394,14 +435,18 @@ export default function PostOpportunityPage() {
                   <Textarea
                     id="benefits"
                     value={formData.benefits}
-                    onChange={(e) => handleInputChange("benefits", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("benefits", e.target.value)
+                    }
                     placeholder="Enter benefits and perks"
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="applicationDeadline">Application Deadline</Label>
+                  <Label htmlFor="applicationDeadline">
+                    Application Deadline
+                  </Label>
                   <Input
                     id="applicationDeadline"
                     type="date"
@@ -428,8 +473,14 @@ export default function PostOpportunityPage() {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={submitting}>
-                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Opportunity
+                    {submitting ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Creating...</span>
+                      </span>
+                    ) : (
+                      <span>Create Opportunity</span>
+                    )}
                   </Button>
                 </div>
               </form>

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 
 export interface OpportunityType {
@@ -21,7 +23,7 @@ export function useOpportunityTypes() {
     try {
       setLoading(true);
       const response = await fetch("/api/opportunity-types", {
-        credentials: 'include'
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -29,7 +31,7 @@ export function useOpportunityTypes() {
       }
 
       const data = await response.json();
-      console.log('Opportunity types API response:', data);
+      console.log("Opportunity types API response:", data);
       setOpportunityTypes(data.opportunityTypes);
     } catch (err: unknown) {
       const errorMessage =
