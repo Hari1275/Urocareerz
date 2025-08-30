@@ -56,7 +56,7 @@ const categoryLabels: Record<string, string> = {
   CAREER_ADVICE: "Career Advice",
   TECHNICAL: "Technical Questions",
   NETWORKING: "Networking",
-  RESOURCES: "Resources",
+  RESOURCES: "Resources & Tools",
 };
 
 const statusLabels: Record<string, string> = {
@@ -269,7 +269,7 @@ export default function DiscussionThreadPage() {
             <p className="text-gray-600 mb-6">
               This discussion thread may have been deleted or doesn&apos;t exist.
             </p>
-            <Button 
+            <Button
               onClick={() => router.push("/discussions")}
               className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
             >
@@ -297,7 +297,7 @@ export default function DiscussionThreadPage() {
                 </span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {user && (
                 <span className="text-sm text-slate-600 font-medium">
@@ -314,7 +314,7 @@ export default function DiscussionThreadPage() {
           </div>
         </div>
       </header>
-      
+
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - Navigation */}
@@ -351,7 +351,7 @@ export default function DiscussionThreadPage() {
                       {statusLabels[thread.status] || thread.status}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm text-slate-600">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
@@ -503,16 +503,16 @@ export default function DiscussionThreadPage() {
                   <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button 
-                    onClick={() => router.push("/dashboard")}  
+                  <Button
+                    onClick={() => router.push("/dashboard")}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Dashboard
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => router.push("/discussions")}
-                    variant="outline" 
+                    variant="outline"
                     className="w-full bg-white/80 border-slate-200 hover:bg-white"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,26 +51,26 @@ interface DiscussionThreadsListProps {
   };
   onRefresh: (category?: string, status?: string) => void;
   onNewDiscussion?: () => void;
+  currentCategory?: string;
+  currentStatus?: string;
 }
 
 const categoryLabels = {
-  GENERAL: "General",
-  MENTORSHIP: "Mentorship",
+  GENERAL: "General Discussion",
+  CASE_DISCUSSION: "Case Discussion",
   CAREER_ADVICE: "Career Advice",
-  RESEARCH: "Research",
-  CLINICAL: "Clinical",
-  FELLOWSHIP: "Fellowship",
-  OTHER: "Other",
+  TECHNICAL: "Technical Questions",
+  NETWORKING: "Networking",
+  RESOURCES: "Resources & Tools",
 };
 
 const categoryColors = {
   GENERAL: "bg-gray-100 text-gray-800",
-  MENTORSHIP: "bg-blue-100 text-blue-800",
+  CASE_DISCUSSION: "bg-blue-100 text-blue-800",
   CAREER_ADVICE: "bg-green-100 text-green-800",
-  RESEARCH: "bg-purple-100 text-purple-800",
-  CLINICAL: "bg-orange-100 text-orange-800",
-  FELLOWSHIP: "bg-pink-100 text-pink-800",
-  OTHER: "bg-indigo-100 text-indigo-800",
+  TECHNICAL: "bg-purple-100 text-purple-800",
+  NETWORKING: "bg-orange-100 text-orange-800",
+  RESOURCES: "bg-pink-100 text-pink-800",
 };
 
 export default function DiscussionThreadsList({
@@ -78,6 +78,8 @@ export default function DiscussionThreadsList({
   pagination,
   onRefresh,
   onNewDiscussion,
+  currentCategory,
+  currentStatus,
 }: DiscussionThreadsListProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -86,17 +88,34 @@ export default function DiscussionThreadsList({
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    const categoryParam = category === "ALL" ? undefined : category;
-    const statusParam = selectedStatus === "ACTIVE" ? undefined : selectedStatus;
+    const categoryParam = category === "ALL" ? "all" : category;
+    const statusParam = selectedStatus === "ACTIVE" ? "all" : selectedStatus;
     onRefresh(categoryParam, statusParam);
   };
 
   const handleStatusChange = (status: string) => {
     setSelectedStatus(status);
-    const categoryParam = selectedCategory === "ALL" ? undefined : selectedCategory;
-    const statusParam = status === "ACTIVE" ? undefined : status;
+    const categoryParam = selectedCategory === "ALL" ? "all" : selectedCategory;
+    const statusParam = status === "ACTIVE" ? "all" : status;
     onRefresh(categoryParam, statusParam);
   };
+
+  // Sync internal state with props
+  useEffect(() => {
+    if (currentCategory) {
+      setSelectedCategory(currentCategory === "all" ? "ALL" : currentCategory);
+    }
+    if (currentStatus) {
+      setSelectedStatus(currentStatus === "all" ? "ACTIVE" : currentStatus);
+    }
+  }, [currentCategory, currentStatus]);
+
+  // Only reset filters on initial mount, not when threads change
+  useEffect(() => {
+    // This effect only runs once on mount to set initial state
+    // We don't reset filters when threads.length === 0 because we want to maintain
+    // the user's selected filters even when no results are found
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -270,7 +289,7 @@ export default function DiscussionThreadsList({
               <div className="text-4xl mb-2">💬</div>
               <h3 className="text-lg font-medium mb-2">No discussions found</h3>
               <p className="text-sm">
-                {selectedCategory
+                {selectedCategory && selectedCategory !== "ALL"
                   ? `No discussions in the "${categoryLabels[
                   selectedCategory as keyof typeof categoryLabels
                   ]

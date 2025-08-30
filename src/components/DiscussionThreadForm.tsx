@@ -32,13 +32,12 @@ interface DiscussionThreadFormData {
 }
 
 const categoryOptions = [
-  { value: "GENERAL", label: "General" },
-  { value: "MENTORSHIP", label: "Mentorship" },
+  { value: "GENERAL", label: "General Discussion" },
+  { value: "CASE_DISCUSSION", label: "Case Discussion" },
   { value: "CAREER_ADVICE", label: "Career Advice" },
-  { value: "RESEARCH", label: "Research" },
-  { value: "CLINICAL", label: "Clinical" },
-  { value: "FELLOWSHIP", label: "Fellowship" },
-  { value: "OTHER", label: "Other" },
+  { value: "TECHNICAL", label: "Technical Questions" },
+  { value: "NETWORKING", label: "Networking" },
+  { value: "RESOURCES", label: "Resources & Tools" },
 ];
 
 export default function DiscussionThreadForm() {

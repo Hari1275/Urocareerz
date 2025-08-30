@@ -201,12 +201,11 @@ model DiscussionThread {
 
 enum DiscussionCategory {
   GENERAL
-  MENTORSHIP
+  CASE_DISCUSSION
   CAREER_ADVICE
-  RESEARCH
-  CLINICAL
-  FELLOWSHIP
-  OTHER
+  TECHNICAL
+  NETWORKING
+  RESOURCES
 }
 
 enum DiscussionStatus {

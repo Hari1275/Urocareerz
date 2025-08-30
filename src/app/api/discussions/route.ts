@@ -15,11 +15,11 @@ export async function GET(req: NextRequest) {
     // Build where clause
     const where: any = {};
 
-    if (category) {
+    if (category && category !== "all") {
       where.category = category;
     }
 
-    if (status) {
+    if (status && status !== "all") {
       where.status = status;
     } else {
       // Default to active threads
@@ -168,12 +168,11 @@ export async function POST(req: NextRequest) {
     // Validate category
     const validCategories = [
       "GENERAL",
-      "MENTORSHIP",
+      "CASE_DISCUSSION",
       "CAREER_ADVICE",
-      "RESEARCH",
-      "CLINICAL",
-      "FELLOWSHIP",
-      "OTHER",
+      "TECHNICAL",
+      "NETWORKING",
+      "RESOURCES",
     ];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });

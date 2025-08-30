@@ -179,19 +179,18 @@ export default function DiscussionManagementTable() {
 
   const getCategoryBadge = (category: string) => {
     const categoryConfig = {
-      GENERAL: { color: "bg-blue-100 text-blue-800" },
-      MENTORSHIP: { color: "bg-purple-100 text-purple-800" },
-      CAREER_ADVICE: { color: "bg-green-100 text-green-800" },
-      RESEARCH: { color: "bg-orange-100 text-orange-800" },
-      CLINICAL: { color: "bg-pink-100 text-pink-800" },
-      FELLOWSHIP: { color: "bg-indigo-100 text-indigo-800" },
-      OTHER: { color: "bg-gray-100 text-gray-800" },
+      GENERAL: { color: "bg-blue-100 text-blue-800", label: "General Discussion" },
+      CASE_DISCUSSION: { color: "bg-purple-100 text-purple-800", label: "Case Discussion" },
+      CAREER_ADVICE: { color: "bg-green-100 text-green-800", label: "Career Advice" },
+      TECHNICAL: { color: "bg-orange-100 text-orange-800", label: "Technical Questions" },
+      NETWORKING: { color: "bg-pink-100 text-pink-800", label: "Networking" },
+      RESOURCES: { color: "bg-indigo-100 text-indigo-800", label: "Resources & Tools" },
     };
 
     const config =
       categoryConfig[category as keyof typeof categoryConfig] ||
       categoryConfig.GENERAL;
-    return <Badge className={config.color}>{category.replace("_", " ")}</Badge>;
+    return <Badge className={config.color}>{config.label}</Badge>;
   };
 
   const formatDate = (dateString: string) => {
@@ -307,12 +306,11 @@ export default function DiscussionManagementTable() {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="GENERAL">General</SelectItem>
-                <SelectItem value="MENTORSHIP">Mentorship</SelectItem>
+                <SelectItem value="CASE_DISCUSSION">Case Discussion</SelectItem>
                 <SelectItem value="CAREER_ADVICE">Career Advice</SelectItem>
-                <SelectItem value="RESEARCH">Research</SelectItem>
-                <SelectItem value="CLINICAL">Clinical</SelectItem>
-                <SelectItem value="FELLOWSHIP">Fellowship</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
+                <SelectItem value="TECHNICAL">Technical</SelectItem>
+                <SelectItem value="NETWORKING">Networking</SelectItem>
+                <SelectItem value="RESOURCES">Resources</SelectItem>
               </SelectContent>
             </Select>
           </div>
