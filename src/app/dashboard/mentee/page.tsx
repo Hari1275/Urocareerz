@@ -273,18 +273,16 @@ function InfiniteScrollTrigger({
             <div
               className={`bg-gradient-to-r ${progressColor} h-1.5 rounded-full transition-all duration-300`}
               style={{
-                width: `${Math.min((currentItems / totalItems) * 100, 100)}%`
-              style={{
                 width: `${Math.min((currentItems / totalItems) * 100, 100)}%`,
               }}
             ></div>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {Math.round((currentItems / totalItems) * 100)}% loaded
+          </p>
         </div>
-        <p className="text-xs text-slate-400 mt-1">
-          {Math.round((currentItems / totalItems) * 100)}% loaded
-        </p>
       </div>
     </div>
-    </div >
   );
 }
 
@@ -341,8 +339,6 @@ export default function MenteeDashboardPage() {
     submittedOpportunities: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [recentOpportunities, setRecentOpportunities] = useState<Opportunity[]>([]);
-
   const [recentOpportunities, setRecentOpportunities] = useState<Opportunity[]>(
     []
   );
@@ -368,6 +364,8 @@ export default function MenteeDashboardPage() {
     pages: 0,
   });
   const [discussionsLoading, setDiscussionsLoading] = useState(false);
+  const [currentDiscussionCategory, setCurrentDiscussionCategory] = useState<string>("all");
+  const [currentDiscussionStatus, setCurrentDiscussionStatus] = useState<string>("all");
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -441,7 +439,6 @@ export default function MenteeDashboardPage() {
   >({});
   const [submissionModalLoading, setSubmissionModalLoading] = useState(false);
   const [savingSubmission, setSavingSubmission] = useState(false);
-  const [saveLoading, setSaveLoading] = useState<{ [key: string]: boolean }>({});
   const [saveLoading, setSaveLoading] = useState<{ [key: string]: boolean }>(
     {}
   );
@@ -499,8 +496,6 @@ export default function MenteeDashboardPage() {
         const savedData = await savedResponse.json();
         const savedOpportunitiesArray = savedData.savedOpportunities || [];
         setSavedOpportunities(savedOpportunitiesArray);
-        setSavedOpportunityIds(savedOpportunitiesArray.map((opp: any) => opp.opportunityId));
-
         setSavedOpportunityIds(
           savedOpportunitiesArray.map((opp: any) => opp.opportunityId)
         );
@@ -521,8 +516,6 @@ export default function MenteeDashboardPage() {
       if (applicationsResponse.ok) {
         const applicationsData = await applicationsResponse.json();
         const applications = applicationsData.applications || [];
-        const pendingApps = applications.filter((app: any) => app.status === 'PENDING');
-
         const pendingApps = applications.filter(
           (app: any) => app.status === "PENDING"
         );
@@ -585,21 +578,33 @@ export default function MenteeDashboardPage() {
     }
   };
 
-  const fetchDiscussions = async (category?: string, status?: string) => {
-    if (activeSection !== "discussions") return;
+  const fetchDiscussions = async (category?: string, status?: string, page = 1, reset = false, force = false) => {
+    console.log("fetchDiscussions called with:", { category, status, page, reset, activeSection, force });
+    if (!force && activeSection !== "discussions") {
+      console.log("fetchDiscussions early return - activeSection is:", activeSection);
+      return;
+    }
 
     setDiscussionsLoading(true);
     try {
       const params = new URLSearchParams();
       if (category) params.set("category", category);
       if (status) params.set("status", status);
+      params.set("page", page.toString());
+      params.set("limit", discussionPagination.limit.toString());
+
+      // Update current filter state
+      if (category) setCurrentDiscussionCategory(category);
+      if (status) setCurrentDiscussionStatus(status);
 
       const response = await fetch(`/api/discussions?${params.toString()}`, {
         cache: "no-store",
       });
       if (response.ok) {
         const data = await response.json();
-        setDiscussions(data.threads || []);
+        const newDiscussions = data.threads || [];
+
+        setDiscussions(prev => reset ? newDiscussions : [...prev, ...newDiscussions]);
         setDiscussionPagination(
           data.pagination || {
             page: 1,
@@ -616,18 +621,21 @@ export default function MenteeDashboardPage() {
     }
   };
 
-
-  // Refetch discussions when returning to this page/tab
+  // Refetch discussions when returning to this page/tab (but preserve loaded state)
   useEffect(() => {
     const onFocus = () => {
-      if (activeSection === "discussions") fetchDiscussions();
+      if (activeSection === "discussions" && discussions.length === 0) {
+        fetchDiscussions(undefined, undefined, 1, true);
+      }
     };
     const onVisibility = () => {
       if (
         document.visibilityState === "visible" &&
-        activeSection === "discussions"
-      )
-        fetchDiscussions();
+        activeSection === "discussions" &&
+        discussions.length === 0
+      ) {
+        fetchDiscussions(undefined, undefined, 1, true);
+      }
     };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibility);
@@ -635,13 +643,9 @@ export default function MenteeDashboardPage() {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [activeSection]);
+  }, [activeSection, discussions.length]);
 
   const fetchOpportunities = async (page = 1, reset = false) => {
-    if (activeSection !== 'opportunities') return;
-
-    setOpportunityPagination(prev => ({ ...prev, loading: true }));
-
     if (activeSection !== "opportunities") return;
 
     setOpportunityPagination((prev) => ({ ...prev, loading: true }));
@@ -661,8 +665,6 @@ export default function MenteeDashboardPage() {
         const data = await response.json();
         const newOpportunities = data.opportunities || [];
 
-        setOpportunities(prev => reset ? newOpportunities : [...prev, ...newOpportunities]);
-
         setOpportunities((prev) =>
           reset ? newOpportunities : [...prev, ...newOpportunities]
         );
@@ -681,10 +683,6 @@ export default function MenteeDashboardPage() {
   };
 
   const fetchSavedOpportunities = async (page = 1, reset = false) => {
-    if (activeSection !== 'saved') return;
-
-    setSavedPagination(prev => ({ ...prev, loading: true }));
-
     if (activeSection !== "saved") return;
 
     setSavedPagination((prev) => ({ ...prev, loading: true }));
@@ -695,16 +693,12 @@ export default function MenteeDashboardPage() {
         limit: savedPagination.limit.toString(),
       });
 
-      const response = await fetch(`/api/saved-opportunities?${params.toString()}`);
-
       const response = await fetch(
         `/api/saved-opportunities?${params.toString()}`
       );
       if (response.ok) {
         const data = await response.json();
         const newSavedOpportunities = data.savedOpportunities || [];
-
-        setSavedOpportunities(prev => reset ? newSavedOpportunities : [...prev, ...newSavedOpportunities]);
 
         setSavedOpportunities((prev) =>
           reset ? newSavedOpportunities : [...prev, ...newSavedOpportunities]
@@ -724,10 +718,6 @@ export default function MenteeDashboardPage() {
   };
 
   const fetchApplications = async (page = 1, reset = false) => {
-    if (activeSection !== 'applications') return;
-
-    setApplicationsPagination(prev => ({ ...prev, loading: true }));
-
     if (activeSection !== "applications") return;
 
     setApplicationsPagination((prev) => ({ ...prev, loading: true }));
@@ -742,8 +732,6 @@ export default function MenteeDashboardPage() {
       if (response.ok) {
         const data = await response.json();
         const newApplications = data.applications || [];
-
-        setApplications(prev => reset ? newApplications : [...prev, ...newApplications]);
 
         setApplications((prev) =>
           reset ? newApplications : [...prev, ...newApplications]
@@ -763,10 +751,6 @@ export default function MenteeDashboardPage() {
   };
 
   const fetchSubmissions = async (page = 1, reset = false) => {
-    if (activeSection !== 'submissions') return;
-
-    setSubmissionsPagination(prev => ({ ...prev, loading: true }));
-
     if (activeSection !== "submissions") return;
 
     setSubmissionsPagination((prev) => ({ ...prev, loading: true }));
@@ -778,16 +762,12 @@ export default function MenteeDashboardPage() {
         status: selectedStatus !== "all" ? selectedStatus : "",
       });
 
-      const response = await fetch(`/api/mentee-opportunities?${params.toString()}`);
-
       const response = await fetch(
         `/api/mentee-opportunities?${params.toString()}`
       );
       if (response.ok) {
         const data = await response.json();
         const newSubmissions = data.opportunities || [];
-
-        setSubmissions(prev => reset ? newSubmissions : [...prev, ...newSubmissions]);
 
         setSubmissions((prev) =>
           reset ? newSubmissions : [...prev, ...newSubmissions]
@@ -822,20 +802,21 @@ export default function MenteeDashboardPage() {
   useEffect(() => {
     if (!isClient) return;
 
-    if (activeSection === 'discussions') {
-
-      if (activeSection === "discussions") {
-        fetchDiscussions();
-      } else if (activeSection === "opportunities") {
-        fetchOpportunities(1, true);
-      } else if (activeSection === "saved") {
-        fetchSavedOpportunities(1, true);
-      } else if (activeSection === "applications") {
-        fetchApplications(1, true);
-      } else if (activeSection === "submissions") {
-        fetchSubmissions(1, true);
+    if (activeSection === "discussions") {
+      // Only fetch if no discussions are loaded yet
+      if (discussions.length === 0) {
+        fetchDiscussions(undefined, undefined, 1, true);
       }
-    }, [activeSection, isClient]);
+    } else if (activeSection === "opportunities") {
+      fetchOpportunities(1, true);
+    } else if (activeSection === "saved") {
+      fetchSavedOpportunities(1, true);
+    } else if (activeSection === "applications") {
+      fetchApplications(1, true);
+    } else if (activeSection === "submissions") {
+      fetchSubmissions(1, true);
+    }
+  }, [activeSection, isClient, discussions.length]);
 
   // Handle filter changes for opportunities
   useEffect(() => {
@@ -885,6 +866,20 @@ export default function MenteeDashboardPage() {
       !applicationsPagination.loading
     ) {
       fetchApplications(applicationsPagination.page + 1, false);
+    }
+  };
+
+  const loadMoreDiscussions = () => {
+    if (
+      discussionPagination.page < discussionPagination.pages &&
+      !discussionsLoading
+    ) {
+      fetchDiscussions(
+        currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+        currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
+        discussionPagination.page + 1,
+        false
+      );
     }
   };
 
@@ -1163,15 +1158,6 @@ export default function MenteeDashboardPage() {
         opportunityTypeId: selectedSubmission.opportunityType.id,
       };
 
-      const response = await fetch(`/api/mentee-opportunities/${selectedSubmission.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(requestBody),
-      });
-
       const response = await fetch(
         `/api/mentee-opportunities/${selectedSubmission.id}`,
         {
@@ -1335,12 +1321,6 @@ export default function MenteeDashboardPage() {
         opportunity.opportunityType.name === typeFilter);
     const matchesSaved =
       savedFilter === "all" ||
-      (savedFilter === "saved" && savedOpportunityIds.includes(opportunity.id)) ||
-      (savedFilter === "not_saved" && !savedOpportunityIds.includes(opportunity.id)) ||
-      (savedFilter === "applied" && userApplications.includes(opportunity.id)) ||
-      (savedFilter === "not_applied" && !userApplications.includes(opportunity.id));
-    const matchesSaved =
-      savedFilter === "all" ||
       (savedFilter === "saved" &&
         savedOpportunityIds.includes(opportunity.id)) ||
       (savedFilter === "not_saved" &&
@@ -1354,13 +1334,6 @@ export default function MenteeDashboardPage() {
   });
 
   const filteredSubmissions = submissions.filter((submission) => {
-    const matchesStatus = selectedStatus === "all" || submission.status === selectedStatus;
-    const matchesSearch = submissionSearchTerm === "" ||
-      submission.title.toLowerCase().includes(submissionSearchTerm.toLowerCase()) ||
-      submission.description.toLowerCase().includes(submissionSearchTerm.toLowerCase());
-    const matchesType = submissionTypeFilter === "all" ||
-      (submission.opportunityType && submission.opportunityType.name === submissionTypeFilter);
-
     const matchesStatus =
       selectedStatus === "all" || submission.status === selectedStatus;
     const matchesSearch =
@@ -1515,9 +1488,6 @@ export default function MenteeDashboardPage() {
                         Recent Opportunities
                       </CardTitle>
                       {recentOpportunities.length > 0 && (
-                        <Button
-                          size="sm"
-                          onClick={() => setActiveSection('opportunities')}
                         <Button
                           size="sm"
                           onClick={() => setActiveSection("opportunities")}
@@ -2197,6 +2167,10 @@ export default function MenteeDashboardPage() {
                     pagination={discussionPagination}
                     onRefresh={fetchDiscussions}
                     onNewDiscussion={() => setActiveSection("new-discussion")}
+                    currentCategory={currentDiscussionCategory}
+                    currentStatus={currentDiscussionStatus}
+                    onLoadMore={loadMoreDiscussions}
+                    loading={discussionsLoading}
                   />
                 )}
               </div>
@@ -2286,8 +2260,6 @@ export default function MenteeDashboardPage() {
                           </span>
                         </div>
                         <Button
-                          onClick={() => setActiveSection('submit-opportunity')}
-                        <Button
                           onClick={() => setActiveSection("submit-opportunity")}
                           className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 px-6 py-2 w-full sm:w-auto"
                         >
@@ -2324,13 +2296,10 @@ export default function MenteeDashboardPage() {
                         No submissions found
                       </h3>
                       <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6 max-w-md mx-auto px-4">
-                        {selectedStatus === 'all'
                         {selectedStatus === "all"
                           ? "You haven't submitted any opportunities yet. Share opportunities you've discovered with the community!"
                           : `No submissions with ${selectedStatus.toLowerCase()} status found.`}
                       </p>
-                      <Button
-                        onClick={() => setActiveSection('submit-opportunity')}
                       <Button
                         onClick={() => setActiveSection("submit-opportunity")}
                         className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
@@ -2493,9 +2462,16 @@ export default function MenteeDashboardPage() {
                 {/* Discussion Form */}
                 <DiscussionThreadForm
                   onSuccess={() => {
+                    console.log("DiscussionThreadForm onSuccess called");
                     // Switch back to discussions tab and refresh the discussions
                     setActiveSection("discussions");
-                    fetchDiscussions();
+                    // Use setTimeout to ensure state update has completed
+                    setTimeout(() => {
+                      console.log("Calling fetchDiscussions from onSuccess");
+                      fetchDiscussions(undefined, undefined, 1, true, true);
+                      // Scroll to top of the page
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 0);
                   }}
                   onCancel={() => setActiveSection("discussions")}
                 />
@@ -2522,17 +2498,12 @@ export default function MenteeDashboardPage() {
                 </CardHeader>
                 <CardContent className="space-y-2 sm:space-y-3">
                   <Button
-                    onClick={() => setActiveSection('submit-opportunity')}
-                  <Button
                     onClick={() => setActiveSection("submit-opportunity")}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md text-xs sm:text-sm"
                   >
                     <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Submit Opportunity
                   </Button>
-                  <Button
-                    onClick={() => setActiveSection('opportunities')}
-                    variant="outline"
                   <Button
                     onClick={() => setActiveSection("opportunities")}
                     variant="outline"
@@ -2584,11 +2555,11 @@ export default function MenteeDashboardPage() {
                                   ? `${saved.opportunity.opportunityType.color}20`
                                   : "#f1f5f9",
                                 color:
-                                  saved.opportunity.opportunityType?.color ||
-                                  "#64748b",
+                                  saved.opportunity.opportunityType
+                                    ?.color || "#64748b",
                                 borderColor:
-                                  saved.opportunity.opportunityType?.color ||
-                                  "#e2e8f0",
+                                  saved.opportunity.opportunityType
+                                    ?.color || "#e2e8f0",
                               }}
                             >
                               {saved.opportunity.opportunityType?.name ||
@@ -2622,10 +2593,6 @@ export default function MenteeDashboardPage() {
                   ) : (
                     <div className="text-center py-4 sm:py-6">
                       <Bookmark className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-xs sm:text-sm text-slate-600">No saved opportunities yet</p>
-                      <Button
-                        size="sm"
-                        variant="ghost"
                       <p className="text-xs sm:text-sm text-slate-600">
                         No saved opportunities yet
                       </p>

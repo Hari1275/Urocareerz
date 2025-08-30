@@ -49,10 +49,12 @@ interface DiscussionThreadsListProps {
     total: number;
     pages: number;
   };
-  onRefresh: (category?: string, status?: string) => void;
+  onRefresh: (category?: string, status?: string, page?: number, forceRefresh?: boolean) => void;
   onNewDiscussion?: () => void;
   currentCategory?: string;
   currentStatus?: string;
+  onLoadMore: () => void;
+  loading: boolean;
 }
 
 const categoryLabels = {
@@ -80,6 +82,8 @@ export default function DiscussionThreadsList({
   onNewDiscussion,
   currentCategory,
   currentStatus,
+  onLoadMore,
+  loading,
 }: DiscussionThreadsListProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -88,18 +92,16 @@ export default function DiscussionThreadsList({
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    const categoryParam = category === "ALL" ? undefined : category;
-    const statusParam =
-      selectedStatus === "ACTIVE" ? undefined : selectedStatus;
-    onRefresh(categoryParam, statusParam);
+    const categoryParam = category === "ALL" ? "all" : category;
+    const statusParam = selectedStatus === "ACTIVE" ? "all" : selectedStatus;
+    onRefresh(categoryParam, statusParam, 1, true);
   };
 
   const handleStatusChange = (status: string) => {
     setSelectedStatus(status);
-    const categoryParam =
-      selectedCategory === "ALL" ? undefined : selectedCategory;
-    const statusParam = status === "ACTIVE" ? undefined : status;
-    onRefresh(categoryParam, statusParam);
+    const categoryParam = selectedCategory === "ALL" ? "all" : selectedCategory;
+    const statusParam = status === "ACTIVE" ? "all" : status;
+    onRefresh(categoryParam, statusParam, 1, true);
   };
 
   // Sync internal state with props
@@ -215,7 +217,7 @@ export default function DiscussionThreadsList({
                     <Badge
                       className={`text-xs ${categoryColors[
                         thread.category as keyof typeof categoryColors
-                        ] || categoryColors.GENERAL
+                      ] || categoryColors.GENERAL
                         }`}
                     >
                       {categoryLabels[
@@ -366,7 +368,7 @@ export default function DiscussionThreadsList({
               <div className="text-4xl mb-2">💬</div>
               <h3 className="text-lg font-medium mb-2">No discussions found</h3>
               <p className="text-sm">
-                {selectedCategory
+                {selectedCategory && selectedCategory !== "ALL"
                   ? `No discussions in the "${categoryLabels[
                   selectedCategory as keyof typeof categoryLabels
                   ]
@@ -388,40 +390,58 @@ export default function DiscussionThreadsList({
         </Card>
       )}
 
-      {/* Pagination */}
-      {pagination.pages > 1 && (
-        <div className="flex items-center justify-between bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 border border-gray-100">
-          <div className="text-sm text-gray-500">
-            Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-            {pagination.total} discussions
-          </div>
+      {/* Infinite Scroll Load More */}
+      {onLoadMore && pagination.page < pagination.pages && (
+        <div className="text-center mt-6">
+          <Button
+            onClick={onLoadMore}
+            disabled={loading}
+            variant="outline"
+            className="bg-white/80 border-slate-200 hover:bg-white px-6 py-3"
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                <span>Loading more...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span>Load More Discussions</span>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            )}
+          </Button>
 
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagination.page === 1}
-              onClick={() => {
-                // For now, pagination is handled by the parent component
-                // Future enhancement: implement pagination callback
-              }}
-              className="bg-white/80 hover:bg-white"
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagination.page === pagination.pages}
-              onClick={() => {
-                // For now, pagination is handled by the parent component
-                // Future enhancement: implement pagination callback
-              }}
-              className="bg-white/80 hover:bg-white"
-            >
-              Next
-            </Button>
+          {/* Progress Indicator */}
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-slate-500">
+              Showing {threads.length} of {pagination.total} discussions
+            </p>
+            <div className="w-full max-w-xs mx-auto">
+              <div className="w-full bg-slate-200 rounded-full h-1.5">
+                <div
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 h-1.5 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min((threads.length / pagination.total) * 100, 100)}%`,
+                  }}
+                ></div>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                {Math.round((threads.length / pagination.total) * 100)}% loaded
+              </p>
+            </div>
           </div>
         </div>
       )}

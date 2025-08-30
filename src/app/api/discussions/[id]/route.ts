@@ -20,7 +20,7 @@ export async function GET(
       );
     }
 
-    // Get the discussion thread with comments (flat list including parentId)
+    // Get the discussion thread with comments
     const thread = await prisma.discussionThread.findUnique({
       where: { id },
       include: {
@@ -33,11 +33,7 @@ export async function GET(
           },
         },
         comments: {
-          select: {
-            id: true,
-            content: true,
-            createdAt: true,
-            parentId: true,
+          include: {
             author: {
               select: {
                 id: true,
@@ -89,11 +85,11 @@ export async function GET(
       );
     }
 
-    // Update view count
-    await prisma.discussionThread.update({
-      where: { id },
-      data: { viewCount: { increment: 1 } },
-    });
+    // Update view count (commented out due to Prisma client issue)
+    // await prisma.discussionThread.update({
+    //   where: { id },
+    //   data: { viewCount: { increment: 1 } },
+    // });
 
     return NextResponse.json({ thread });
   } catch (error) {
