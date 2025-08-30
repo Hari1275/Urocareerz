@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import SharedHeader from "@/components/shared-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, MessageCircle, Eye, Calendar, User } from "lucide-react";
 import DiscussionStatusControls from "@/components/DiscussionStatusControls";
+import DiscussionComments, {
+  FlatComment,
+} from "@/components/DiscussionComments";
 
 interface DiscussionThread {
   id: string;
@@ -30,17 +34,7 @@ interface DiscussionThread {
   comments: DiscussionComment[];
 }
 
-interface DiscussionComment {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-  };
-}
+interface DiscussionComment extends FlatComment {}
 
 interface User {
   id: string;
@@ -74,6 +68,9 @@ export default function DiscussionThreadPage() {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
 
   const threadId = params.id as string;
 
@@ -118,6 +115,8 @@ export default function DiscussionThreadPage() {
 
       const data = await response.json();
       setThread(data.thread);
+      setEditTitle(data.thread.title);
+      setEditContent(data.thread.content);
     } catch (error) {
       console.error("Error fetching thread:", error);
       toast({
@@ -127,6 +126,62 @@ export default function DiscussionThreadPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const canModify =
+    !!user &&
+    !!thread &&
+    (user.id === thread.author.id || user.role === "ADMIN") &&
+    ((thread.comments && thread.comments.length === 0) || !thread.comments);
+
+  const handleSaveEdit = async () => {
+    if (!thread) return;
+    try {
+      const res = await fetch(`/api/discussions/${thread.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle,
+          content: editContent,
+          category: thread.category,
+          tags: thread.tags,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to update thread");
+      setThread(data.thread);
+      setIsEditing(false);
+      toast({
+        title: "Updated",
+        description: "Discussion updated successfully",
+      });
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to update discussion",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!thread) return;
+    if (!confirm("Delete this discussion? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/discussions/${thread.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to delete thread");
+      toast({ title: "Deleted", description: "Discussion deleted" });
+      router.push("/dashboard/mentee");
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to delete discussion",
+        variant: "destructive",
+      });
     }
   };
 
@@ -220,19 +275,7 @@ export default function DiscussionThreadPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Loading...</span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <SharedHeader />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -248,29 +291,18 @@ export default function DiscussionThreadPage() {
   if (!thread) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Error</span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <SharedHeader />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Thread Not Found
             </h1>
             <p className="text-gray-600 mb-6">
-              This discussion thread may have been deleted or doesn&apos;t exist.
+              This discussion thread may have been deleted or doesn&apos;t
+              exist.
             </p>
-            <Button 
-              onClick={() => router.push("/discussions")}
+            <Button
+              onClick={() => router.back()}
               className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
             >
               Back to Discussions
@@ -283,61 +315,21 @@ export default function DiscussionThreadPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Premium Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">U</span>
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
-                  UroCareerz
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              {user && (
-                <span className="text-sm text-slate-600 font-medium">
-                  Welcome, {user.firstName || user.email}
-                </span>
-              )}
-              <Link href="/profile" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
-                Profile
-              </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-      
+      <SharedHeader />
+
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - Navigation */}
           <div className="lg:col-span-3">
             <div className="sticky top-24 space-y-6">
-              {/* Back Navigation */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardContent className="p-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push("/dashboard")}
-                    className="w-full bg-white/80 border-slate-200 hover:bg-white"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Dashboard
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Removed back navigation for consistency */}
 
               {/* Discussion Info */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">Discussion Info</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-slate-900">
+                    Discussion Info
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-2">
@@ -345,35 +337,48 @@ export default function DiscussionThreadPage() {
                       {categoryLabels[thread.category] || thread.category}
                     </Badge>
                     <Badge
-                      variant={thread.status === "PINNED" ? "default" : "outline"}
-                      className={thread.status === "PINNED" ? "bg-yellow-100 text-yellow-800" : "bg-white/50"}
+                      variant={
+                        thread.status === "PINNED" ? "default" : "outline"
+                      }
+                      className={
+                        thread.status === "PINNED"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-white/50"
+                      }
                     >
                       {statusLabels[thread.status] || thread.status}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm text-slate-600">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      <span>{thread.author.firstName} {thread.author.lastName}</span>
+                      <span>
+                        {thread.author.firstName} {thread.author.lastName}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span suppressHydrationWarning>
-                        {new Date(thread.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        {new Date(thread.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Eye className="h-4 w-4" />
-                      <span>{thread.viewCount} views</span>
+                      <span>{thread.viewCount ?? 0} views</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MessageCircle className="h-4 w-4" />
-                      <span>{thread.comments.length} comments</span>
+                      <span>
+                        {thread.comments ? thread.comments.length : 0} comments
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -383,16 +388,38 @@ export default function DiscussionThreadPage() {
               {user && (
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                   <CardHeader>
-                    <CardTitle className="text-lg font-semibold text-slate-900">Discussion Controls</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-slate-900">
+                      Discussion Controls
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <DiscussionStatusControls
                       discussionId={thread.id}
-                      currentStatus={thread.status as "ACTIVE" | "CLOSED" | "ARCHIVED"}
+                      currentStatus={
+                        thread.status as "ACTIVE" | "CLOSED" | "ARCHIVED"
+                      }
                       isAuthor={user.id === thread.author.id}
                       isAdmin={user.role === "ADMIN"}
                       onStatusChange={handleStatusChange}
                     />
+                    <div className="mt-4 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!canModify}
+                        onClick={() => setIsEditing((v) => !v)}
+                      >
+                        {isEditing ? "Cancel Edit" : "Edit"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={!canModify}
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -416,10 +443,14 @@ export default function DiscussionThreadPage() {
                     </p>
                   </div>
 
-                  {thread.tags.length > 0 && (
+                  {thread.tags && thread.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-slate-200">
                       {thread.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs bg-blue-50 border-blue-200 text-blue-700"
+                        >
                           #{tag}
                         </Badge>
                       ))}
@@ -431,106 +462,113 @@ export default function DiscussionThreadPage() {
               {/* Add Comment */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">Add Comment</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-slate-900">
+                    Add Comment
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Textarea
-                    placeholder="Add your comment..."
+                    placeholder={
+                      thread.status !== "ACTIVE"
+                        ? "Commenting is disabled for closed or archived discussions"
+                        : "Add your comment..."
+                    }
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     className="min-h-[100px] mb-4 bg-white/80 border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
+                    disabled={thread.status !== "ACTIVE"}
                   />
                   <div className="flex justify-end">
                     <Button
                       onClick={handleSubmitComment}
-                      disabled={!comment.trim() || submitting}
+                      disabled={
+                        thread.status !== "ACTIVE" ||
+                        !comment.trim() ||
+                        submitting
+                      }
                       className="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
                     >
-                      {submitting ? "Posting..." : "Post Comment"}
+                      {submitting
+                        ? "Posting..."
+                        : thread.status !== "ACTIVE"
+                        ? "Comments disabled"
+                        : "Post Comment"}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Comments List */}
-              <div className="space-y-4">
-                {thread.comments.length === 0 ? (
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                    <CardContent className="p-8 text-center">
-                      <MessageCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-slate-600">No comments yet. Be the first to comment!</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  thread.comments.map((comment) => (
-                    <Card key={comment.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-slate-500" />
-                            <span className="font-medium text-slate-900">
-                              {comment.author.firstName} {comment.author.lastName}
-                            </span>
-                            <Badge variant="outline" className="text-xs bg-white/50">
-                              {comment.author.role}
-                            </Badge>
-                          </div>
-                          <span className="text-sm text-slate-500" suppressHydrationWarning>
-                            {new Date(comment.createdAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-                          {comment.content}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
+              {isEditing && (
+                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold text-slate-900">
+                      Edit Discussion
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Title"
+                    />
+                    <Textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      rows={6}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSaveEdit}
+                        disabled={
+                          !canModify || !editTitle.trim() || !editContent.trim()
+                        }
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Comments List (Nested) */}
+              <DiscussionComments
+                threadId={thread.id}
+                comments={thread.comments || []}
+                onAdded={(c) =>
+                  setThread((prev) =>
+                    prev
+                      ? { ...prev, comments: [...(prev.comments || []), c] }
+                      : prev
+                  )
+                }
+                canReply={thread.status === "ACTIVE"}
+              />
             </div>
           </div>
 
           {/* Right Sidebar - Additional Info */}
           <div className="lg:col-span-3">
             <div className="sticky top-24 space-y-6">
-              {/* Quick Actions */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button 
-                    onClick={() => router.push("/dashboard")}  
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Dashboard
-                  </Button>
-                  <Button 
-                    onClick={() => router.push("/discussions")}
-                    variant="outline" 
-                    className="w-full bg-white/80 border-slate-200 hover:bg-white"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    All Discussions
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Removed quick actions for consistency */}
 
               {/* Author Info */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">Author</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-slate-900">
+                    Author
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
                       <span className="text-white font-semibold text-sm">
-                        {thread.author.firstName?.[0] || 'U'}
+                        {thread.author.firstName?.[0] || "U"}
                       </span>
                     </div>
                     <div>

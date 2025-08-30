@@ -165,15 +165,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate category
+    // Validate category (keep in sync with prisma enum DiscussionCategory)
     const validCategories = [
       "GENERAL",
-      "MENTORSHIP",
+      "CASE_DISCUSSION",
       "CAREER_ADVICE",
-      "RESEARCH",
-      "CLINICAL",
-      "FELLOWSHIP",
-      "OTHER",
+      "TECHNICAL",
+      "NETWORKING",
+      "RESOURCES",
     ];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });

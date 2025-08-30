@@ -20,7 +20,7 @@ export async function GET(
       );
     }
 
-    // Get the discussion thread with comments
+    // Get the discussion thread with comments (flat list including parentId)
     const thread = await prisma.discussionThread.findUnique({
       where: { id },
       include: {
@@ -33,7 +33,11 @@ export async function GET(
           },
         },
         comments: {
-          include: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            parentId: true,
             author: {
               select: {
                 id: true,
@@ -88,7 +92,7 @@ export async function GET(
     // Update view count
     await prisma.discussionThread.update({
       where: { id },
-      data: { }, // Remove viewCount increment since it doesn't exist in schema
+      data: { viewCount: { increment: 1 } },
     });
 
     return NextResponse.json({ thread });
@@ -137,12 +141,12 @@ export async function PUT(
     }
 
     // Get the discussion thread
-    const thread = await prisma.discussionThread.findUnique({
-      where: { id, deletedAt: null },
-      select: { authorId: true },
+    const threadRecord = await prisma.discussionThread.findUnique({
+      where: { id },
+      select: { authorId: true, deletedAt: true },
     });
 
-    if (!thread) {
+    if (!threadRecord || threadRecord.deletedAt) {
       return NextResponse.json(
         { error: "Discussion thread not found" },
         { status: 404 }
@@ -150,7 +154,7 @@ export async function PUT(
     }
 
     // Check if user is the author
-    if (thread.authorId !== userId) {
+    if (threadRecord.authorId !== userId) {
       return NextResponse.json(
         { error: "You can only edit your own threads" },
         { status: 403 }
@@ -182,6 +186,19 @@ export async function PUT(
         { error: "Content must be between 10 and 5000 characters" },
         { status: 400 }
       );
+    }
+
+    // Optional: validate category/tags as in POST
+    const validCategories = [
+      "GENERAL",
+      "CASE_DISCUSSION",
+      "CAREER_ADVICE",
+      "TECHNICAL",
+      "NETWORKING",
+      "RESOURCES",
+    ];
+    if (category && !validCategories.includes(category)) {
+      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
 
     // Update the discussion thread
@@ -257,12 +274,12 @@ export async function DELETE(
     }
 
     // Get the discussion thread
-    const thread = await prisma.discussionThread.findUnique({
-      where: { id, deletedAt: null },
-      select: { authorId: true },
+    const threadRecord = await prisma.discussionThread.findUnique({
+      where: { id },
+      select: { authorId: true, deletedAt: true },
     });
 
-    if (!thread) {
+    if (!threadRecord || threadRecord.deletedAt) {
       return NextResponse.json(
         { error: "Discussion thread not found" },
         { status: 404 }
@@ -270,7 +287,7 @@ export async function DELETE(
     }
 
     // Check if user is the author
-    if (thread.authorId !== userId) {
+    if (threadRecord.authorId !== userId) {
       return NextResponse.json(
         { error: "You can only delete your own threads" },
         { status: 403 }
