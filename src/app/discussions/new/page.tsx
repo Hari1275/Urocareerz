@@ -70,7 +70,16 @@ export default function NewDiscussionPage() {
 
         {/* Form Container */}
         <div className="max-w-4xl mx-auto">
-          <DiscussionThreadForm />
+          <DiscussionThreadForm
+            onSuccess={() => {
+              // Navigate to the discussions list page after successful creation
+              router.push("/discussions");
+            }}
+            onCancel={() => {
+              // Navigate back to discussions list
+              router.push("/discussions");
+            }}
+          />
         </div>
       </main>
     </div>

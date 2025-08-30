@@ -1653,7 +1653,7 @@ export default function MenteeDashboardPage() {
                 {/* Opportunities Grid */}
                 <div className="grid gap-6">
                   {opportunityPagination.loading &&
-                  opportunities.length === 0 ? (
+                    opportunities.length === 0 ? (
                     <div className="space-y-6">
                       {[...Array(6)].map((_, i) => (
                         <LoadingCard
@@ -1776,16 +1776,16 @@ export default function MenteeDashboardPage() {
                       {/* Infinite Scroll Load More */}
                       {opportunityPagination.page <
                         opportunityPagination.pages && (
-                        <InfiniteScrollTrigger
-                          onLoadMore={loadMoreOpportunities}
-                          loading={opportunityPagination.loading}
-                          totalItems={opportunityPagination.total}
-                          currentItems={opportunities.length}
-                          loadingText="Loading more opportunities..."
-                          buttonText="Load More Opportunities"
-                          progressColor="from-blue-500 to-indigo-500"
-                        />
-                      )}
+                          <InfiniteScrollTrigger
+                            onLoadMore={loadMoreOpportunities}
+                            loading={opportunityPagination.loading}
+                            totalItems={opportunityPagination.total}
+                            currentItems={opportunities.length}
+                            loadingText="Loading more opportunities..."
+                            buttonText="Load More Opportunities"
+                            progressColor="from-blue-500 to-indigo-500"
+                          />
+                        )}
                     </>
                   )}
                 </div>
@@ -1805,7 +1805,7 @@ export default function MenteeDashboardPage() {
 
                 <div className="space-y-6">
                   {applicationsPagination.loading &&
-                  applications.length === 0 ? (
+                    applications.length === 0 ? (
                     <div className="space-y-6">
                       {[...Array(5)].map((_, i) => (
                         <LoadingCard
@@ -1902,16 +1902,16 @@ export default function MenteeDashboardPage() {
                       {/* Infinite Scroll Load More */}
                       {applicationsPagination.page <
                         applicationsPagination.pages && (
-                        <InfiniteScrollTrigger
-                          onLoadMore={loadMoreApplications}
-                          loading={applicationsPagination.loading}
-                          totalItems={applicationsPagination.total}
-                          currentItems={applications.length}
-                          loadingText="Loading more applications..."
-                          buttonText="Load More Applications"
-                          progressColor="from-indigo-500 to-purple-500"
-                        />
-                      )}
+                          <InfiniteScrollTrigger
+                            onLoadMore={loadMoreApplications}
+                            loading={applicationsPagination.loading}
+                            totalItems={applicationsPagination.total}
+                            currentItems={applications.length}
+                            loadingText="Loading more applications..."
+                            buttonText="Load More Applications"
+                            progressColor="from-indigo-500 to-purple-500"
+                          />
+                        )}
                     </>
                   )}
                 </div>
@@ -1934,7 +1934,7 @@ export default function MenteeDashboardPage() {
 
                 <div className="space-y-4">
                   {savedPagination.loading &&
-                  savedOpportunities.length === 0 ? (
+                    savedOpportunities.length === 0 ? (
                     <div className="space-y-4">
                       {[...Array(5)].map((_, i) => (
                         <LoadingCard
@@ -2375,18 +2375,18 @@ export default function MenteeDashboardPage() {
                       {/* Infinite Scroll Load More */}
                       {submissionsPagination.page <
                         submissionsPagination.pages && (
-                        <InfiniteScrollTrigger
-                          onLoadMore={() =>
-                            fetchSubmissions(submissionsPagination.page + 1)
-                          }
-                          loading={submissionsPagination.loading}
-                          totalItems={submissionsPagination.total}
-                          currentItems={submissions.length}
-                          loadingText="Loading more submissions..."
-                          buttonText="Load More Submissions"
-                          progressColor="from-emerald-500 to-teal-500"
-                        />
-                      )}
+                          <InfiniteScrollTrigger
+                            onLoadMore={() =>
+                              fetchSubmissions(submissionsPagination.page + 1)
+                            }
+                            loading={submissionsPagination.loading}
+                            totalItems={submissionsPagination.total}
+                            currentItems={submissions.length}
+                            loadingText="Loading more submissions..."
+                            buttonText="Load More Submissions"
+                            progressColor="from-emerald-500 to-teal-500"
+                          />
+                        )}
                     </>
                   )}
                 </div>
@@ -2421,7 +2421,14 @@ export default function MenteeDashboardPage() {
                 </div>
 
                 {/* Discussion Form */}
-                <DiscussionThreadForm />
+                <DiscussionThreadForm
+                  onSuccess={() => {
+                    // Switch back to discussions tab and refresh the discussions
+                    setActiveSection("discussions");
+                    fetchDiscussions();
+                  }}
+                  onCancel={() => setActiveSection("discussions")}
+                />
               </div>
             )}
           </div>
@@ -3084,35 +3091,35 @@ export default function MenteeDashboardPage() {
                 {/* Source Information */}
                 {(selectedSubmission.sourceUrl ||
                   selectedSubmission.sourceName) && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                      Source Information
-                    </h3>
-                    <div className="space-y-2">
-                      {selectedSubmission.sourceName && (
-                        <p className="text-sm text-slate-600">
-                          <span className="font-medium">Source:</span>{" "}
-                          {selectedSubmission.sourceName}
-                        </p>
-                      )}
-                      {selectedSubmission.sourceUrl && (
-                        <p className="text-sm">
-                          <span className="font-medium text-slate-600">
-                            URL:
-                          </span>{" "}
-                          <a
-                            href={selectedSubmission.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 underline"
-                          >
-                            {selectedSubmission.sourceUrl}
-                          </a>
-                        </p>
-                      )}
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                        Source Information
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedSubmission.sourceName && (
+                          <p className="text-sm text-slate-600">
+                            <span className="font-medium">Source:</span>{" "}
+                            {selectedSubmission.sourceName}
+                          </p>
+                        )}
+                        {selectedSubmission.sourceUrl && (
+                          <p className="text-sm">
+                            <span className="font-medium text-slate-600">
+                              URL:
+                            </span>{" "}
+                            <a
+                              href={selectedSubmission.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700 underline"
+                            >
+                              {selectedSubmission.sourceUrl}
+                            </a>
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Admin Feedback */}
                 {selectedSubmission.status === "REJECTED" &&
@@ -3362,8 +3369,8 @@ export default function MenteeDashboardPage() {
                     value={
                       editingSubmission.applicationDeadline
                         ? new Date(editingSubmission.applicationDeadline)
-                            .toISOString()
-                            .split("T")[0]
+                          .toISOString()
+                          .split("T")[0]
                         : ""
                     }
                     onChange={(e) =>
