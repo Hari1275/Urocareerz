@@ -280,9 +280,9 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md shadow-md border-b border-gray-200">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               {/* Mobile menu button */}
@@ -315,7 +315,7 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex pt-16">
         {/* Sidebar - Mobile Overlay */}
         {sidebarOpen && (
           <div
@@ -328,9 +328,8 @@ export default function AdminDashboardPage() {
 
         {/* Sidebar */}
         <aside
-          className={`fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 w-64 bg-white shadow-sm transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:h-screen ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-50 w-64 bg-white shadow-sm transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:h-[calc(100vh-4rem)] ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="flex items-center justify-between p-4 border-b lg:hidden">
             <h2 className="text-lg font-semibold">Navigation</h2>
@@ -342,7 +341,7 @@ export default function AdminDashboardPage() {
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <nav className="mt-4 lg:mt-8 lg:overflow-y-auto lg:h-[calc(100vh-8rem)]">
+          <nav className="mt-4 lg:mt-8 lg:overflow-y-auto lg:h-[calc(100vh-12rem)]">
             <div className="px-4 space-y-2">
               <Button
                 variant={activeTab === "overview" ? "default" : "ghost"}
@@ -423,25 +422,34 @@ export default function AdminDashboardPage() {
                   <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
                   <p className="text-gray-600">All platform metrics, trends, and recent activity</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-36">
-                    <DatePicker
-                      date={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
-                      onChange={date => setDateRange(prev => ({ ...prev, startDate: date ? date.toISOString().split('T')[0] : "" }))}
-                      placeholder="Start Date"
-                    />
-                  </div>
-                  <div className="w-36">
-                    <DatePicker
-                      date={dateRange.endDate ? new Date(dateRange.endDate) : undefined}
-                      onChange={date => setDateRange(prev => ({ ...prev, endDate: date ? date.toISOString().split('T')[0] : "" }))}
-                      placeholder="End Date"
-                    />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                  <div className="flex gap-2">
+                    <div className="w-full sm:w-36">
+                      <DatePicker
+                        date={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
+                        onChange={date => setDateRange(prev => ({
+                          ...prev,
+                          startDate: date ? date.toISOString().split('T')[0] : ""
+                        }))}
+                        placeholder="Start Date"
+                      />
+                    </div>
+                    <div className="w-full sm:w-36">
+                      <DatePicker
+                        date={dateRange.endDate ? new Date(dateRange.endDate) : undefined}
+                        onChange={date => setDateRange(prev => ({
+                          ...prev,
+                          endDate: date ? date.toISOString().split('T')[0] : ""
+                        }))}
+                        placeholder="End Date"
+                      />
+                    </div>
                   </div>
                   <Button
                     variant="outline"
                     onClick={fetchAnalytics}
                     disabled={analyticsLoading}
+                    className="w-full sm:w-auto"
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
                     Refresh
@@ -513,8 +521,8 @@ export default function AdminDashboardPage() {
                           <AreaChart data={analyticsData.trends.userRegistrationsByDate} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                             <defs>
                               <linearGradient id="colorReg" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.7}/>
-                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05}/>
+                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.7} />
+                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05} />
                               </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
@@ -535,8 +543,8 @@ export default function AdminDashboardPage() {
                           <AreaChart data={analyticsData.trends.opportunitySubmissionsByDate} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                             <defs>
                               <linearGradient id="colorSub" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#059669" stopOpacity={0.7}/>
-                                <stop offset="95%" stopColor="#059669" stopOpacity={0.05}/>
+                                <stop offset="5%" stopColor="#059669" stopOpacity={0.7} />
+                                <stop offset="95%" stopColor="#059669" stopOpacity={0.05} />
                               </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
@@ -574,9 +582,9 @@ export default function AdminDashboardPage() {
                                     <Cell key={`cell-role-${idx}`} fill={ROLE_COLORS[idx % ROLE_COLORS.length]} />
                                   ))}
                                 </Pie>
-                                <Tooltip 
-                                  contentStyle={{ 
-                                    backgroundColor: '#fff', 
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: '#fff',
                                     border: '1px solid #e5e7eb',
                                     borderRadius: '8px',
                                     fontSize: '14px',
@@ -584,8 +592,8 @@ export default function AdminDashboardPage() {
                                   }}
                                   formatter={(value, name) => [`${value} users`, name]}
                                 />
-                                <Legend 
-                                  verticalAlign="bottom" 
+                                <Legend
+                                  verticalAlign="bottom"
                                   height={36}
                                   iconType="circle"
                                   wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
@@ -621,9 +629,9 @@ export default function AdminDashboardPage() {
                                     <Cell key={`cell-type-${idx}`} fill={TYPE_COLORS[idx % TYPE_COLORS.length]} />
                                   ))}
                                 </Pie>
-                                <Tooltip 
-                                  contentStyle={{ 
-                                    backgroundColor: '#fff', 
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: '#fff',
                                     border: '1px solid #e5e7eb',
                                     borderRadius: '8px',
                                     fontSize: '14px',
@@ -631,8 +639,8 @@ export default function AdminDashboardPage() {
                                   }}
                                   formatter={(value, name) => [`${value} opportunities`, name]}
                                 />
-                                <Legend 
-                                  verticalAlign="bottom" 
+                                <Legend
+                                  verticalAlign="bottom"
                                   height={36}
                                   iconType="circle"
                                   wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
@@ -688,41 +696,54 @@ export default function AdminDashboardPage() {
                     </Card>
                   </div>
                   {/* Recent Activity */}
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>Recent Activity</CardTitle>
-                          <p className="text-sm text-muted-foreground">Platform actions and events from the last 7 days</p>
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="min-w-0">
+                          <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                            Platform actions and events from the last 7 days
+                          </p>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setActiveTab("audit-logs")}
-                          className="text-xs"
+                          className="text-xs flex-shrink-0 w-full sm:w-auto"
                         >
+                          <ClipboardList className="h-3 w-3 mr-1" />
                           View All
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
                         {analyticsData.recentActivity.length > 0 ? (
                           <>
                             {analyticsData.recentActivity.slice(0, 10).map((activity) => (
-                              <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div className="flex items-center gap-3">
-                                  <Badge className={getActionColor(activity.action)}>{activity.action.replace(/_/g, " ")}</Badge>
-                                  <div>
-                                    <p className="text-sm font-medium">{activity.user.firstName && activity.user.lastName ? `${activity.user.firstName} ${activity.user.lastName}` : activity.user.email}</p>
-                                    <p className="text-xs text-gray-500">{activity.entityType} • {activity.user.role}</p>
+                              <div key={activity.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg hover:bg-gray-50/50 transition-colors">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <Badge className={`${getActionColor(activity.action)} text-xs flex-shrink-0`}>
+                                    {activity.action.replace(/_/g, " ")}
+                                  </Badge>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium truncate">
+                                      {activity.user.firstName && activity.user.lastName
+                                        ? `${activity.user.firstName} ${activity.user.lastName}`
+                                        : activity.user.email}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {activity.entityType} • <Badge className={getRoleColor(activity.user.role)} variant="outline">{activity.user.role}</Badge>
+                                    </p>
                                   </div>
                                 </div>
-                                <span className="text-xs text-gray-500">{formatDate(activity.createdAt)}</span>
+                                <span className="text-xs text-gray-500 flex-shrink-0 self-start sm:self-center">
+                                  {formatDate(activity.createdAt)}
+                                </span>
                               </div>
                             ))}
                             {analyticsData.recentActivity.length > 10 && (
-                              <div className="text-center pt-2">
+                              <div className="text-center pt-3 border-t">
                                 <p className="text-xs text-gray-500">
                                   Showing 10 of {analyticsData.recentActivity.length} recent activities
                                 </p>
@@ -730,7 +751,9 @@ export default function AdminDashboardPage() {
                             )}
                           </>
                         ) : (
-                          <p className="text-gray-500 text-center py-4">No recent activity</p>
+                          <div className="flex items-center justify-center py-8">
+                            <p className="text-gray-500 text-center">No recent activity</p>
+                          </div>
                         )}
                       </div>
                     </CardContent>

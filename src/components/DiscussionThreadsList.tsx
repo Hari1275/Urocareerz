@@ -55,20 +55,22 @@ interface DiscussionThreadsListProps {
 
 const categoryLabels = {
   GENERAL: "General",
-  CASE_DISCUSSION: "Case Discussion",
+  MENTORSHIP: "Mentorship",
   CAREER_ADVICE: "Career Advice",
-  TECHNICAL: "Technical",
-  NETWORKING: "Networking",
-  RESOURCES: "Resources",
+  RESEARCH: "Research",
+  CLINICAL: "Clinical",
+  FELLOWSHIP: "Fellowship",
+  OTHER: "Other",
 };
 
 const categoryColors = {
   GENERAL: "bg-gray-100 text-gray-800",
-  CASE_DISCUSSION: "bg-blue-100 text-blue-800",
+  MENTORSHIP: "bg-blue-100 text-blue-800",
   CAREER_ADVICE: "bg-green-100 text-green-800",
-  TECHNICAL: "bg-purple-100 text-purple-800",
-  NETWORKING: "bg-orange-100 text-orange-800",
-  RESOURCES: "bg-pink-100 text-pink-800",
+  RESEARCH: "bg-purple-100 text-purple-800",
+  CLINICAL: "bg-orange-100 text-orange-800",
+  FELLOWSHIP: "bg-pink-100 text-pink-800",
+  OTHER: "bg-indigo-100 text-indigo-800",
 };
 
 export default function DiscussionThreadsList({
@@ -153,7 +155,7 @@ export default function DiscussionThreadsList({
               </Select>
             </div>
 
-            <Button 
+            <Button
               onClick={() => onNewDiscussion ? onNewDiscussion() : router.push("/discussions/new")}
               className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
             >
@@ -166,8 +168,8 @@ export default function DiscussionThreadsList({
       {/* Threads List */}
       <div className="space-y-4">
         {threads.map((thread) => (
-          <Card 
-            key={thread.id} 
+          <Card
+            key={thread.id}
             className="bg-white/70 backdrop-blur-lg shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200 cursor-pointer hover:bg-white/80 hover:border-blue-200"
             onClick={() => router.push(`/discussions/${thread.id}`)}
           >
@@ -181,11 +183,10 @@ export default function DiscussionThreadsList({
                       </Badge>
                     )}
                     <Badge
-                      className={`text-xs ${
-                        categoryColors[
-                          thread.category as keyof typeof categoryColors
-                        ] || categoryColors.GENERAL
-                      }`}
+                      className={`text-xs ${categoryColors[
+                        thread.category as keyof typeof categoryColors
+                      ] || categoryColors.GENERAL
+                        }`}
                     >
                       {categoryLabels[
                         thread.category as keyof typeof categoryLabels
@@ -270,15 +271,14 @@ export default function DiscussionThreadsList({
               <h3 className="text-lg font-medium mb-2">No discussions found</h3>
               <p className="text-sm">
                 {selectedCategory
-                  ? `No discussions in the "${
-                      categoryLabels[
-                        selectedCategory as keyof typeof categoryLabels
-                      ]
-                    }" category yet.`
+                  ? `No discussions in the "${categoryLabels[
+                  selectedCategory as keyof typeof categoryLabels
+                  ]
+                  }" category yet.`
                   : "Be the first to start a discussion!"}
               </p>
             </div>
-            <Button 
+            <Button
               onClick={() => onNewDiscussion ? onNewDiscussion() : router.push("/discussions/new")}
               className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
             >

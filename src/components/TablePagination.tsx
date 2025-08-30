@@ -43,17 +43,19 @@ export function TablePagination({
   }
 
   return (
-    <div className={`flex items-center justify-between space-x-6 py-4 ${className || ""}`}>
+    <div
+      className={`flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 py-4 ${className || ""}`}
+    >
       {/* Left Section: Page Size Selector and Info */}
-      <div className="flex items-center space-x-6 text-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm w-full md:w-auto">
         {showPageSizeSelector && (
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-700">Rows per page</span>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-700 text-xs sm:text-sm">Rows per page</span>
             <Select
               value={state.pageSize.toString()}
               onValueChange={(value) => actions.setPageSize(Number(value))}
             >
-              <SelectTrigger className="h-8 w-16">
+              <SelectTrigger className="h-8 w-20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -67,16 +69,17 @@ export function TablePagination({
           </div>
         )}
         {showPageInfo && (
-          <div className="text-gray-700">
+          <div className="text-gray-700 text-xs sm:text-sm">
             Showing {state.startIndex + 1} to {state.endIndex} of {state.totalItems} results
           </div>
         )}
       </div>
+
       {/* Right Section: Pagination Controls */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center flex-wrap gap-2 justify-center md:justify-end w-full md:w-auto">
         {state.totalPages > 1 && (
           <Pagination>
-            <PaginationContent>
+            <PaginationContent className="flex flex-wrap justify-center gap-1">
               <PaginationItem>
                 <PaginationPrevious
                   onClick={(e) => {
@@ -145,12 +148,14 @@ export function TablePaginationSimple({
   }
 
   return (
-    <div className={`flex items-center justify-between py-4 ${className || ""}`}>
-      <div className="text-sm text-gray-700">
+    <div
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 py-4 ${className || ""}`}
+    >
+      <div className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
         Page {state.currentPage} of {state.totalPages} ({state.totalItems} total)
       </div>
-      
-      <div className="flex items-center space-x-2">
+
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -170,4 +175,4 @@ export function TablePaginationSimple({
       </div>
     </div>
   );
-} 
+}

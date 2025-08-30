@@ -168,11 +168,12 @@ export async function POST(req: NextRequest) {
     // Validate category
     const validCategories = [
       "GENERAL",
-      "CASE_DISCUSSION",
+      "MENTORSHIP",
       "CAREER_ADVICE",
-      "TECHNICAL",
-      "NETWORKING",
-      "RESOURCES",
+      "RESEARCH",
+      "CLINICAL",
+      "FELLOWSHIP",
+      "OTHER",
     ];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });

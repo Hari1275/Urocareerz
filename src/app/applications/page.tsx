@@ -297,7 +297,7 @@ export default function ApplicationsPage() {
                 </span>
               </Link>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {user && (
                 <span className="text-sm text-slate-600 font-medium">
@@ -365,13 +365,13 @@ export default function ApplicationsPage() {
                       </CardTitle>
                       <div className="flex items-center gap-3 mb-2">
                         {application.opportunity.opportunityType && (
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className="rounded-lg font-medium"
-                            style={{ 
-                              backgroundColor: application.opportunity.opportunityType.color ? application.opportunity.opportunityType.color + '20' : undefined, 
+                            style={{
+                              backgroundColor: application.opportunity.opportunityType.color ? application.opportunity.opportunityType.color + '20' : undefined,
                               color: application.opportunity.opportunityType.color || undefined,
-                              borderColor: application.opportunity.opportunityType.color || undefined 
+                              borderColor: application.opportunity.opportunityType.color || undefined
                             }}
                           >
                             {application.opportunity.opportunityType.name}

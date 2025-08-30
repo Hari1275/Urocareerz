@@ -685,7 +685,7 @@ export default function UserManagementTable() {
               paginatedUsers.map((user) => (
                 <Card key={user.id} className="p-4">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap">
                       <div>
                         <h3 className="font-medium">
                           {user.firstName && user.lastName
@@ -824,7 +824,7 @@ export default function UserManagementTable() {
           </div>
 
           {/* Pagination */}
-          <TablePagination 
+          <TablePagination
             pagination={pagination}
             showPageSizeSelector={true}
             showPageInfo={true}
@@ -845,9 +845,8 @@ export default function UserManagementTable() {
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         title="Delete User"
-        description={`Are you sure you want to delete ${
-          userToDelete?.firstName || userToDelete?.email
-        }? This action cannot be undone.`}
+        description={`Are you sure you want to delete ${userToDelete?.firstName || userToDelete?.email
+          }? This action cannot be undone.`}
         confirmText="Delete User"
         variant="destructive"
         onConfirm={() => {
@@ -864,9 +863,8 @@ export default function UserManagementTable() {
         open={showRejectDialog}
         onOpenChange={setShowRejectDialog}
         title="Reject User"
-        description={`Are you sure you want to reject and delete ${
-          userToDelete?.firstName || userToDelete?.email
-        }? This action cannot be undone.`}
+        description={`Are you sure you want to reject and delete ${userToDelete?.firstName || userToDelete?.email
+          }? This action cannot be undone.`}
         confirmText="Reject User"
         variant="destructive"
         onConfirm={() => {

@@ -33,11 +33,12 @@ interface DiscussionThreadFormData {
 
 const categoryOptions = [
   { value: "GENERAL", label: "General" },
-  { value: "CASE_DISCUSSION", label: "Case Discussion" },
+  { value: "MENTORSHIP", label: "Mentorship" },
   { value: "CAREER_ADVICE", label: "Career Advice" },
-  { value: "TECHNICAL", label: "Technical" },
-  { value: "NETWORKING", label: "Networking" },
-  { value: "RESOURCES", label: "Resources" },
+  { value: "RESEARCH", label: "Research" },
+  { value: "CLINICAL", label: "Clinical" },
+  { value: "FELLOWSHIP", label: "Fellowship" },
+  { value: "OTHER", label: "Other" },
 ];
 
 export default function DiscussionThreadForm() {
@@ -309,8 +310,8 @@ export default function DiscussionThreadForm() {
         </Button>
         <div className="flex gap-3 w-full sm:w-auto">
           <Button variant="outline" onClick={() => router.push("/dashboard")} className="text-gray-700 hover:text-blue-600 transition-colors">Cancel</Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             onClick={handleSubmit}
             disabled={loading}
             className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600 w-full sm:w-auto"

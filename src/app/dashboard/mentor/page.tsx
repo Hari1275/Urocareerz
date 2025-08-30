@@ -89,7 +89,7 @@ export default function MentorDashboardPage() {
   const router = useRouter();
   const { opportunityTypes, loading: opportunityTypesLoading, error: opportunityTypesError, getTypeBadge } = useOpportunityTypes();
   const { mentees, loading: searchLoading, error: searchError, filters, pagination, updateFilters, changePage, clearSearch } = useMenteeSearch();
-  
+
   // Debug opportunity types
   useEffect(() => {
     console.log('Opportunity Types:', opportunityTypes);
@@ -109,11 +109,11 @@ export default function MentorDashboardPage() {
     useState<Application | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewing, setReviewing] = useState(false);
-  
+
   // New state for view management
   const [currentView, setCurrentView] = useState<'main' | 'opportunities' | 'applications' | 'post-opportunity' | 'find-mentees'>('main');
 
-  
+
   // Modal states for opportunities
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -155,7 +155,7 @@ export default function MentorDashboardPage() {
     const initializeDashboard = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch user data, opportunities, and applications in parallel
         const [userResponse, opportunitiesResponse, applicationsResponse] = await Promise.allSettled([
           fetch("/api/user", { credentials: 'include' }),
@@ -297,7 +297,7 @@ export default function MentorDashboardPage() {
 
   const handleSaveOpportunity = async () => {
     if (!selectedOpportunity) return;
-    
+
     setSavingOpportunity(true);
     try {
       const response = await fetch(`/api/opportunities/${selectedOpportunity.id}`, {
@@ -398,7 +398,7 @@ export default function MentorDashboardPage() {
   const handlePostOpportunity = async () => {
     // Clear any previous form errors
     setFormError(null);
-    
+
     if (!postOpportunityForm.title || !postOpportunityForm.description || !postOpportunityForm.opportunityTypeId) {
       setFormError("Please fill in all required fields (Title, Description, and Opportunity Type)");
       return;
@@ -451,7 +451,7 @@ export default function MentorDashboardPage() {
   const handleFindMentees = async () => {
     // Clear any previous form errors
     setFormError(null);
-    
+
     setSearchingMentees(true);
     try {
       // Update search filters with form data
@@ -461,7 +461,7 @@ export default function MentorDashboardPage() {
         experienceLevel: findMenteesForm.experienceLevel,
         interests: findMenteesForm.interests
       });
-      
+
       setSuccessMessage("Search completed successfully!");
       setFormError(null);
       setSearchingMentees(false);
@@ -546,7 +546,7 @@ export default function MentorDashboardPage() {
         <Skeleton className="h-8 w-64 mx-auto mb-4" />
         <Skeleton className="h-6 w-96 mx-auto" />
       </div>
-      
+
       {/* Stats cards skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
         {[1, 2, 3, 4].map((i) => (
@@ -559,7 +559,7 @@ export default function MentorDashboardPage() {
           </Card>
         ))}
       </div>
-      
+
       {/* Action cards skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {[1, 2, 3].map((i) => (
@@ -644,8 +644,8 @@ export default function MentorDashboardPage() {
               <h3 className="text-lg font-medium mb-2">Error Loading Dashboard</h3>
               <p className="text-sm text-gray-600">{error}</p>
             </div>
-            <Button 
-              onClick={() => router.push("/login")} 
+            <Button
+              onClick={() => router.push("/login")}
               className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
             >
               Back to Login
@@ -669,7 +669,7 @@ export default function MentorDashboardPage() {
             <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
               <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
             </Link>
-            
+
             <div className="hidden md:flex items-center gap-4">
               {user === null ? (
                 <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
@@ -755,8 +755,8 @@ export default function MentorDashboardPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 text-center">Post Opportunity</h3>
               <p className="text-sm text-gray-500 text-center">Share fellowships, jobs, or observerships</p>
-              <Button 
-                className="w-full mt-2 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" 
+              <Button
+                className="w-full mt-2 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
                 onClick={() => setCurrentView('post-opportunity')}
               >
                 Post Opportunity
@@ -772,8 +772,8 @@ export default function MentorDashboardPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 text-center">My Opportunities</h3>
               <p className="text-sm text-gray-500 text-center">Manage your posted opportunities</p>
-              <Button 
-                className="w-full mt-2 bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-semibold shadow-md hover:from-emerald-700 hover:to-teal-600" 
+              <Button
+                className="w-full mt-2 bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-semibold shadow-md hover:from-emerald-700 hover:to-teal-600"
                 onClick={() => setCurrentView('opportunities')}
               >
                 View Opportunities
@@ -789,8 +789,8 @@ export default function MentorDashboardPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 text-center">Applications</h3>
               <p className="text-sm text-gray-500 text-center">View applications from mentees</p>
-              <Button 
-                className="w-full mt-2 bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600" 
+              <Button
+                className="w-full mt-2 bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
                 onClick={() => setCurrentView('applications')}
               >
                 View Applications
@@ -818,8 +818,8 @@ export default function MentorDashboardPage() {
           <div className="mb-8 sm:mb-10 lg:mb-12">
             {/* Header with Back Button */}
             <div className="flex items-center gap-4 mb-6">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setCurrentView('main')}
                 className="flex items-center gap-2"
               >
@@ -842,7 +842,7 @@ export default function MentorDashboardPage() {
 
             {/* Action Button */}
             <div className="text-center mb-8">
-              <Button 
+              <Button
                 className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600 px-8 py-3"
                 onClick={() => setCurrentView('post-opportunity')}
               >
@@ -876,8 +876,8 @@ export default function MentorDashboardPage() {
           <div className="mb-8 sm:mb-10 lg:mb-12">
             {/* Header with Back Button */}
             <div className="flex items-center gap-4 mb-6">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setCurrentView('main')}
                 className="flex items-center gap-2"
               >
@@ -925,7 +925,7 @@ export default function MentorDashboardPage() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">All Opportunities</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                
+
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span>Show:</span>
                   <Select
@@ -957,8 +957,8 @@ export default function MentorDashboardPage() {
                 <div className="text-4xl mb-4">📝</div>
                 <h3 className="text-lg font-medium mb-2">No opportunities posted yet</h3>
                 <p className="text-gray-600 mb-4">Start by posting your first opportunity to help mentees.</p>
-                <Button 
-                  className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" 
+                <Button
+                  className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
                   onClick={() => setCurrentView('post-opportunity')}
                 >
                   Post Your First Opportunity
@@ -969,7 +969,7 @@ export default function MentorDashboardPage() {
                 <div className="mb-4 text-sm text-gray-600">
                   Showing {opportunitiesPagination.state.startIndex + 1} to {opportunitiesPagination.state.endIndex} of {opportunitiesPagination.state.totalItems} opportunities
                 </div>
-                
+
                 {/* Table Layout */}
                 <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow overflow-hidden">
                   <Table>
@@ -1086,181 +1086,181 @@ export default function MentorDashboardPage() {
                       </PaginationContent>
                     </Pagination>
                   </div>
-                              )}
-            </>
-          )}
-        </div>
+                )}
+              </>
+            )}
+          </div>
         )}
 
         {/* Applications Section with Cards - Only show in applications view */}
         {currentView === 'applications' && (
           <div id="applications-section" className="mt-8 sm:mt-10 lg:mt-12">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Applications from Mentees</h2>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Show:</span>
-                <Select
-                  value={applicationsPagination.state.pageSize.toString()}
-                  onValueChange={(value) => applicationsPagination.actions.setPageSize(parseInt(value))}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Applications from Mentees</h2>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>Show:</span>
+                  <Select
+                    value={applicationsPagination.state.pageSize.toString()}
+                    onValueChange={(value) => applicationsPagination.actions.setPageSize(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-20 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span>per page</span>
+                </div>
+                <Button onClick={fetchApplications} variant="outline" disabled={loadingApplications} className="w-full sm:w-auto">
+                  {loadingApplications ? "Refreshing..." : "Refresh"}
+                </Button>
+              </div>
+            </div>
+
+            {loadingApplications ? (
+              <TableSkeleton />
+            ) : applications.length === 0 ? (
+              <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center">
+                <div className="text-4xl mb-4">📋</div>
+                <h3 className="text-lg font-medium mb-2">No applications received yet</h3>
+                <p className="text-gray-600 mb-4">Applications will appear here when mentees apply to your opportunities.</p>
+                <Button
+                  className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                  onClick={() => setCurrentView('post-opportunity')}
                 >
-                  <SelectTrigger className="w-20 h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>per page</span>
+                  Post an Opportunity
+                </Button>
               </div>
-              <Button onClick={fetchApplications} variant="outline" disabled={loadingApplications} className="w-full sm:w-auto">
-                {loadingApplications ? "Refreshing..." : "Refresh"}
-              </Button>
-            </div>
-          </div>
-          
-          {loadingApplications ? (
-            <TableSkeleton />
-          ) : applications.length === 0 ? (
-            <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center">
-              <div className="text-4xl mb-4">📋</div>
-              <h3 className="text-lg font-medium mb-2">No applications received yet</h3>
-              <p className="text-gray-600 mb-4">Applications will appear here when mentees apply to your opportunities.</p>
-              <Button 
-                className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" 
-                onClick={() => setCurrentView('post-opportunity')}
-              >
-                Post an Opportunity
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="mb-4 text-sm text-gray-600">
-                Showing {applicationsPagination.state.startIndex + 1} to {applicationsPagination.state.endIndex} of {applicationsPagination.state.totalItems} applications
-              </div>
-              
-              {/* Table Layout */}
-              <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Applicant</TableHead>
-                      <TableHead>Opportunity</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Applied Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {applicationsPagination.paginateData(applications).map((application) => {
-                      const opportunity = opportunities.find((opp) => opp.id === application.opportunityId);
-                      return (
-                        <TableRow key={application.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium text-gray-900">{application.menteeName}</div>
-                              <div className="text-sm text-gray-500">{application.menteeEmail}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-xs">
-                              <div className="font-medium text-gray-900 truncate">{opportunity?.title || "Unknown Opportunity"}</div>
-                              {opportunity?.location && (
-                                <div className="text-sm text-gray-500">{opportunity.location}</div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {getApplicationStatusBadge(application.status)}
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-gray-500" suppressHydrationWarning>
-                              {new Date(application.appliedAt).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {application.resumeUrl && (
+            ) : (
+              <>
+                <div className="mb-4 text-sm text-gray-600">
+                  Showing {applicationsPagination.state.startIndex + 1} to {applicationsPagination.state.endIndex} of {applicationsPagination.state.totalItems} applications
+                </div>
+
+                {/* Table Layout */}
+                <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Applicant</TableHead>
+                        <TableHead>Opportunity</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Applied Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {applicationsPagination.paginateData(applications).map((application) => {
+                        const opportunity = opportunities.find((opp) => opp.id === application.opportunityId);
+                        return (
+                          <TableRow key={application.id}>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium text-gray-900">{application.menteeName}</div>
+                                <div className="text-sm text-gray-500">{application.menteeEmail}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="max-w-xs">
+                                <div className="font-medium text-gray-900 truncate">{opportunity?.title || "Unknown Opportunity"}</div>
+                                {opportunity?.location && (
+                                  <div className="text-sm text-gray-500">{opportunity.location}</div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {getApplicationStatusBadge(application.status)}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm text-gray-500" suppressHydrationWarning>
+                                {new Date(application.appliedAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {application.resumeUrl && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(application.resumeUrl, "_blank")}
+                                    className="text-xs"
+                                  >
+                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Resume
+                                  </Button>
+                                )}
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => window.open(application.resumeUrl, "_blank")}
+                                  onClick={() => handleReviewApplication(application)}
                                   className="text-xs"
                                 >
                                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                   </svg>
-                                  Resume
+                                  Review
                                 </Button>
-                              )}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleReviewApplication(application)}
-                                className="text-xs"
-                              >
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                Review
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              {applicationsPagination.state.totalPages > 1 && (
-                <div className="mt-6 flex justify-center">
-                  <Pagination>
-                    <PaginationContent className="flex flex-wrap justify-center gap-1 sm:gap-2">
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          onClick={applicationsPagination.actions.previousPage}
-                          className={!applicationsPagination.state.hasPreviousPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                      
-                      {applicationsPagination.getPageNumbers().map((pageNumber, index) => (
-                        <PaginationItem key={index}>
-                          {pageNumber === -1 ? (
-                            <PaginationEllipsis />
-                          ) : (
-                            <PaginationLink
-                              onClick={() => applicationsPagination.actions.setCurrentPage(pageNumber)}
-                              isActive={pageNumber === applicationsPagination.state.currentPage}
-                              className="cursor-pointer min-w-[2rem] sm:min-w-[2.5rem]"
-                            >
-                              {pageNumber}
-                            </PaginationLink>
-                          )}
-                        </PaginationItem>
-                      ))}
-                      
-                      <PaginationItem>
-                        <PaginationNext 
-                          onClick={applicationsPagination.actions.nextPage}
-                          className={!applicationsPagination.state.hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
-            </>
-          )}
-        </div>
+
+                {applicationsPagination.state.totalPages > 1 && (
+                  <div className="mt-6 flex justify-center">
+                    <Pagination>
+                      <PaginationContent className="flex flex-wrap justify-center gap-1 sm:gap-2">
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={applicationsPagination.actions.previousPage}
+                            className={!applicationsPagination.state.hasPreviousPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+
+                        {applicationsPagination.getPageNumbers().map((pageNumber, index) => (
+                          <PaginationItem key={index}>
+                            {pageNumber === -1 ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                onClick={() => applicationsPagination.actions.setCurrentPage(pageNumber)}
+                                isActive={pageNumber === applicationsPagination.state.currentPage}
+                                className="cursor-pointer min-w-[2rem] sm:min-w-[2.5rem]"
+                              >
+                                {pageNumber}
+                              </PaginationLink>
+                            )}
+                          </PaginationItem>
+                        ))}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={applicationsPagination.actions.nextPage}
+                            className={!applicationsPagination.state.hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         )}
 
         {/* Post Opportunity Detail View */}
@@ -1268,8 +1268,8 @@ export default function MentorDashboardPage() {
           <div className="mb-8 sm:mb-10 lg:mb-12">
             {/* Header with Back Button */}
             <div className="flex items-center gap-4 mb-6">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setCurrentView('main')}
                 className="flex items-center gap-2"
               >
@@ -1325,193 +1325,193 @@ export default function MentorDashboardPage() {
                   )}
 
                   <div className="space-y-6">
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div>
-                         <Label htmlFor="title" className="text-sm font-medium text-gray-700">Opportunity Title *</Label>
-                         <Input
-                           id="title"
-                           value={postOpportunityForm.title}
-                           onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, title: e.target.value }))}
-                           placeholder="e.g., Urology Fellowship Program"
-                           className="mt-1"
-                         />
-                       </div>
-                       <div>
-                         <Label htmlFor="type" className="text-sm font-medium text-gray-700">Opportunity Type *</Label>
-                         {opportunityTypesLoading ? (
-                           <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50">
-                             <div className="animate-pulse flex space-x-4">
-                               <div className="flex-1 space-y-2 py-1">
-                                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                               </div>
-                             </div>
-                           </div>
-                         ) : opportunityTypesError ? (
-                           <div className="mt-1 p-3 border border-red-200 rounded-md bg-red-50 text-red-700">
-                             Error loading opportunity types: {opportunityTypesError}
-                           </div>
-                         ) : opportunityTypes.length === 0 ? (
-                           <div className="mt-1 p-3 border border-yellow-200 rounded-md bg-yellow-50 text-yellow-700">
-                             No opportunity types available
-                           </div>
-                         ) : (
-                           <Select value={postOpportunityForm.opportunityTypeId} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, opportunityTypeId: value }))}>
-                             <SelectTrigger className="mt-1">
-                               <SelectValue placeholder="Select type">
-                                 {postOpportunityForm.opportunityTypeId && (() => {
-                                   const selectedType = opportunityTypes.find(type => type.id === postOpportunityForm.opportunityTypeId);
-                                   if (selectedType) {
-                                     const typeInfo = getTypeBadge(selectedType.name);
-                                     return typeInfo ? (
-                                       <Badge className={typeInfo.colorClass}>
-                                         {typeInfo.name}
-                                       </Badge>
-                                     ) : (
-                                       <Badge variant="secondary">{selectedType.name}</Badge>
-                                     );
-                                   }
-                                   return null;
-                                 })()}
-                               </SelectValue>
-                             </SelectTrigger>
-                             <SelectContent>
-                               {opportunityTypes.map((type) => {
-                                 const typeInfo = getTypeBadge(type.name);
-                                 return (
-                                   <SelectItem key={type.id} value={type.id}>
-                                     {typeInfo ? (
-                                       <Badge className={typeInfo.colorClass}>
-                                         {typeInfo.name}
-                                       </Badge>
-                                     ) : (
-                                       <Badge variant="secondary">{type.name}</Badge>
-                                     )}
-                                   </SelectItem>
-                                 );
-                               })}
-                             </SelectContent>
-                           </Select>
-                         )}
-                       </div>
-                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="title" className="text-sm font-medium text-gray-700">Opportunity Title *</Label>
+                        <Input
+                          id="title"
+                          value={postOpportunityForm.title}
+                          onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, title: e.target.value }))}
+                          placeholder="e.g., Urology Fellowship Program"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="type" className="text-sm font-medium text-gray-700">Opportunity Type *</Label>
+                        {opportunityTypesLoading ? (
+                          <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50">
+                            <div className="animate-pulse flex space-x-4">
+                              <div className="flex-1 space-y-2 py-1">
+                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : opportunityTypesError ? (
+                          <div className="mt-1 p-3 border border-red-200 rounded-md bg-red-50 text-red-700">
+                            Error loading opportunity types: {opportunityTypesError}
+                          </div>
+                        ) : opportunityTypes.length === 0 ? (
+                          <div className="mt-1 p-3 border border-yellow-200 rounded-md bg-yellow-50 text-yellow-700">
+                            No opportunity types available
+                          </div>
+                        ) : (
+                          <Select value={postOpportunityForm.opportunityTypeId} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, opportunityTypeId: value }))}>
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select type">
+                                {postOpportunityForm.opportunityTypeId && (() => {
+                                  const selectedType = opportunityTypes.find(type => type.id === postOpportunityForm.opportunityTypeId);
+                                  if (selectedType) {
+                                    const typeInfo = getTypeBadge(selectedType.name);
+                                    return typeInfo ? (
+                                      <Badge className={typeInfo.colorClass}>
+                                        {typeInfo.name}
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="secondary">{selectedType.name}</Badge>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {opportunityTypes.map((type) => {
+                                const typeInfo = getTypeBadge(type.name);
+                                return (
+                                  <SelectItem key={type.id} value={type.id}>
+                                    {typeInfo ? (
+                                      <Badge className={typeInfo.colorClass}>
+                                        {typeInfo.name}
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="secondary">{type.name}</Badge>
+                                    )}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    </div>
 
-                     <div>
-                       <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description *</Label>
-                       <Textarea
-                         id="description"
-                         value={postOpportunityForm.description}
-                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, description: e.target.value }))}
-                         placeholder="Provide a detailed description of the opportunity..."
-                         className="mt-1 min-h-[120px]"
-                       />
-                     </div>
+                    <div>
+                      <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description *</Label>
+                      <Textarea
+                        id="description"
+                        value={postOpportunityForm.description}
+                        onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Provide a detailed description of the opportunity..."
+                        className="mt-1 min-h-[120px]"
+                      />
+                    </div>
 
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div>
-                         <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
-                         <Input
-                           id="location"
-                           value={postOpportunityForm.location}
-                           onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, location: e.target.value }))}
-                           placeholder="e.g., New York, NY or Remote"
-                           className="mt-1"
-                         />
-                       </div>
-                       <div>
-                         <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
-                         <Select value={postOpportunityForm.experienceLevel} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, experienceLevel: value }))}>
-                           <SelectTrigger className="mt-1">
-                             <SelectValue placeholder="Select level" />
-                           </SelectTrigger>
-                           <SelectContent>
-                             <SelectItem value="entry">Entry Level</SelectItem>
-                             <SelectItem value="mid">Mid Level</SelectItem>
-                             <SelectItem value="senior">Senior Level</SelectItem>
-                             <SelectItem value="expert">Expert Level</SelectItem>
-                           </SelectContent>
-                         </Select>
-                       </div>
-                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+                        <Input
+                          id="location"
+                          value={postOpportunityForm.location}
+                          onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, location: e.target.value }))}
+                          placeholder="e.g., New York, NY or Remote"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
+                        <Select value={postOpportunityForm.experienceLevel} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, experienceLevel: value }))}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="entry">Entry Level</SelectItem>
+                            <SelectItem value="mid">Mid Level</SelectItem>
+                            <SelectItem value="senior">Senior Level</SelectItem>
+                            <SelectItem value="expert">Expert Level</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div>
-                         <Label htmlFor="duration" className="text-sm font-medium text-gray-700">Duration</Label>
-                         <Select value={postOpportunityForm.duration} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, duration: value }))}>
-                           <SelectTrigger className="mt-1 text-gray-900">
-                             <SelectValue placeholder="Select duration" />
-                           </SelectTrigger>
-                           <SelectContent>
-                             <SelectItem value="1-3 months" className="text-gray-900">1-3 months</SelectItem>
-                             <SelectItem value="3-6 months" className="text-gray-900">3-6 months</SelectItem>
-                             <SelectItem value="6 months" className="text-gray-900">6 months</SelectItem>
-                             <SelectItem value="1 year" className="text-gray-900">1 year</SelectItem>
-                             <SelectItem value="2 years" className="text-gray-900">2 years</SelectItem>
-                             <SelectItem value="Permanent" className="text-gray-900">Permanent</SelectItem>
-                           </SelectContent>
-                         </Select>
-                       </div>
-                       <div>
-                         <Label htmlFor="compensation" className="text-sm font-medium text-gray-700">Compensation</Label>
-                         <Input
-                           id="compensation"
-                           value={postOpportunityForm.compensation}
-                           onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, compensation: e.target.value }))}
-                           placeholder="e.g., ₹50,000/year, Stipend provided"
-                           className="mt-1"
-                         />
-                       </div>
-                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="duration" className="text-sm font-medium text-gray-700">Duration</Label>
+                        <Select value={postOpportunityForm.duration} onValueChange={(value) => setPostOpportunityForm(prev => ({ ...prev, duration: value }))}>
+                          <SelectTrigger className="mt-1 text-gray-900">
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1-3 months" className="text-gray-900">1-3 months</SelectItem>
+                            <SelectItem value="3-6 months" className="text-gray-900">3-6 months</SelectItem>
+                            <SelectItem value="6 months" className="text-gray-900">6 months</SelectItem>
+                            <SelectItem value="1 year" className="text-gray-900">1 year</SelectItem>
+                            <SelectItem value="2 years" className="text-gray-900">2 years</SelectItem>
+                            <SelectItem value="Permanent" className="text-gray-900">Permanent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="compensation" className="text-sm font-medium text-gray-700">Compensation</Label>
+                        <Input
+                          id="compensation"
+                          value={postOpportunityForm.compensation}
+                          onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, compensation: e.target.value }))}
+                          placeholder="e.g., ₹50,000/year, Stipend provided"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
 
-                     <div>
-                       <Label htmlFor="requirements" className="text-sm font-medium text-gray-700">Requirements</Label>
-                       <Textarea
-                         id="requirements"
-                         value={postOpportunityForm.requirements}
-                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, requirements: e.target.value }))}
-                         placeholder="List the requirements and qualifications needed..."
-                         className="mt-1 min-h-[100px]"
-                       />
-                     </div>
+                    <div>
+                      <Label htmlFor="requirements" className="text-sm font-medium text-gray-700">Requirements</Label>
+                      <Textarea
+                        id="requirements"
+                        value={postOpportunityForm.requirements}
+                        onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, requirements: e.target.value }))}
+                        placeholder="List the requirements and qualifications needed..."
+                        className="mt-1 min-h-[100px]"
+                      />
+                    </div>
 
-                     <div>
-                       <Label htmlFor="benefits" className="text-sm font-medium text-gray-700">Benefits</Label>
-                       <Textarea
-                         id="benefits"
-                         value={postOpportunityForm.benefits}
-                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, benefits: e.target.value }))}
-                         placeholder="Describe the benefits and perks of this opportunity..."
-                         className="mt-1 min-h-[100px]"
-                       />
-                     </div>
+                    <div>
+                      <Label htmlFor="benefits" className="text-sm font-medium text-gray-700">Benefits</Label>
+                      <Textarea
+                        id="benefits"
+                        value={postOpportunityForm.benefits}
+                        onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, benefits: e.target.value }))}
+                        placeholder="Describe the benefits and perks of this opportunity..."
+                        className="mt-1 min-h-[100px]"
+                      />
+                    </div>
 
-                     <div>
-                       <Label htmlFor="deadline" className="text-sm font-medium text-gray-700">Application Deadline</Label>
-                       <Input
-                         id="deadline"
-                         type="date"
-                         value={postOpportunityForm.applicationDeadline}
-                         onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, applicationDeadline: e.target.value }))}
-                         className="mt-1"
-                       />
-                     </div>
+                    <div>
+                      <Label htmlFor="deadline" className="text-sm font-medium text-gray-700">Application Deadline</Label>
+                      <Input
+                        id="deadline"
+                        type="date"
+                        value={postOpportunityForm.applicationDeadline}
+                        onChange={(e) => setPostOpportunityForm(prev => ({ ...prev, applicationDeadline: e.target.value }))}
+                        className="mt-1"
+                      />
+                    </div>
 
-                                         <div className="flex justify-end gap-4 pt-6">
-                       <Button
-                         variant="outline"
-                         onClick={() => setCurrentView('main')}
-                         className="px-8"
-                         disabled={postingOpportunity}
-                       >
-                         Cancel
-                       </Button>
-                       <Button
-                         className="bg-gradient-to-tr from-green-600 to-blue-500 text-white font-semibold shadow-md hover:from-green-700 hover:to-blue-600 px-8"
-                         onClick={handlePostOpportunity}
-                         disabled={postingOpportunity}
-                       >
-                         {postingOpportunity ? "Posting..." : "Post Opportunity"}
-                       </Button>
-                     </div>
+                    <div className="flex justify-end gap-4 pt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentView('main')}
+                        className="px-8"
+                        disabled={postingOpportunity}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="bg-gradient-to-tr from-green-600 to-blue-500 text-white font-semibold shadow-md hover:from-green-700 hover:to-blue-600 px-8"
+                        onClick={handlePostOpportunity}
+                        disabled={postingOpportunity}
+                      >
+                        {postingOpportunity ? "Posting..." : "Post Opportunity"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1524,8 +1524,8 @@ export default function MentorDashboardPage() {
           <div className="mb-8 sm:mb-10 lg:mb-12">
             {/* Header with Back Button */}
             <div className="flex items-center gap-4 mb-6">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setCurrentView('main')}
                 className="flex items-center gap-2"
               >
@@ -1580,95 +1580,95 @@ export default function MentorDashboardPage() {
                     </div>
                   )}
 
-                                     <div className="space-y-6">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div>
-                         <Label htmlFor="search" className="text-sm font-medium text-gray-700">Search Keywords</Label>
-                         <Input
-                           id="search"
-                           value={findMenteesForm.search}
-                           onChange={(e) => {
-                             setFindMenteesForm(prev => ({ ...prev, search: e.target.value }));
-                             // Real-time search with debouncing
-                             updateFilters({ query: e.target.value });
-                           }}
-                           placeholder="Search by name, interests, or keywords..."
-                           className="mt-1"
-                         />
-                       </div>
-                       <div>
-                         <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
-                         <Input
-                           id="location"
-                           value={findMenteesForm.location}
-                           onChange={(e) => {
-                             setFindMenteesForm(prev => ({ ...prev, location: e.target.value }));
-                             // Real-time search with debouncing
-                             updateFilters({ location: e.target.value });
-                           }}
-                           placeholder="e.g., New York, NY or Remote"
-                           className="mt-1"
-                         />
-                       </div>
-                     </div>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="search" className="text-sm font-medium text-gray-700">Search Keywords</Label>
+                        <Input
+                          id="search"
+                          value={findMenteesForm.search}
+                          onChange={(e) => {
+                            setFindMenteesForm(prev => ({ ...prev, search: e.target.value }));
+                            // Real-time search with debouncing
+                            updateFilters({ query: e.target.value });
+                          }}
+                          placeholder="Search by name, interests, or keywords..."
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+                        <Input
+                          id="location"
+                          value={findMenteesForm.location}
+                          onChange={(e) => {
+                            setFindMenteesForm(prev => ({ ...prev, location: e.target.value }));
+                            // Real-time search with debouncing
+                            updateFilters({ location: e.target.value });
+                          }}
+                          placeholder="e.g., New York, NY or Remote"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
 
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div>
-                         <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
-                         <Select value={findMenteesForm.experienceLevel} onValueChange={(value) => {
-                           setFindMenteesForm(prev => ({ ...prev, experienceLevel: value }));
-                           // Real-time search with debouncing
-                           updateFilters({ experienceLevel: value });
-                         }}>
-                           <SelectTrigger className="mt-1">
-                             <SelectValue placeholder="Any experience level" />
-                           </SelectTrigger>
-                           <SelectContent>
-                             <SelectItem value="student">Medical Student</SelectItem>
-                             <SelectItem value="resident">Resident</SelectItem>
-                             <SelectItem value="fellow">Fellow</SelectItem>
-                             <SelectItem value="attending">Attending</SelectItem>
-                           </SelectContent>
-                         </Select>
-                       </div>
-                       <div>
-                         <Label htmlFor="interests" className="text-sm font-medium text-gray-700">Interests</Label>
-                         <Select value={findMenteesForm.interests} onValueChange={(value) => {
-                           setFindMenteesForm(prev => ({ ...prev, interests: value }));
-                           // Real-time search with debouncing
-                           updateFilters({ interests: value });
-                         }}>
-                           <SelectTrigger className="mt-1">
-                             <SelectValue placeholder="Select interests" />
-                           </SelectTrigger>
-                           <SelectContent>
-                             <SelectItem value="oncology">Oncology</SelectItem>
-                             <SelectItem value="pediatric">Pediatric Urology</SelectItem>
-                             <SelectItem value="reconstructive">Reconstructive</SelectItem>
-                             <SelectItem value="endourology">Endourology</SelectItem>
-                             <SelectItem value="infertility">Infertility</SelectItem>
-                           </SelectContent>
-                         </Select>
-                       </div>
-                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
+                        <Select value={findMenteesForm.experienceLevel} onValueChange={(value) => {
+                          setFindMenteesForm(prev => ({ ...prev, experienceLevel: value }));
+                          // Real-time search with debouncing
+                          updateFilters({ experienceLevel: value });
+                        }}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Any experience level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="student">Medical Student</SelectItem>
+                            <SelectItem value="resident">Resident</SelectItem>
+                            <SelectItem value="fellow">Fellow</SelectItem>
+                            <SelectItem value="attending">Attending</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="interests" className="text-sm font-medium text-gray-700">Interests</Label>
+                        <Select value={findMenteesForm.interests} onValueChange={(value) => {
+                          setFindMenteesForm(prev => ({ ...prev, interests: value }));
+                          // Real-time search with debouncing
+                          updateFilters({ interests: value });
+                        }}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select interests" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="oncology">Oncology</SelectItem>
+                            <SelectItem value="pediatric">Pediatric Urology</SelectItem>
+                            <SelectItem value="reconstructive">Reconstructive</SelectItem>
+                            <SelectItem value="endourology">Endourology</SelectItem>
+                            <SelectItem value="infertility">Infertility</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                                         <div className="flex justify-end gap-4 pt-6">
-                       <Button
-                         variant="outline"
-                         onClick={() => setCurrentView('main')}
-                         className="px-8"
-                         disabled={searchingMentees}
-                       >
-                         Cancel
-                       </Button>
-                       <Button
-                         className="bg-gradient-to-tr from-cyan-600 to-blue-500 text-white font-semibold shadow-md hover:from-cyan-700 hover:to-blue-600 px-8"
-                         onClick={handleFindMentees}
-                         disabled={searchingMentees}
-                       >
-                         {searchingMentees ? "Searching..." : "Search Mentees"}
-                       </Button>
-                     </div>
+                    <div className="flex justify-end gap-4 pt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentView('main')}
+                        className="px-8"
+                        disabled={searchingMentees}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="bg-gradient-to-tr from-cyan-600 to-blue-500 text-white font-semibold shadow-md hover:from-cyan-700 hover:to-blue-600 px-8"
+                        onClick={handleFindMentees}
+                        disabled={searchingMentees}
+                      >
+                        {searchingMentees ? "Searching..." : "Search Mentees"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1685,7 +1685,7 @@ export default function MentorDashboardPage() {
                         <h3 className="text-xl font-bold text-gray-900">Search Results</h3>
                         {!searchLoading && (
                           <p className="text-sm text-gray-600">
-                            Found {mentees.length} mentee{mentees.length !== 1 ? 's' : ''} 
+                            Found {mentees.length} mentee{mentees.length !== 1 ? 's' : ''}
                             {pagination.total > mentees.length && ` (showing ${mentees.length} of ${pagination.total})`}
                           </p>
                         )}
@@ -1765,21 +1765,21 @@ export default function MentorDashboardPage() {
                                   {mentee.profile?.availabilityStatus || 'Available'}
                                 </Badge>
                               </div>
-                              
+
                               <p className="text-sm text-gray-600 mb-2">{mentee.email}</p>
-                              
+
                               {mentee.profile?.location && (
                                 <p className="text-sm text-gray-500 mb-2">
                                   📍 {mentee.profile.location}
                                 </p>
                               )}
-                              
+
                               {mentee.profile?.bio && (
                                 <p className="text-sm text-gray-700 mb-2 line-clamp-2">
                                   {mentee.profile.bio}
                                 </p>
                               )}
-                              
+
                               {mentee.profile?.interests && mentee.profile.interests.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mb-2">
                                   {mentee.profile.interests.slice(0, 3).map((interest, index) => (
@@ -1794,7 +1794,7 @@ export default function MentorDashboardPage() {
                                   )}
                                 </div>
                               )}
-                              
+
                               {mentee.profile?.yearsOfExperience && (
                                 <p className="text-sm text-gray-500">
                                   💼 {mentee.profile.yearsOfExperience} years of experience
@@ -1887,20 +1887,20 @@ export default function MentorDashboardPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-lg font-semibold text-gray-800 text-center sm:text-left whitespace-nowrap">Ready to take action?</span>
               <div className="flex flex-wrap items-center gap-3 justify-center sm:justify-end">
-                    <Button
+                <Button
                   onClick={() => setCurrentView('post-opportunity')}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                    >
-                      Post Opportunity
-                    </Button>
-                    <Button
+                >
+                  Post Opportunity
+                </Button>
+                <Button
                   onClick={() => setCurrentView('find-mentees')}
                   className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 >
                   Search Mentees
-                    </Button>
-                  </div>
-                </div>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2072,8 +2072,8 @@ export default function MentorDashboardPage() {
                       onValueChange={(value) => {
                         const selectedType = opportunityTypes.find(type => type.id === value);
                         if (selectedType) {
-                          setEditingOpportunity(prev => ({ 
-                            ...prev, 
+                          setEditingOpportunity(prev => ({
+                            ...prev,
                             opportunityType: {
                               id: selectedType.id,
                               name: selectedType.name,
@@ -2285,7 +2285,7 @@ export default function MentorDashboardPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {selectedMentee.profile?.yearsOfExperience && (
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -2335,7 +2335,7 @@ export default function MentorDashboardPage() {
                     <div className="w-1 h-6 bg-green-500 rounded-full"></div>
                     Professional Information
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Education */}
                     {selectedMentee.profile?.education && (
@@ -2405,9 +2405,9 @@ export default function MentorDashboardPage() {
                     <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                       <div className="flex flex-wrap gap-3">
                         {selectedMentee.profile.interests.map((interest: string, index: number) => (
-                          <Badge 
-                            key={index} 
-                            variant="secondary" 
+                          <Badge
+                            key={index}
+                            variant="secondary"
                             className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-200 px-4 py-2 text-sm font-medium"
                           >
                             {interest}
@@ -2435,25 +2435,25 @@ export default function MentorDashboardPage() {
                 Review Application
               </DialogTitle>
             </DialogHeader>
-            
+
             {selectedApplication && (
               <div className="space-y-4">
                 {/* Application Details */}
                 <div className="border-b pb-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">{selectedApplication.menteeName}</h3>
-                    <p className="text-sm text-gray-600 mb-1"><strong>Email:</strong> {selectedApplication.menteeEmail}</p>
-                    <p className="text-sm text-gray-600 mb-1" suppressHydrationWarning>
-                      <strong>Applied:</strong> {new Date(selectedApplication.appliedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-1"><strong>Status:</strong> {selectedApplication.status}</p>
+                  <h3 className="font-semibold text-gray-900 mb-2">{selectedApplication.menteeName}</h3>
+                  <p className="text-sm text-gray-600 mb-1"><strong>Email:</strong> {selectedApplication.menteeEmail}</p>
+                  <p className="text-sm text-gray-600 mb-1" suppressHydrationWarning>
+                    <strong>Applied:</strong> {new Date(selectedApplication.appliedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-1"><strong>Status:</strong> {selectedApplication.status}</p>
                   {selectedApplication.coverLetter && (
                     <div className="mt-3">
-                        <p className="text-sm font-medium text-gray-900 mb-1">Cover Letter:</p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{selectedApplication.coverLetter}</p>
+                      <p className="text-sm font-medium text-gray-900 mb-1">Cover Letter:</p>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{selectedApplication.coverLetter}</p>
                     </div>
                   )}
                 </div>
@@ -2461,15 +2461,15 @@ export default function MentorDashboardPage() {
                 {selectedApplication.resumeUrl && (
                   <div className="border-b pb-4">
                     <h4 className="font-medium text-gray-900 mb-2">Resume</h4>
-                      <Button variant="outline" size="sm" onClick={() => window.open(selectedApplication.resumeUrl, "_blank")}>View Resume</Button>
+                    <Button variant="outline" size="sm" onClick={() => window.open(selectedApplication.resumeUrl, "_blank")}>View Resume</Button>
                   </div>
                 )}
                 {/* Review Actions */}
                 <div className="flex justify-end space-x-3 pt-4">
-                    <Button variant="outline" onClick={() => {setShowReviewModal(false);setSelectedApplication(null);}} disabled={reviewing}>Cancel</Button>
-                    <Button variant="destructive" onClick={() => handleUpdateApplicationStatus("REJECTED")} disabled={reviewing}>{reviewing ? "Rejecting..." : "Reject Application"}</Button>
-                    <Button className="btn-primary" onClick={() => handleUpdateApplicationStatus("ACCEPTED")} disabled={reviewing}>{reviewing ? "Accepting..." : "Accept Application"}</Button>
-                  </div>
+                  <Button variant="outline" onClick={() => { setShowReviewModal(false); setSelectedApplication(null); }} disabled={reviewing}>Cancel</Button>
+                  <Button variant="destructive" onClick={() => handleUpdateApplicationStatus("REJECTED")} disabled={reviewing}>{reviewing ? "Rejecting..." : "Reject Application"}</Button>
+                  <Button className="btn-primary" onClick={() => handleUpdateApplicationStatus("ACCEPTED")} disabled={reviewing}>{reviewing ? "Accepting..." : "Accept Application"}</Button>
+                </div>
               </div>
             )}
           </DialogContent>

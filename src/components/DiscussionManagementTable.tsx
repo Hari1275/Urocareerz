@@ -180,11 +180,12 @@ export default function DiscussionManagementTable() {
   const getCategoryBadge = (category: string) => {
     const categoryConfig = {
       GENERAL: { color: "bg-blue-100 text-blue-800" },
-      CASE_DISCUSSION: { color: "bg-purple-100 text-purple-800" },
+      MENTORSHIP: { color: "bg-purple-100 text-purple-800" },
       CAREER_ADVICE: { color: "bg-green-100 text-green-800" },
-      TECHNICAL: { color: "bg-orange-100 text-orange-800" },
-      NETWORKING: { color: "bg-pink-100 text-pink-800" },
-      RESOURCES: { color: "bg-indigo-100 text-indigo-800" },
+      RESEARCH: { color: "bg-orange-100 text-orange-800" },
+      CLINICAL: { color: "bg-pink-100 text-pink-800" },
+      FELLOWSHIP: { color: "bg-indigo-100 text-indigo-800" },
+      OTHER: { color: "bg-gray-100 text-gray-800" },
     };
 
     const config =
@@ -306,11 +307,12 @@ export default function DiscussionManagementTable() {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="GENERAL">General</SelectItem>
-                <SelectItem value="CASE_DISCUSSION">Case Discussion</SelectItem>
+                <SelectItem value="MENTORSHIP">Mentorship</SelectItem>
                 <SelectItem value="CAREER_ADVICE">Career Advice</SelectItem>
-                <SelectItem value="TECHNICAL">Technical</SelectItem>
-                <SelectItem value="NETWORKING">Networking</SelectItem>
-                <SelectItem value="RESOURCES">Resources</SelectItem>
+                <SelectItem value="RESEARCH">Research</SelectItem>
+                <SelectItem value="CLINICAL">Clinical</SelectItem>
+                <SelectItem value="FELLOWSHIP">Fellowship</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -493,69 +495,69 @@ export default function DiscussionManagementTable() {
 
         {paginatedDiscussions.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-                      No discussions found with the current filters.
+            No discussions found with the current filters.
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between space-x-6 py-4">
+          <TablePagination
+            pagination={pagination}
+            showPageSizeSelector={true}
+            showPageInfo={true}
+          />
         </div>
-      )}
+      </CardContent>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between space-x-6 py-4">
-        <TablePagination 
-          pagination={pagination}
-          showPageSizeSelector={true}
-          showPageInfo={true}
-        />
-      </div>
-    </CardContent>
-
-    <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirm Action</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to {pendingAction?.description}?
-            {pendingAction?.status === "CLOSED" && (
-              <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                <p className="text-sm text-yellow-800">
-                  <strong>Note:</strong> Closing a discussion will prevent new
-                  comments from being added, but existing comments will remain
-                  visible.
-                </p>
-              </div>
-            )}
-            {pendingAction?.status === "ARCHIVED" && (
-              <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                <p className="text-sm text-gray-800">
-                  <strong>Note:</strong> Archiving a discussion will hide it
-                  from the main discussion list and prevent any new activity.
-                </p>
-              </div>
-            )}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel
-            disabled={actionLoading === pendingAction?.discussionId}
-          >
-            Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={confirmStatusChange}
-            disabled={actionLoading === pendingAction?.discussionId}
-            className={
-              pendingAction?.status === "CLOSED"
-                ? "bg-yellow-600 hover:bg-yellow-700"
-                : pendingAction?.status === "ARCHIVED"
-                ? "bg-gray-600 hover:bg-gray-700"
-                : ""
-            }
-          >
-            {actionLoading === pendingAction?.discussionId
-              ? "Updating..."
-              : `Yes, ${pendingAction?.action}`}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  </Card>
-);
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Action</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to {pendingAction?.description}?
+              {pendingAction?.status === "CLOSED" && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> Closing a discussion will prevent new
+                    comments from being added, but existing comments will remain
+                    visible.
+                  </p>
+                </div>
+              )}
+              {pendingAction?.status === "ARCHIVED" && (
+                <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                  <p className="text-sm text-gray-800">
+                    <strong>Note:</strong> Archiving a discussion will hide it
+                    from the main discussion list and prevent any new activity.
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={actionLoading === pendingAction?.discussionId}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmStatusChange}
+              disabled={actionLoading === pendingAction?.discussionId}
+              className={
+                pendingAction?.status === "CLOSED"
+                  ? "bg-yellow-600 hover:bg-yellow-700"
+                  : pendingAction?.status === "ARCHIVED"
+                    ? "bg-gray-600 hover:bg-gray-700"
+                    : ""
+              }
+            >
+              {actionLoading === pendingAction?.discussionId
+                ? "Updating..."
+                : `Yes, ${pendingAction?.action}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
+  );
 }

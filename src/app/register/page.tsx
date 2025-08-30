@@ -66,9 +66,6 @@ function RegisterContent() {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect to dashboard (which will handle role-based routing)
-        router.push("/dashboard");
-        
         // If registration is successful, store the user ID and show OTP verification
         setUserId(data.userId);
         setOtpSent(true);

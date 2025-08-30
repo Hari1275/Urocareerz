@@ -186,8 +186,8 @@ export default function PostOpportunityPage() {
               <h3 className="text-lg font-medium mb-2">Error Loading Page</h3>
               <p className="text-sm text-gray-600">{error}</p>
             </div>
-            <Button 
-              onClick={() => router.push("/login")} 
+            <Button
+              onClick={() => router.push("/login")}
               className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
             >
               Back to Login
