@@ -6,6 +6,15 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Target, Edit3 } from "lucide-react";
 
+/**
+ * RESPONSIVE PROFILE STRENGTH REFACTOR - Key Changes:
+ * 1. Progress ring maintains 1:1 aspect ratio and scales with font-size
+ * 2. Responsive text sizing and spacing for 1200px+ viewports
+ * 3. Improved layout for call-to-action section
+ * 4. Better spacing and padding for larger screens
+ * 5. Enhanced readability across all device sizes
+ */
+
 interface User {
   id: string;
   email: string;
@@ -187,22 +196,22 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
 
   if (loading) {
     return (
-      <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 ${className || ""}`}>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-slate-900 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-blue-500" />
-              Profile Strength
+      <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 w-full ${className || ""}`}>
+        <CardHeader className="pb-3 xl:pb-4">
+          <CardTitle className="text-base xl:text-lg font-semibold text-slate-900 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Target className="h-4 w-4 xl:h-5 xl:w-5 text-blue-500 flex-shrink-0" />
+              <span className="truncate">Profile Strength</span>
             </div>
             {onEdit && (
               <Button 
                 size="sm" 
                 variant="outline" 
                 onClick={onEdit}
-                className="text-xs bg-white/80 border-slate-200 hover:bg-white"
+                className="text-xs bg-white/80 border-slate-200 hover:bg-white flex-shrink-0"
               >
                 <Edit3 className="h-3 w-3 mr-1" />
-                Edit
+                <span className="hidden sm:inline">Edit</span>
               </Button>
             )}
           </CardTitle>
@@ -231,57 +240,62 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
   }
 
   return (
-    <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 ${className || ""}`}>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-slate-900 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-blue-500" />
-            Profile Strength
+    <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 w-full ${className || ""}`}>
+      <CardHeader className="pb-3 xl:pb-4">
+        <CardTitle className="text-base xl:text-lg font-semibold text-slate-900 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Target className="h-4 w-4 xl:h-5 xl:w-5 text-blue-500 flex-shrink-0" />
+            <span className="truncate">Profile Strength</span>
           </div>
-          {/* {onEdit && (
+          {onEdit && (
             <Button 
               size="sm" 
               variant="outline" 
               onClick={onEdit}
-              className="text-xs bg-white/80 border-slate-200 hover:bg-white"
+              className="text-xs bg-white/80 border-slate-200 hover:bg-white flex-shrink-0"
             >
               <Edit3 className="h-3 w-3 mr-1" />
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </Button>
-          )} */}
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-4 xl:space-y-5">
+          {/* Progress Section - Responsive sizing */}
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-slate-700">Completion</span>
-              <span className="text-sm font-bold text-slate-900">{completionPercentage}%</span>
+            <div className="flex justify-between items-center mb-2 xl:mb-3">
+              <span className="text-sm xl:text-base font-medium text-slate-700">Completion</span>
+              <span className="text-sm xl:text-base font-bold text-slate-900">{completionPercentage}%</span>
             </div>
             <Progress 
               value={completionPercentage} 
-              className="h-2"
+              className="h-2 xl:h-2.5"
             />
           </div>
-          <div className="space-y-2">
+          
+          {/* Profile Fields List - Responsive spacing */}
+          <div className="space-y-2 xl:space-y-2.5">
             {profileFields.map((field) => (
-              <div key={field.name} className="flex items-center gap-2 text-sm">
+              <div key={field.name} className="flex items-center gap-2 xl:gap-3 text-sm xl:text-base">
                 <div 
-                  className={`w-2 h-2 rounded-full ${getStatusColor(field.isComplete, field.required)}`}
+                  className={`w-2 h-2 xl:w-2.5 xl:h-2.5 rounded-full ${getStatusColor(field.isComplete, field.required)}`}
                   title={getStatusLabel(field.isComplete, field.required)}
                 ></div>
-                <span className="text-slate-600">{field.label}</span>
+                <span className="text-slate-600 flex-1 truncate">{field.label}</span>
                 {field.required && !field.isComplete && (
-                  <span className="text-xs text-red-500 font-medium">Required</span>
+                  <span className="text-xs xl:text-sm text-red-500 font-medium flex-shrink-0">Required</span>
                 )}
               </div>
             ))}
           </div>
+          
+          {/* Call-to-Action Section - Responsive layout */}
           {completionPercentage < 100 && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-start justify-between gap-3">
+            <div className="mt-4 xl:mt-5 p-3 xl:p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex flex-col gap-3">
                 <div className="flex-1">
-                  <p className="text-xs text-blue-700 mb-2">
+                  <p className="text-xs xl:text-sm text-blue-700 leading-relaxed">
                     Complete your profile to improve your visibility and get better opportunities!
                   </p>
                 </div>
@@ -289,9 +303,10 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
                   <Button 
                     size="sm" 
                     onClick={onEdit}
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 h-7"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs xl:text-sm px-3 xl:px-4 py-1.5 xl:py-2 h-auto w-full sm:w-auto"
                   >
-                    Complete Profile
+                    <span className="block sm:hidden">Complete Profile</span>
+                    <span className="hidden sm:block">Complete Profile</span>
                   </Button>
                 )}
               </div>

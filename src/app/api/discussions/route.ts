@@ -8,12 +8,39 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const status = searchParams.get("status");
+    const myDiscussions = searchParams.get("myDiscussions") === "true";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
+    // Get current user for filtering own discussions
+    let currentUserId: string | null = null;
+    if (myDiscussions) {
+      const token = req.cookies.get("token")?.value;
+      console.log("Token found for myDiscussions filter:", !!token);
+      if (token) {
+        const secret = process.env.JWT_SECRET;
+        if (secret) {
+          try {
+            const decoded = await verifyEdgeToken(token, secret);
+            currentUserId = decoded?.userId || null;
+            console.log("Decoded user ID for filtering:", currentUserId);
+          } catch (error) {
+            console.log("Token verification failed for filtering:", error);
+          }
+        } else {
+          console.log("JWT_SECRET is missing");
+        }
+      } else {
+        console.log("No token found in cookies");
+      }
+    }
+
     // Build where clause
-    const where: any = {};
+    const where: any = {
+      // Note: Temporarily ignoring soft delete filter due to MongoDB null handling issues
+      // TODO: Fix the deletedAt field handling for proper soft delete filtering
+    };
 
     if (category && category !== "all") {
       where.category = category;
@@ -21,24 +48,28 @@ export async function GET(req: NextRequest) {
 
     if (status && status !== "all") {
       where.status = status;
-    } else {
-      // Default to active threads
-      where.status = "ACTIVE";
     }
 
-    console.log("Discussion list query where clause:", where);
+    // Filter by user's own discussions if requested
+    if (myDiscussions && currentUserId) {
+      where.authorId = currentUserId;
+      console.log("✅ Applied myDiscussions filter with authorId:", currentUserId);
+    } else if (myDiscussions && !currentUserId) {
+      console.log("⚠️ WARNING: myDiscussions requested but no valid user ID found");
+      // Return empty result when myDiscussions is requested but no user is authenticated
+      return NextResponse.json({
+        threads: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          pages: 0,
+        },
+      });
+    }
 
-    // Let's first check what's in the database without any filters
-    const allThreads = await prisma.discussionThread.findMany({
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        deletedAt: true,
-        createdAt: true,
-      },
-    });
-    console.log("All threads in database:", allThreads);
+    console.log("🔍 Discussion list query where clause:", where);
+    console.log("📨 Request parameters:", { category, status, myDiscussions, page, limit, currentUserId });
 
     // Get discussion threads with pagination
     const [threads, total] = await Promise.all([
@@ -66,15 +97,11 @@ export async function GET(req: NextRequest) {
       prisma.discussionThread.count({ where }),
     ]);
 
-    console.log("Found threads:", threads.length);
-    console.log("Total threads:", total);
-    if (threads.length > 0) {
-      console.log("Sample thread:", {
-        id: threads[0].id,
-        title: threads[0].title,
-        status: threads[0].status,
-        deletedAt: threads[0].deletedAt,
-      });
+    console.log("✅ Found threads:", threads.length, "Total:", total);
+    if (threads.length > 0 && myDiscussions) {
+      console.log("👤 Sample thread author IDs:", threads.slice(0, 3).map(t => t.author.id));
+      console.log("🔎 Expected author ID:", currentUserId);
+      console.log("✅ All threads match current user:", threads.every(t => t.author.id === currentUserId));
     }
 
     return NextResponse.json({

@@ -16,6 +16,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
+
     // Get user role
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
@@ -27,74 +34,116 @@ export async function GET(request: NextRequest) {
     }
 
     let applications;
+    let totalCount;
+
+    // Build where clause for filtering
+    const buildWhereClause = (baseWhere: any) => {
+      const whereClause = { ...baseWhere };
+      
+      if (status && status !== "all") {
+        whereClause.status = status;
+      }
+      
+      return whereClause;
+    };
 
     if (user.role === "MENTEE") {
       // Mentees see their own applications
-      applications = await (prisma.application.findMany({
-        where: { menteeId: payload.userId },
-        include: {
-          opportunity: {
-            include: {
-              opportunityType: {
-                select: {
-                  id: true,
-                  name: true,
-                  description: true,
-                  color: true,
+      const whereClause = buildWhereClause({ menteeId: payload.userId });
+      
+      const [applicationsData, count] = await Promise.all([
+        prisma.application.findMany({
+          where: whereClause,
+          include: {
+            opportunity: {
+              include: {
+                opportunityType: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    color: true,
+                  },
                 },
-              },
-              creator: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  profile: {
-                    select: {
-                      specialty: true,
+                creator: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    profile: {
+                      select: {
+                        specialty: true,
+                      },
                     },
                   },
                 },
-              },
-            } as any,
+              } as any,
+            },
           },
-        },
-        orderBy: { createdAt: "desc" },
-      }) as any);
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }) as any,
+        prisma.application.count({ where: whereClause }),
+      ]);
+      
+      applications = applicationsData;
+      totalCount = count;
     } else if (user.role === "MENTOR") {
       // Mentors see applications for their opportunities
-      applications = await (prisma.application.findMany({
-        where: {
-          opportunity: {
-            creatorId: payload.userId,
-          } as any,
-        },
-        include: {
-          opportunity: {
-            include: {
-              opportunityType: {
-                select: {
-                  id: true,
-                  name: true,
-                  description: true,
-                  color: true,
+      const whereClause = buildWhereClause({
+        opportunity: {
+          creatorId: payload.userId,
+        } as any,
+      });
+      
+      const [applicationsData, count] = await Promise.all([
+        prisma.application.findMany({
+          where: whereClause,
+          include: {
+            opportunity: {
+              include: {
+                opportunityType: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    color: true,
+                  },
                 },
               },
             },
-          },
-          mentee: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
+            mentee: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
             },
           },
-        },
-        orderBy: { createdAt: "desc" },
-      }) as any);
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }) as any,
+        prisma.application.count({ where: whereClause }),
+      ]);
+      
+      applications = applicationsData;
+      totalCount = count;
     } else {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    return NextResponse.json({ applications });
+    return NextResponse.json({
+      applications,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit),
+        hasNext: page * limit < totalCount,
+        hasPrev: page > 1,
+      },
+    });
   } catch (error) {
     console.error("Error fetching applications:", error);
     return NextResponse.json(

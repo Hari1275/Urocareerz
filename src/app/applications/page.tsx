@@ -27,6 +27,8 @@ import {
   Search,
 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 
 interface Application {
   id: string;
@@ -68,11 +70,16 @@ interface User {
 export default function ApplicationsPage() {
   const { opportunityTypes, getTypeBadge } = useOpportunityTypes();
   const { navigateToOpportunity, navigateToOpportunities, navigateToDashboard } = useNavigation();
+  const { toast } = useToast();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  
+  // Withdraw confirmation dialog state
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [applicationToWithdraw, setApplicationToWithdraw] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -179,13 +186,16 @@ export default function ApplicationsPage() {
   };
 
   const handleWithdrawApplication = async (applicationId: string) => {
-    if (!confirm("Are you sure you want to withdraw this application?")) {
-      return;
-    }
+    setApplicationToWithdraw(applicationId);
+    setShowWithdrawDialog(true);
+  };
 
-    setWithdrawingId(applicationId);
+  const confirmWithdrawApplication = async () => {
+    if (!applicationToWithdraw) return;
+    
+    setWithdrawingId(applicationToWithdraw);
     try {
-      const response = await fetch(`/api/applications/${applicationId}/withdraw`, {
+      const response = await fetch(`/api/applications/${applicationToWithdraw}/withdraw`, {
         method: "POST",
       });
 
@@ -193,18 +203,35 @@ export default function ApplicationsPage() {
         // Update the application status locally
         setApplications((prev) =>
           prev.map((app) =>
-            app.id === applicationId ? { ...app, status: "WITHDRAWN" } : app
+            app.id === applicationToWithdraw ? { ...app, status: "WITHDRAWN" } : app
           )
         );
+        
+        // Show success toast
+        toast({
+          title: "Success!",
+          description: "Application withdrawn successfully",
+          variant: "default",
+        });
       } else {
         const errorData = await response.json();
-        alert(errorData.error || "Failed to withdraw application");
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to withdraw application",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error withdrawing application:", error);
-      alert("Failed to withdraw application");
+      toast({
+        title: "Error",
+        description: "Failed to withdraw application",
+        variant: "destructive",
+      });
     } finally {
       setWithdrawingId(null);
+      setShowWithdrawDialog(false);
+      setApplicationToWithdraw(null);
     }
   };
 
@@ -449,6 +476,18 @@ export default function ApplicationsPage() {
           )}
         </div>
       </main>
+
+      {/* Withdraw Application Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showWithdrawDialog}
+        onOpenChange={setShowWithdrawDialog}
+        title="Withdraw Application"
+        description="Are you sure you want to withdraw this application? This action cannot be undone."
+        confirmText="Withdraw Application"
+        variant="destructive"
+        onConfirm={confirmWithdrawApplication}
+        loading={withdrawingId !== null}
+      />
     </div>
   );
 }

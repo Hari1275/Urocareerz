@@ -73,6 +73,27 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
+
+// Category constants for discussions
+const categoryLabels = {
+  GENERAL: "General Discussion",
+  CASE_DISCUSSION: "Case Discussion",
+  CAREER_ADVICE: "Career Advice",
+  TECHNICAL: "Technical Questions",
+  NETWORKING: "Networking",
+  RESOURCES: "Resources & Tools",
+};
+
+const categoryColors = {
+  GENERAL: "bg-gray-100 text-gray-800",
+  CASE_DISCUSSION: "bg-blue-100 text-blue-800",
+  CAREER_ADVICE: "bg-green-100 text-green-800",
+  TECHNICAL: "bg-purple-100 text-purple-800",
+  NETWORKING: "bg-orange-100 text-orange-800",
+  RESOURCES: "bg-pink-100 text-pink-800",
+};
 
 // Interfaces
 interface SavedOpportunity {
@@ -90,7 +111,7 @@ interface SavedOpportunity {
       lastName: string;
     };
   };
-  savedAt: string;
+  createdAt: string;
 }
 
 interface User {
@@ -104,8 +125,15 @@ interface User {
 interface DashboardStats {
   totalApplications: number;
   pendingApplications: number;
+  acceptedApplications: number;
+  rejectedApplications: number;
   savedOpportunities: number;
   submittedOpportunities: number;
+  approvedSubmissions: number;
+  pendingSubmissions: number;
+  rejectedSubmissions: number;
+  totalOpportunities: number;
+  applicationSuccessRate: number;
 }
 
 interface RecentActivity {
@@ -318,6 +346,7 @@ export default function MenteeDashboardPage() {
   const router = useRouter();
   const { getTypeBadge } = useOpportunityTypes();
   const { navigateToOpportunity, navigateToApply } = useNavigation();
+  const { toast } = useToast();
 
   // Core state
   const [user, setUser] = useState<User | null>(null);
@@ -335,8 +364,15 @@ export default function MenteeDashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalApplications: 0,
     pendingApplications: 0,
+    acceptedApplications: 0,
+    rejectedApplications: 0,
     savedOpportunities: 0,
     submittedOpportunities: 0,
+    approvedSubmissions: 0,
+    pendingSubmissions: 0,
+    rejectedSubmissions: 0,
+    totalOpportunities: 0,
+    applicationSuccessRate: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [recentOpportunities, setRecentOpportunities] = useState<Opportunity[]>(
@@ -366,6 +402,7 @@ export default function MenteeDashboardPage() {
   const [discussionsLoading, setDiscussionsLoading] = useState(false);
   const [currentDiscussionCategory, setCurrentDiscussionCategory] = useState<string>("all");
   const [currentDiscussionStatus, setCurrentDiscussionStatus] = useState<string>("all");
+  const [showMyDiscussions, setShowMyDiscussions] = useState<boolean>(false);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -373,9 +410,14 @@ export default function MenteeDashboardPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [savedFilter, setSavedFilter] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [applicationStatusFilter, setApplicationStatusFilter] = useState("all");
   const [submissionSearchTerm, setSubmissionSearchTerm] = useState("");
   const [submissionTypeFilter, setSubmissionTypeFilter] = useState("all");
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  
+  // Withdraw confirmation dialog state
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [applicationToWithdraw, setApplicationToWithdraw] = useState<string | null>(null);
 
   // Pagination states
   const [opportunityPagination, setOpportunityPagination] = useState({
@@ -442,6 +484,11 @@ export default function MenteeDashboardPage() {
   const [saveLoading, setSaveLoading] = useState<{ [key: string]: boolean }>(
     {}
   );
+
+  // Discussion modal state
+  const [showDiscussionModal, setShowDiscussionModal] = useState(false);
+  const [selectedDiscussion, setSelectedDiscussion] = useState<DiscussionThread | null>(null);
+  const [discussionModalLoading, setDiscussionModalLoading] = useState(false);
   // Check user role and redirect if necessary
   const checkUserRole = async () => {
     try {
@@ -519,6 +566,16 @@ export default function MenteeDashboardPage() {
         const pendingApps = applications.filter(
           (app: any) => app.status === "PENDING"
         );
+        const acceptedApps = applications.filter(
+          (app: any) => app.status === "ACCEPTED"
+        );
+        const rejectedApps = applications.filter(
+          (app: any) => app.status === "REJECTED"
+        );
+
+        // Calculate success rate
+        const totalProcessedApps = acceptedApps.length + rejectedApps.length;
+        const successRate = totalProcessedApps > 0 ? Math.round((acceptedApps.length / totalProcessedApps) * 100) : 0;
 
         setApplications(applications);
         setUserApplications(applications.map((app: any) => app.opportunityId));
@@ -526,6 +583,9 @@ export default function MenteeDashboardPage() {
           ...prev,
           totalApplications: applications.length,
           pendingApplications: pendingApps.length,
+          acceptedApplications: acceptedApps.length,
+          rejectedApplications: rejectedApps.length,
+          applicationSuccessRate: successRate,
         }));
       } else if (applicationsResponse.status === 401) {
         // Token expired, redirect to login
@@ -537,7 +597,12 @@ export default function MenteeDashboardPage() {
       const opportunitiesResponse = await fetch("/api/opportunities");
       if (opportunitiesResponse.ok) {
         const opportunitiesData = await opportunitiesResponse.json();
-        setOpportunities(opportunitiesData.opportunities || []);
+        const allOpportunities = opportunitiesData.opportunities || [];
+        setOpportunities(allOpportunities);
+        setStats((prev) => ({
+          ...prev,
+          totalOpportunities: allOpportunities.length,
+        }));
       }
 
       // Fetch recent opportunities by mentors (latest 5)
@@ -561,10 +626,24 @@ export default function MenteeDashboardPage() {
       const submissionsResponse = await fetch("/api/mentee-opportunities");
       if (submissionsResponse.ok) {
         const submissionsData = await submissionsResponse.json();
-        setSubmissions(submissionsData.opportunities || []);
+        const allSubmissions = submissionsData.opportunities || [];
+        const approvedSubs = allSubmissions.filter(
+          (sub: any) => sub.status === "APPROVED"
+        );
+        const pendingSubs = allSubmissions.filter(
+          (sub: any) => sub.status === "PENDING"
+        );
+        const rejectedSubs = allSubmissions.filter(
+          (sub: any) => sub.status === "REJECTED"
+        );
+
+        setSubmissions(allSubmissions);
         setStats((prev) => ({
           ...prev,
-          submittedOpportunities: submissionsData.opportunities?.length || 0,
+          submittedOpportunities: allSubmissions.length,
+          approvedSubmissions: approvedSubs.length,
+          pendingSubmissions: pendingSubs.length,
+          rejectedSubmissions: rejectedSubs.length,
         }));
       } else if (submissionsResponse.status === 401) {
         // Token expired, redirect to login
@@ -578,31 +657,46 @@ export default function MenteeDashboardPage() {
     }
   };
 
-  const fetchDiscussions = async (category?: string, status?: string, page = 1, reset = false, force = false) => {
-    console.log("fetchDiscussions called with:", { category, status, page, reset, activeSection, force });
+  const fetchDiscussions = async (category?: string, status?: string, page = 1, reset = false, force = false, myDiscussions?: boolean) => {
     if (!force && activeSection !== "discussions") {
-      console.log("fetchDiscussions early return - activeSection is:", activeSection);
       return;
     }
 
+    console.log("🔍 fetchDiscussions called with:", { category, status, page, reset, force, myDiscussions });
+    console.log("👤 Current user for filtering:", user?.id, user?.firstName);
+    
     setDiscussionsLoading(true);
     try {
       const params = new URLSearchParams();
-      if (category) params.set("category", category);
-      if (status) params.set("status", status);
+      if (category && category !== "all") params.set("category", category);
+      if (status && status !== "all") params.set("status", status);
+      if (myDiscussions !== undefined) {
+        params.set("myDiscussions", myDiscussions.toString());
+        console.log("🔎 Setting myDiscussions parameter to:", myDiscussions);
+      }
       params.set("page", page.toString());
       params.set("limit", discussionPagination.limit.toString());
+
+      console.log("📡 API request params:", params.toString());
 
       // Update current filter state
       if (category) setCurrentDiscussionCategory(category);
       if (status) setCurrentDiscussionStatus(status);
+      if (myDiscussions !== undefined) setShowMyDiscussions(myDiscussions);
 
       const response = await fetch(`/api/discussions?${params.toString()}`, {
         cache: "no-store",
       });
+      
       if (response.ok) {
         const data = await response.json();
         const newDiscussions = data.threads || [];
+        console.log(`✅ Loaded ${newDiscussions.length} discussions from API`);
+        console.log("🔍 Filter status:", { 
+          myDiscussions, 
+          userHasDiscussions: newDiscussions.filter((d: any) => d.author.id === user?.id).length,
+          totalDiscussions: newDiscussions.length 
+        });
 
         setDiscussions(prev => reset ? newDiscussions : [...prev, ...newDiscussions]);
         setDiscussionPagination(
@@ -613,6 +707,8 @@ export default function MenteeDashboardPage() {
             pages: 0,
           }
         );
+      } else {
+        console.error("Failed to fetch discussions:", response.status);
       }
     } catch (error) {
       console.error("Error fetching discussions:", error);
@@ -726,6 +822,7 @@ export default function MenteeDashboardPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: applicationsPagination.limit.toString(),
+        status: applicationStatusFilter !== "all" ? applicationStatusFilter : "",
       });
 
       const response = await fetch(`/api/applications?${params.toString()}`);
@@ -803,10 +900,8 @@ export default function MenteeDashboardPage() {
     if (!isClient) return;
 
     if (activeSection === "discussions") {
-      // Only fetch if no discussions are loaded yet
-      if (discussions.length === 0) {
-        fetchDiscussions(undefined, undefined, 1, true);
-      }
+      // Always fetch discussions when switching to discussions section
+      fetchDiscussions(undefined, undefined, 1, true, true, showMyDiscussions);
     } else if (activeSection === "opportunities") {
       fetchOpportunities(1, true);
     } else if (activeSection === "saved") {
@@ -816,7 +911,7 @@ export default function MenteeDashboardPage() {
     } else if (activeSection === "submissions") {
       fetchSubmissions(1, true);
     }
-  }, [activeSection, isClient, discussions.length]);
+  }, [activeSection, isClient]);
 
   // Handle filter changes for opportunities
   useEffect(() => {
@@ -829,6 +924,31 @@ export default function MenteeDashboardPage() {
     if (!isClient || activeSection !== "submissions") return;
     fetchSubmissions(1, true);
   }, [selectedStatus, isClient]);
+
+  // Handle status filter for applications
+  useEffect(() => {
+    if (!isClient || activeSection !== "applications") return;
+    fetchApplications(1, true);
+  }, [applicationStatusFilter, isClient]);
+
+  // Clear all filters function
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setExperienceFilter("all");
+    setTypeFilter("all");
+    setSavedFilter("all");
+  };
+
+  // Clear application filters function
+  const handleClearApplicationFilters = () => {
+    setApplicationStatusFilter("all");
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm !== "" || experienceFilter !== "all" || typeFilter !== "all" || savedFilter !== "all";
+
+  // Check if any application filters are active
+  const hasActiveApplicationFilters = applicationStatusFilter !== "all";
 
   const handleLogout = async () => {
     try {
@@ -878,7 +998,9 @@ export default function MenteeDashboardPage() {
         currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
         currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
         discussionPagination.page + 1,
-        false
+        false,
+        false,
+        showMyDiscussions
       );
     }
   };
@@ -912,25 +1034,30 @@ export default function MenteeDashboardPage() {
       }
     } catch (err) {
       console.error("Failed to save opportunity:", err);
-      alert(
-        err instanceof Error
+      toast({
+        title: "Error",
+        description: err instanceof Error
           ? err.message
-          : "Failed to save opportunity. Please try again."
-      );
+          : "Failed to save opportunity. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setSaveLoading((prev) => ({ ...prev, [opportunityId]: false }));
     }
   };
 
   const handleWithdrawApplication = async (applicationId: string) => {
-    if (!confirm("Are you sure you want to withdraw this application?")) {
-      return;
-    }
+    setApplicationToWithdraw(applicationId);
+    setShowWithdrawDialog(true);
+  };
 
-    setWithdrawingId(applicationId);
+  const confirmWithdrawApplication = async () => {
+    if (!applicationToWithdraw) return;
+    
+    setWithdrawingId(applicationToWithdraw);
     try {
       const response = await fetch(
-        `/api/applications/${applicationId}/withdraw`,
+        `/api/applications/${applicationToWithdraw}/withdraw`,
         {
           method: "POST",
         }
@@ -940,18 +1067,38 @@ export default function MenteeDashboardPage() {
         // Update the application status locally
         setApplications((prev) =>
           prev.map((app) =>
-            app.id === applicationId ? { ...app, status: "WITHDRAWN" } : app
+            app.id === applicationToWithdraw ? { ...app, status: "WITHDRAWN" } : app
           )
         );
+        
+        // Show success toast
+        toast({
+          title: "Success!",
+          description: "Application withdrawn successfully",
+          variant: "default",
+        });
+        
+        // Refresh dashboard data to update stats
+        fetchDashboardData();
       } else {
         const errorData = await response.json();
-        alert(errorData.error || "Failed to withdraw application");
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to withdraw application",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error withdrawing application:", error);
-      alert("Failed to withdraw application");
+      toast({
+        title: "Error",
+        description: "Failed to withdraw application",
+        variant: "destructive",
+      });
     } finally {
       setWithdrawingId(null);
+      setShowWithdrawDialog(false);
+      setApplicationToWithdraw(null);
     }
   };
 
@@ -964,23 +1111,62 @@ export default function MenteeDashboardPage() {
 
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedOpportunityForApply || !coverLetter.trim()) {
-      alert("Please fill in the cover letter");
+    
+    if (!selectedOpportunityForApply) {
+      toast({
+        title: "Error",
+        description: "No opportunity selected",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!cvFile) {
+      toast({
+        title: "Missing File",
+        description: "Please upload your CV/Resume",
+        variant: "destructive",
+      });
       return;
     }
 
     setApplyLoading(true);
     try {
-      const submitData = new FormData();
-      submitData.append("opportunityId", selectedOpportunityForApply.id);
-      submitData.append("coverLetter", coverLetter);
+      let resumeUrl = "";
+      
+      // Upload the file first if provided
       if (cvFile) {
-        submitData.append("cvFile", cvFile);
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", cvFile);
+        uploadFormData.append("fileType", "resume");
+
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        if (!uploadResponse.ok) {
+          const uploadError = await uploadResponse.json();
+          throw new Error(uploadError.error || "Failed to upload resume");
+        }
+
+        const uploadData = await uploadResponse.json();
+        resumeUrl = uploadData.url;
       }
+
+      // Submit the application with JSON
+      const submitData = {
+        opportunityId: selectedOpportunityForApply.id,
+        coverLetter: coverLetter,
+        resumeUrl: resumeUrl,
+      };
 
       const response = await fetch("/api/applications", {
         method: "POST",
-        body: submitData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submitData),
       });
 
       if (response.ok) {
@@ -990,18 +1176,24 @@ export default function MenteeDashboardPage() {
         setSelectedOpportunityForApply(null);
         setCoverLetter("");
         setCvFile(null);
-        alert("Application submitted successfully!");
+        toast({
+          title: "Success!",
+          description: "Application submitted successfully!",
+          variant: "success",
+        });
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to submit application");
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert(
-        error instanceof Error
+      toast({
+        title: "Error",
+        description: error instanceof Error
           ? error.message
-          : "Failed to submit application. Please try again."
-      );
+          : "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setApplyLoading(false);
     }
@@ -1072,11 +1264,13 @@ export default function MenteeDashboardPage() {
       }
     } catch (err) {
       console.error("Failed to save opportunity:", err);
-      alert(
-        err instanceof Error
+      toast({
+        title: "Error",
+        description: err instanceof Error
           ? err.message
-          : "Failed to save opportunity. Please try again."
-      );
+          : "Failed to save opportunity. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -1089,7 +1283,16 @@ export default function MenteeDashboardPage() {
     setShowApplyModal(true);
   };
 
-  // Submission handlers
+  // Discussion handlers
+  const handleViewDiscussion = (thread: DiscussionThread) => {
+    setSelectedDiscussion(thread);
+    setShowDiscussionModal(true);
+  };
+
+  const handleCloseDiscussionModal = () => {
+    setShowDiscussionModal(false);
+    setSelectedDiscussion(null);
+  };
   const handleViewSubmission = (submission: MenteeOpportunity) => {
     setSelectedSubmission(submission);
     setShowSubmissionModal(true);
@@ -1142,9 +1345,11 @@ export default function MenteeDashboardPage() {
       }
     } catch (error) {
       console.error("Error deleting submission:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to delete submission"
-      );
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete submission",
+        variant: "destructive",
+      });
     }
   };
 
@@ -1181,9 +1386,11 @@ export default function MenteeDashboardPage() {
       }
     } catch (error) {
       console.error("Error updating submission:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to update submission"
-      );
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update submission",
+        variant: "destructive",
+      });
     } finally {
       setSavingSubmission(false);
     }
@@ -1233,7 +1440,11 @@ export default function MenteeDashboardPage() {
       await fetchDashboardData();
     } catch (err: any) {
       console.error("Error saving profile:", err);
-      alert(err.message || "Failed to save profile. Please try again.");
+      toast({
+        title: "Error",
+        description: err.message || "Failed to save profile. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsEditingProfile(false);
     }
@@ -1282,9 +1493,18 @@ export default function MenteeDashboardPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    // Handle invalid or missing dates
+    if (!dateString) return "Unknown date";
+    
     // Use a consistent date format to prevent hydration mismatches
     const date = new Date(dateString);
+    
+    // Check if the date is invalid
+    if (isNaN(date.getTime())) {
+      return "Unknown date";
+    }
+    
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -1352,6 +1572,14 @@ export default function MenteeDashboardPage() {
     return matchesStatus && matchesSearch && matchesType;
   });
 
+  // Filter applications for client-side filtering
+  const filteredApplications = applications.filter((application) => {
+    const matchesStatus =
+      applicationStatusFilter === "all" || application.status === applicationStatusFilter;
+
+    return matchesStatus;
+  });
+
   // Show loading until both data is loaded and client is hydrated
   if (loading || !isClient) {
     return (
@@ -1359,7 +1587,7 @@ export default function MenteeDashboardPage() {
         title="Loading your dashboard..."
         description="Preparing your personalized experience with opportunities, applications, and profile insights"
         size="lg"
-        variant="elegant"
+        variant="default"
         color="blue"
       />
     );
@@ -1373,23 +1601,25 @@ export default function MenteeDashboardPage() {
         isMobileMenuOpen={isMobileSidebarOpen}
       />
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-          {/* Sidebar */}
-          <DashboardSidebar
-            activeSection={activeSection}
-            onSectionChange={(section) => {
-              setActiveSection(section);
-              setIsMobileSidebarOpen(false);
-            }}
-            stats={{
-              pendingApplications: stats.pendingApplications,
-            }}
-            isOpen={isMobileSidebarOpen}
-            onClose={() => setIsMobileSidebarOpen(false)}
-          />
-          {/* Main Content */}
-          <div className="lg:col-span-6">
+      <div className="max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-4 sm:gap-6 lg:gap-6 xl:gap-8">
+          {/* Sidebar - Responsive widths */}
+          <div className="lg:col-span-3 xl:col-span-3">
+            <DashboardSidebar
+              activeSection={activeSection}
+              onSectionChange={(section) => {
+                setActiveSection(section);
+                setIsMobileSidebarOpen(false);
+              }}
+              stats={{
+                pendingApplications: stats.pendingApplications,
+              }}
+              isOpen={isMobileSidebarOpen}
+              onClose={() => setIsMobileSidebarOpen(false)}
+            />
+          </div>
+          {/* Main Content - Flexible width */}
+          <div className="lg:col-span-9 xl:col-span-6 order-2 lg:order-1">
             {activeSection === "dashboard" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
@@ -1402,73 +1632,199 @@ export default function MenteeDashboardPage() {
                   </p>
                 </div>
 
-                {/* Quick Stats Grid */}
+                {/* Enhanced Stats Grid */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  {/* Total Applications */}
                   <Card 
-                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105"
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
                     onClick={() => setActiveSection("applications")}
                   >
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
-                          <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                    <CardContent className="p-3 sm:p-4 lg:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                        <div className="p-2 sm:p-2.5 lg:p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg flex-shrink-0">
+                          <FileText className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base sm:text-lg lg:text-2xl font-bold text-slate-900 leading-tight">
                             {stats.totalApplications}
                           </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
+                          <p className="text-xs sm:text-sm text-slate-600 leading-tight">
                             Applications
                           </p>
+                          <p className="text-xs text-blue-600 font-medium leading-tight">
+                            {stats.totalApplications === 0 ? "Start applying" : 
+                             stats.applicationSuccessRate > 0 ? `${stats.applicationSuccessRate}% success` :
+                             "Track your progress"}
+                          </p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
+                  {/* Pending Applications */}
                   <Card 
-                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105"
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
                     onClick={() => setActiveSection("applications")}
                   >
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg">
-                          <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                    <CardContent className="p-3 sm:p-4 lg:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                        <div className="p-2 sm:p-2.5 lg:p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg flex-shrink-0">
+                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
-                            {stats.pendingApplications + stats.submittedOpportunities}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base sm:text-lg lg:text-2xl font-bold text-slate-900 leading-tight">
+                            {stats.pendingApplications}
                           </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            In Review
+                          <p className="text-xs sm:text-sm text-slate-600 leading-tight">
+                            Pending Review
+                          </p>
+                          <p className="text-xs text-amber-600 font-medium leading-tight">
+                            {stats.pendingApplications === 0 ? "All caught up" : "Waiting for response"}
                           </p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
+                  {/* Saved Opportunities */}
                   <Card 
-                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105"
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
                     onClick={() => setActiveSection("saved")}
                   >
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 shadow-lg">
-                          <Heart className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                    <CardContent className="p-3 sm:p-4 lg:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                        <div className="p-2 sm:p-2.5 lg:p-3 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 shadow-lg flex-shrink-0">
+                          <Heart className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base sm:text-lg lg:text-2xl font-bold text-slate-900 leading-tight">
                             {stats.savedOpportunities}
                           </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
+                          <p className="text-xs sm:text-sm text-slate-600 leading-tight">
                             Saved
+                          </p>
+                          <p className="text-xs text-pink-600 font-medium leading-tight">
+                            {stats.savedOpportunities === 0 ? "Save to apply later" : "Ready to apply"}
                           </p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  
+                  {/* My Submissions */}
+                  <Card 
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
+                    onClick={() => setActiveSection("submissions")}
+                  >
+                    <CardContent className="p-3 sm:p-4 lg:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                        <div className="p-2 sm:p-2.5 lg:p-3 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg flex-shrink-0">
+                          <Send className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base sm:text-lg lg:text-2xl font-bold text-slate-900 leading-tight">
+                            {stats.submittedOpportunities}
+                          </p>
+                          <p className="text-xs sm:text-sm text-slate-600 leading-tight">
+                            My Posts
+                          </p>
+                          <p className="text-xs text-emerald-600 font-medium leading-tight">
+                            {stats.submittedOpportunities === 0 ? "Share opportunities" : 
+                             stats.approvedSubmissions > 0 ? `${stats.approvedSubmissions} approved` :
+                             "Under review"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
+
+                {/* Activity Insights */}
+                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-500">
+                        <TrendingUp className="h-5 w-5 text-white" />
+                      </div>
+                      Your Progress
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Applications Progress */}
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-blue-900">Applications</h4>
+                          <FileText className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-blue-700">Total Applied:</span>
+                            <span className="font-semibold">{stats.totalApplications}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-amber-700">Pending:</span>
+                            <span className="font-semibold">{stats.pendingApplications}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-green-700">Accepted:</span>
+                            <span className="font-semibold">{stats.acceptedApplications}</span>
+                          </div>
+                          {stats.applicationSuccessRate > 0 && (
+                            <div className="pt-2 mt-2 border-t border-blue-200">
+                              <div className="flex justify-between">
+                                <span className="text-blue-700">Success Rate:</span>
+                                <span className="font-bold text-green-600">{stats.applicationSuccessRate}%</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-3 bg-white/80 border-blue-200 text-blue-700 hover:bg-blue-50"
+                          onClick={() => setActiveSection("applications")}
+                        >
+                          View Applications
+                        </Button>
+                      </div>
+
+                      {/* Submissions Progress */}
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-emerald-900">Contributions</h4>
+                          <Send className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-emerald-700">Total Posted:</span>
+                            <span className="font-semibold">{stats.submittedOpportunities}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-amber-700">Pending:</span>
+                            <span className="font-semibold">{stats.pendingSubmissions}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-green-700">Approved:</span>
+                            <span className="font-semibold">{stats.approvedSubmissions}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-red-700">Rejected:</span>
+                            <span className="font-semibold">{stats.rejectedSubmissions}</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-3 bg-white/80 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          onClick={() => setActiveSection("submissions")}
+                        >
+                          Manage Posts
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Recent Opportunities by Mentors */}
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
@@ -1626,54 +1982,74 @@ export default function MenteeDashboardPage() {
 
                 {/* Search and Filters */}
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <Input
-                        placeholder="Search opportunities..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-white/80"
-                      />
-                      <Select
-                        value={experienceFilter}
-                        onValueChange={setExperienceFilter}
-                      >
-                        <SelectTrigger className="bg-white/80">
-                          <SelectValue placeholder="Experience Level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Levels</SelectItem>
-                          <SelectItem value="ENTRY">Entry Level</SelectItem>
-                          <SelectItem value="MID">Mid-Career</SelectItem>
-                          <SelectItem value="SENIOR">Senior Level</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select value={typeFilter} onValueChange={setTypeFilter}>
-                        <SelectTrigger className="bg-white/80">
-                          <SelectValue placeholder="Opportunity Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Types</SelectItem>
-                          {opportunityTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.name}>
-                              {type.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={savedFilter}
-                        onValueChange={setSavedFilter}
-                      >
-                        <SelectTrigger className="bg-white/80">
-                          <SelectValue placeholder="Saved Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Opportunities</SelectItem>
-                          <SelectItem value="saved">Saved Only</SelectItem>
-                          <SelectItem value="not_saved">Not Saved</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="space-y-4">
+                      {/* Filter Grid */}
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                        {/* First Row */}
+                        <Input
+                          placeholder="Search opportunities..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="bg-white/80 w-full"
+                        />
+                        <Select
+                          value={experienceFilter}
+                          onValueChange={setExperienceFilter}
+                        >
+                          <SelectTrigger className="bg-white/80 w-full">
+                            <SelectValue placeholder="Experience Level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Levels</SelectItem>
+                            <SelectItem value="ENTRY">Entry Level</SelectItem>
+                            <SelectItem value="MID">Mid-Career</SelectItem>
+                            <SelectItem value="SENIOR">Senior Level</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {/* Second Row */}
+                        <Select value={typeFilter} onValueChange={setTypeFilter}>
+                          <SelectTrigger className="bg-white/80 w-full">
+                            <SelectValue placeholder="Opportunity Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            {opportunityTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.name}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={savedFilter}
+                          onValueChange={setSavedFilter}
+                        >
+                          <SelectTrigger className="bg-white/80 w-full">
+                            <SelectValue placeholder="Saved Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Opportunities</SelectItem>
+                            <SelectItem value="saved">Saved Only</SelectItem>
+                            <SelectItem value="not_saved">Not Saved</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Clear Filters Button */}
+                      {hasActiveFilters && (
+                        <div className="flex justify-center pt-2 border-t border-slate-100">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleClearFilters}
+                            className="bg-white/80 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-700 px-4 py-2"
+                          >
+                            <Filter className="h-4 w-4 mr-2" />
+                            Clear Filters
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1831,6 +2207,49 @@ export default function MenteeDashboardPage() {
                   </p>
                 </div>
 
+                {/* Application Filters */}
+                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="space-y-4">
+                      {/* Filter Row */}
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                        <div className="w-full sm:w-48">
+                          <Select
+                            value={applicationStatusFilter}
+                            onValueChange={setApplicationStatusFilter}
+                          >
+                            <SelectTrigger className="bg-white/80 w-full">
+                              <SelectValue placeholder="Filter by Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Status</SelectItem>
+                              <SelectItem value="PENDING">Pending Review</SelectItem>
+                              <SelectItem value="ACCEPTED">Accepted</SelectItem>
+                              <SelectItem value="REJECTED">Rejected</SelectItem>
+                              <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      {/* Clear Filters Button */}
+                      {hasActiveApplicationFilters && (
+                        <div className="flex justify-center pt-2 border-t border-slate-100">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleClearApplicationFilters}
+                            className="bg-white/80 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-700 px-4 py-2"
+                          >
+                            <Filter className="h-4 w-4 mr-2" />
+                            Clear Filters
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <div className="space-y-6">
                   {applicationsPagination.loading &&
                     applications.length === 0 ? (
@@ -1847,28 +2266,32 @@ export default function MenteeDashboardPage() {
                         />
                       ))}
                     </div>
-                  ) : applications.length === 0 ? (
+                  ) : filteredApplications.length === 0 ? (
                     <div className="text-center py-16">
                       <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
                         <FileText className="h-12 w-12 text-slate-400" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 mb-2">
-                        No applications yet
+                        {applicationStatusFilter !== "all" ? "No applications found" : "No applications yet"}
                       </h3>
                       <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                        Start applying for opportunities to see your
-                        applications here.
+                        {applicationStatusFilter !== "all" 
+                          ? `No applications with ${applicationStatusFilter.toLowerCase()} status found.`
+                          : "Start applying for opportunities to see your applications here."
+                        }
                       </p>
-                      <Button
-                        onClick={() => setActiveSection("opportunities")}
-                        className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
-                      >
-                        Browse Opportunities
-                      </Button>
+                      {applicationStatusFilter === "all" && (
+                        <Button
+                          onClick={() => setActiveSection("opportunities")}
+                          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                        >
+                          Browse Opportunities
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <>
-                      {applications.map((application) => (
+                      {filteredApplications.map((application) => (
                         <Card
                           key={application.id}
                           className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
@@ -1934,7 +2357,7 @@ export default function MenteeDashboardPage() {
                             onLoadMore={loadMoreApplications}
                             loading={applicationsPagination.loading}
                             totalItems={applicationsPagination.total}
-                            currentItems={applications.length}
+                            currentItems={filteredApplications.length}
                             loadingText="Loading more applications..."
                             buttonText="Load More Applications"
                             progressColor="from-indigo-500 to-purple-500"
@@ -2034,7 +2457,7 @@ export default function MenteeDashboardPage() {
                                   <div className="flex items-center gap-1 text-sm text-slate-500">
                                     <Heart className="h-4 w-4" />
                                     <span>
-                                      Saved {formatDate(saved.savedAt)}
+                                      Saved {formatDate(saved.createdAt)}
                                     </span>
                                   </div>
                                 </div>
@@ -2151,7 +2574,7 @@ export default function MenteeDashboardPage() {
                     description="Connecting you with community conversations and expert insights"
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
                     size="lg"
-                    variant="elegant"
+                    variant="default"
                     color="purple"
                   />
                 ) : (
@@ -2164,6 +2587,9 @@ export default function MenteeDashboardPage() {
                     currentStatus={currentDiscussionStatus}
                     onLoadMore={loadMoreDiscussions}
                     loading={discussionsLoading}
+                    currentUser={user}
+                    onViewDiscussion={handleViewDiscussion}
+                    currentMyDiscussions={showMyDiscussions}
                   />
                 )}
               </div>
@@ -2189,69 +2615,82 @@ export default function MenteeDashboardPage() {
                   <CardContent className="p-4 sm:p-6">
                     <div className="space-y-4">
                       {/* Search Row */}
+                      <div>
+                        <Input
+                          placeholder="Search submissions..."
+                          value={submissionSearchTerm}
+                          onChange={(e) =>
+                            setSubmissionSearchTerm(e.target.value)
+                          }
+                          className="bg-white/80 w-full"
+                        />
+                      </div>
+
+                      {/* Filters Row */}
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <div className="flex-1 min-w-0">
-                          <Input
-                            placeholder="Search submissions..."
-                            value={submissionSearchTerm}
-                            onChange={(e) =>
-                              setSubmissionSearchTerm(e.target.value)
-                            }
-                            className="bg-white/80 w-full"
-                          />
+                        <div className="flex-1">
+                          <Select
+                            value={selectedStatus}
+                            onValueChange={setSelectedStatus}
+                          >
+                            <SelectTrigger className="bg-white/80 w-full">
+                              <SelectValue placeholder="Filter by Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Status</SelectItem>
+                              <SelectItem value="PENDING">
+                                Pending Review
+                              </SelectItem>
+                              <SelectItem value="APPROVED">
+                                Approved
+                              </SelectItem>
+                              <SelectItem value="REJECTED">
+                                Rejected
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:w-auto">
-                          <div className="w-full sm:w-48">
-                            <Select
-                              value={selectedStatus}
-                              onValueChange={setSelectedStatus}
-                            >
-                              <SelectTrigger className="bg-white/80 w-full">
-                                <SelectValue placeholder="Filter by Status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="PENDING">
-                                  Pending Review
+                        <div className="flex-1">
+                          <Select
+                            value={submissionTypeFilter}
+                            onValueChange={setSubmissionTypeFilter}
+                          >
+                            <SelectTrigger className="bg-white/80 w-full">
+                              <SelectValue placeholder="Filter by Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Types</SelectItem>
+                              {opportunityTypes.map((type) => (
+                                <SelectItem key={type.id} value={type.name}>
+                                  {type.name}
                                 </SelectItem>
-                                <SelectItem value="APPROVED">
-                                  Approved
-                                </SelectItem>
-                                <SelectItem value="REJECTED">
-                                  Rejected
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="w-full sm:w-48">
-                            <Select
-                              value={submissionTypeFilter}
-                              onValueChange={setSubmissionTypeFilter}
-                            >
-                              <SelectTrigger className="bg-white/80 w-full">
-                                <SelectValue placeholder="Filter by Type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All Types</SelectItem>
-                                {opportunityTypes.map((type) => (
-                                  <SelectItem key={type.id} value={type.name}>
-                                    {type.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
 
-                      {/* Action Button Row */}
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-slate-100">
-                        <div className="text-xs text-slate-500 flex items-center gap-2">
-                          <span className="hidden sm:inline">💡 Tip:</span>
-                          <span>
-                            Use filters to find specific submissions quickly
-                          </span>
+                      {/* Clear Filters Row */}
+                      {(submissionSearchTerm !== "" || selectedStatus !== "all" || submissionTypeFilter !== "all") && (
+                        <div className="flex justify-start pt-2 border-t border-slate-100">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSubmissionSearchTerm("");
+                              setSelectedStatus("all");
+                              setSubmissionTypeFilter("all");
+                            }}
+                            className="text-slate-600 hover:text-slate-900"
+                          >
+                            <Filter className="h-4 w-4 mr-2" />
+                            Clear Filters
+                          </Button>
                         </div>
+                      )}
+
+                      {/* Action Button Row */}
+                      <div className="flex justify-end pt-2 border-t border-slate-100">
                         <Button
                           onClick={() => setActiveSection("submit-opportunity")}
                           className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 px-6 py-2 w-full sm:w-auto"
@@ -2293,13 +2732,13 @@ export default function MenteeDashboardPage() {
                           ? "You haven't submitted any opportunities yet. Share opportunities you've discovered with the community!"
                           : `No submissions with ${selectedStatus.toLowerCase()} status found.`}
                       </p>
-                      <Button
+                      {/* <Button
                         onClick={() => setActiveSection("submit-opportunity")}
                         className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Submit Your First Opportunity
-                      </Button>
+                      </Button> */}
                     </div>
                   ) : (
                     <>
@@ -2472,14 +2911,15 @@ export default function MenteeDashboardPage() {
             )}
           </div>
 
-          {/* Right Sidebar - Widgets */}
-          <div className="lg:col-span-3">
-            <div className="sticky top-20 sm:top-24 space-y-4 sm:space-y-6">
+          {/* Right Sidebar - Profile Strength & Widgets */}
+          <div className="lg:col-span-12 xl:col-span-3 order-1 lg:order-2">
+            <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-4 sm:space-y-6">
               {/* Profile Strength */}
               <ProfileStrength
                 user={user}
                 profile={profile}
                 onEdit={handleEditProfile}
+                className="w-full"
               />
 
               {/* Quick Actions */}
@@ -2608,72 +3048,101 @@ export default function MenteeDashboardPage() {
 
       {/* Apply Modal */}
       <Dialog open={showApplyModal} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-900">
-              Apply for Position
-            </DialogTitle>
-            <DialogDescription className="text-slate-600">
-              {selectedOpportunityForApply?.title}
-            </DialogDescription>
+        <DialogContent className="sm:max-w-lg lg:max-w-xl">
+          <DialogHeader className="text-center space-y-2">
+            <div className="mx-auto w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">
+                Apply for Position
+              </DialogTitle>
+              <DialogDescription className="text-slate-600 font-medium text-sm">
+                {selectedOpportunityForApply?.title}
+              </DialogDescription>
+            </div>
           </DialogHeader>
 
-          <form onSubmit={handleApplySubmit} className="space-y-6">
+          <form onSubmit={handleApplySubmit} className="space-y-5 mt-4">
             <div className="space-y-2">
               <Label
                 htmlFor="coverLetter"
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-semibold text-slate-800 flex items-center gap-2"
               >
-                Cover Letter *
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                Cover Letter
+                <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">Optional</span>
               </Label>
               <Textarea
                 id="coverLetter"
-                placeholder="Write your cover letter here..."
+                placeholder="Share your motivation, relevant experience, and why you're interested in this opportunity..."
                 value={coverLetter}
                 onChange={(e) => setCoverLetter(e.target.value)}
-                className="min-h-[120px] resize-none"
-                required
+                className="min-h-[100px] max-h-[120px] resize-none border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-slate-50/50 placeholder:text-slate-400"
               />
             </div>
 
             <div className="space-y-2">
               <Label
                 htmlFor="cvFile"
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-semibold text-slate-800 flex items-center gap-2"
               >
-                CV/Resume (Optional)
+                <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                CV/Resume
+                <span className="text-xs font-normal text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Required</span>
               </Label>
-              <Input
-                id="cvFile"
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => setCvFile(e.target.files?.[0] || null)}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-              <p className="text-xs text-slate-500">
-                Accepted formats: PDF, DOC, DOCX (Max 10MB)
+              <div className="relative">
+                <div className="w-full h-12 border border-slate-200 rounded-lg bg-slate-50/50 flex items-center overflow-hidden">
+                  <label
+                    htmlFor="cvFile"
+                    className="inline-flex items-center justify-center h-full px-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-sm rounded-none rounded-l-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 cursor-pointer border-0"
+                  >
+                    Choose File
+                  </label>
+                  <div className="flex-1 px-4 h-full flex items-center text-sm text-slate-700">
+                    {cvFile ? cvFile.name : "No file chosen"}
+                  </div>
+                </div>
+                <Input
+                  id="cvFile"
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => setCvFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-slate-400"></span>
+                PDF, DOC, DOCX (Max 10MB)
               </p>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-4 border-t border-slate-100">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleCloseModal}
-                className="flex-1"
+                className="flex-1 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg font-medium"
                 disabled={applyLoading}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
-                disabled={applyLoading || !coverLetter.trim()}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg font-medium"
+                disabled={applyLoading || !cvFile}
               >
                 {applyLoading ? (
-                  <LoadingButton size="md" className="flex-1" />
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
+                    Submitting...
+                  </>
                 ) : (
-                  "Submit Application"
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit Application
+                  </>
                 )}
               </Button>
             </div>
@@ -2697,7 +3166,7 @@ export default function MenteeDashboardPage() {
               <div className="flex items-center justify-center py-12">
                 <LoadingSpinner
                   size="lg"
-                  variant="elegant"
+                  variant="default"
                   color="blue"
                   text="Loading opportunity details..."
                 />
@@ -2804,74 +3273,76 @@ export default function MenteeDashboardPage() {
                 )}
 
                 {/* Quick Info Grid */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                    Quick Info
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedOpportunity.experienceLevel && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <User className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Experience Level
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {getExperienceLevelLabel(
-                              selectedOpportunity.experienceLevel
-                            )}
-                          </p>
+                {(selectedOpportunity.experienceLevel || selectedOpportunity.duration || selectedOpportunity.compensation || selectedOpportunity.applicationDeadline) && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                      Quick Info
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedOpportunity.experienceLevel && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <User className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Experience Level
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {getExperienceLevelLabel(
+                                selectedOpportunity.experienceLevel
+                              )}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {selectedOpportunity.duration && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Duration
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {selectedOpportunity.duration}
-                          </p>
+                      {selectedOpportunity.duration && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Duration
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {selectedOpportunity.duration}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {selectedOpportunity.compensation && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <div className="h-5 w-5 text-blue-600 font-bold text-lg">
-                          ₹
+                      {selectedOpportunity.compensation && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <div className="h-5 w-5 text-blue-600 font-bold text-lg">
+                            ₹
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Compensation
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {selectedOpportunity.compensation}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Compensation
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {selectedOpportunity.compensation}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {selectedOpportunity.applicationDeadline && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <Calendar className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Application Deadline
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {formatDate(
-                              selectedOpportunity.applicationDeadline
-                            )}
-                          </p>
+                      {selectedOpportunity.applicationDeadline && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <Calendar className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Application Deadline
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {formatDate(
+                                selectedOpportunity.applicationDeadline
+                              )}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Mentor Info */}
                 {selectedOpportunity.creator && (
@@ -3060,72 +3531,74 @@ export default function MenteeDashboardPage() {
                 )}
 
                 {/* Quick Info Grid */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                    Quick Info
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedSubmission.experienceLevel && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <User className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Experience Level
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {getExperienceLevelLabel(
-                              selectedSubmission.experienceLevel
-                            )}
-                          </p>
+                {(selectedSubmission.experienceLevel || selectedSubmission.duration || selectedSubmission.compensation || selectedSubmission.applicationDeadline) && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                      Quick Info
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedSubmission.experienceLevel && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <User className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Experience Level
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {getExperienceLevelLabel(
+                                selectedSubmission.experienceLevel
+                              )}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {selectedSubmission.duration && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Duration
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {selectedSubmission.duration}
-                          </p>
+                      {selectedSubmission.duration && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Duration
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {selectedSubmission.duration}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {selectedSubmission.compensation && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <div className="h-5 w-5 text-blue-600 font-bold text-lg">
-                          ₹
+                      {selectedSubmission.compensation && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <div className="h-5 w-5 text-blue-600 font-bold text-lg">
+                            ₹
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Compensation
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {selectedSubmission.compensation}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Compensation
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {selectedSubmission.compensation}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {selectedSubmission.applicationDeadline && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                        <Calendar className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            Application Deadline
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {formatDate(selectedSubmission.applicationDeadline)}
-                          </p>
+                      {selectedSubmission.applicationDeadline && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <Calendar className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              Application Deadline
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {formatDate(selectedSubmission.applicationDeadline)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Source Information */}
                 {(selectedSubmission.sourceUrl ||
@@ -3180,8 +3653,9 @@ export default function MenteeDashboardPage() {
               <div className="flex gap-3 pt-6 border-t">
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={handleCloseSubmissionModals}
-                  className="flex-1"
+                  className="px-4"
                 >
                   Close
                 </Button>
@@ -3517,6 +3991,174 @@ export default function MenteeDashboardPage() {
               onCancel={handleCloseProfileModal}
             />
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Withdraw Application Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showWithdrawDialog}
+        onOpenChange={setShowWithdrawDialog}
+        title="Withdraw Application"
+        description="Are you sure you want to withdraw this application? This action cannot be undone."
+        confirmText="Withdraw Application"
+        variant="destructive"
+        onConfirm={confirmWithdrawApplication}
+        loading={withdrawingId !== null}
+      />
+
+      {/* Discussion View Modal */}
+      <Dialog open={showDiscussionModal} onOpenChange={handleCloseDiscussionModal}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedDiscussion ? (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-500">
+                      <MessageSquare className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">
+                        {selectedDiscussion.title}
+                      </DialogTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge
+                          className={`text-xs font-medium ${
+                            selectedDiscussion.status === "ACTIVE"
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : selectedDiscussion.status === "CLOSED"
+                              ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                              : "bg-gray-100 text-gray-800 border-gray-200"
+                          }`}
+                        >
+                          {selectedDiscussion.status === "ACTIVE" && "🟢 Active"}
+                          {selectedDiscussion.status === "CLOSED" && "🔒 Closed"}
+                          {selectedDiscussion.status === "ARCHIVED" && "📁 Archived"}
+                        </Badge>
+                        
+                        <Badge
+                          className={`text-xs ${
+                            categoryColors[
+                              selectedDiscussion.category as keyof typeof categoryColors
+                            ] || categoryColors.GENERAL
+                          }`}
+                        >
+                          {categoryLabels[
+                            selectedDiscussion.category as keyof typeof categoryLabels
+                          ] || selectedDiscussion.category}
+                        </Badge>
+                        
+                        {user && selectedDiscussion.author.id === user.id && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-purple-50 text-purple-700 border-purple-200"
+                          >
+                            👤 My Post
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                    }}
+                    className="text-slate-600 hover:text-blue-600"
+                  >
+                    Open Full View
+                  </Button>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Author and Date */}
+                <div className="flex items-center gap-4 text-sm text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
+                      <span className="text-white font-semibold text-xs">
+                        {selectedDiscussion.author.firstName?.[0] || "U"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        {selectedDiscussion.author.firstName} {selectedDiscussion.author.lastName}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {selectedDiscussion.author.role} • {formatDate(selectedDiscussion.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 ml-auto">
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-4 w-4" />
+                      <span>{selectedDiscussion.viewCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>{selectedDiscussion._count.comments}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tags */}
+                {selectedDiscussion.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedDiscussion.tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="text-xs bg-white/50"
+                      >
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Content */}
+                <div className="prose prose-slate max-w-none">
+                  <div className="p-4 bg-slate-50 rounded-lg border">
+                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {selectedDiscussion.content}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Actions */}
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={handleCloseDiscussionModal}
+                    className="flex-1"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                    }}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
+                  >
+                    Join Discussion
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">
+                  Discussion Details
+                </DialogTitle>
+              </DialogHeader>
+              <div className="text-center py-8">
+                <p className="text-slate-600">Failed to load discussion details</p>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

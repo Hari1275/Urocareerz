@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Discussion Creation</title>
+</head>
+<body>
+    <h1>Test Discussion Creation</h1>
+    <button onclick="createTestDiscussion()">Create Test Discussion</button>
+    <button onclick="checkDiscussions()">Check Discussions</button>
+    <div id="result" style="margin-top: 20px; white-space: pre-wrap;"></div>
+
+    <script>
+        async function createTestDiscussion() {
+            try {
+                const response = await fetch('/api/discussions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Discussion Thread',
+                        content: 'This is a test discussion thread to verify the discussion functionality is working properly.',
+                        category: 'GENERAL',
+                        tags: ['test', 'debugging']
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('result').textContent = 'Create Response: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function checkDiscussions() {
+            try {
+                const response = await fetch('/api/debug/discussions');
+                const data = await response.json();
+                document.getElementById('result').textContent = 'Debug Response: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

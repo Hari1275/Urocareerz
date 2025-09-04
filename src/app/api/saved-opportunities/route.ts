@@ -42,6 +42,13 @@ export async function GET(request: NextRequest) {
                 },
               },
             },
+            opportunityType: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
           },
         },
       },
@@ -145,6 +152,13 @@ export async function POST(request: NextRequest) {
                     specialty: true,
                   },
                 },
+              },
+            },
+            opportunityType: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
               },
             },
           },

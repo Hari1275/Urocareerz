@@ -474,62 +474,64 @@ export default function OpportunityDetailPage() {
           <div className="lg:col-span-3">
             <div className="sticky top-24 space-y-6">
               {/* Quick Info */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold text-slate-900">Quick Info</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {opportunity.experienceLevel && (
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <User className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">Experience Level</p>
-                        <p className="text-sm text-slate-600">
-                          {getExperienceLevelLabel(opportunity.experienceLevel)}
-                        </p>
+              {(opportunity.experienceLevel || opportunity.duration || opportunity.compensation || opportunity.applicationDeadline) && (
+                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold text-slate-900">Quick Info</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {opportunity.experienceLevel && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <User className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Experience Level</p>
+                          <p className="text-sm text-slate-600">
+                            {getExperienceLevelLabel(opportunity.experienceLevel)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {opportunity.duration && (
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <Clock className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">Duration</p>
-                        <p className="text-sm text-slate-600">
-                          {opportunity.duration}
-                        </p>
+                    {opportunity.duration && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Duration</p>
+                          <p className="text-sm text-slate-600">
+                            {opportunity.duration}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {opportunity.compensation && (
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <div className="h-5 w-5 text-blue-600 font-bold text-lg">₹</div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">Compensation</p>
-                        <p className="text-sm text-slate-600">
-                          {opportunity.compensation}
-                        </p>
+                    {opportunity.compensation && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <div className="h-5 w-5 text-blue-600 font-bold text-lg">₹</div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Compensation</p>
+                          <p className="text-sm text-slate-600">
+                            {opportunity.compensation}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {opportunity.applicationDeadline && (
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <Calendar className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          Application Deadline
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          {formatDate(opportunity.applicationDeadline)}
-                        </p>
+                    {opportunity.applicationDeadline && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">
+                            Application Deadline
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {formatDate(opportunity.applicationDeadline)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Mentor Info */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
