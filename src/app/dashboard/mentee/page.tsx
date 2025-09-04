@@ -1404,7 +1404,10 @@ export default function MenteeDashboardPage() {
 
                 {/* Quick Stats Grid */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
+                  <Card 
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105"
+                    onClick={() => setActiveSection("applications")}
+                  >
                     <CardContent className="p-3 sm:p-6">
                       <div className="flex items-center gap-2 sm:gap-4">
                         <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
@@ -1422,7 +1425,10 @@ export default function MenteeDashboardPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
+                  <Card 
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105"
+                    onClick={() => setActiveSection("applications")}
+                  >
                     <CardContent className="p-3 sm:p-6">
                       <div className="flex items-center gap-2 sm:gap-4">
                         <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg">
@@ -1430,17 +1436,20 @@ export default function MenteeDashboardPage() {
                         </div>
                         <div>
                           <p className="text-lg sm:text-2xl font-bold text-slate-900">
-                            {stats.pendingApplications}
+                            {stats.pendingApplications + stats.submittedOpportunities}
                           </p>
                           <p className="text-xs sm:text-sm text-slate-600">
-                            Pending
+                            In Review
                           </p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
+                  <Card 
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105"
+                    onClick={() => setActiveSection("saved")}
+                  >
                     <CardContent className="p-3 sm:p-6">
                       <div className="flex items-center gap-2 sm:gap-4">
                         <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 shadow-lg">
@@ -1458,23 +1467,7 @@ export default function MenteeDashboardPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg">
-                          <Send className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
-                            {stats.submittedOpportunities}
-                          </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Submitted
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  
                 </div>
 
                 {/* Recent Opportunities by Mentors */}

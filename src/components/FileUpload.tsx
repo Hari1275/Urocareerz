@@ -84,6 +84,18 @@ export default function FileUpload({
     };
   }, [uploadedFileUrl, isImage]);
 
+  // Clear file input when selectedFile becomes null (after deletion)
+  React.useEffect(() => {
+    if (!selectedFile && fileInputRef.current) {
+      fileInputRef.current.value = "";
+      // Also clear preview URL if it exists
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+    }
+  }, [selectedFile, previewUrl]);
+
   const handleFileSelect = (file: File) => {
     // Validate file type
     if (isImage) {

@@ -339,11 +339,16 @@ export default function ProfileForm({
         throw new Error(data.error || "Delete failed");
       }
 
+      // Clear all resume-related state
       setFormData((prev) => ({
         ...prev,
         resume: "",
         resumeFileName: "",
       }));
+      
+      // Reset selected file state to allow re-upload
+      setSelectedResumeFile(null);
+      
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -370,11 +375,16 @@ export default function ProfileForm({
         throw new Error(data.error || "Delete failed");
       }
 
+      // Clear all avatar-related state
       setFormData((prev) => ({
         ...prev,
         avatar: "",
         avatarFileName: "",
       }));
+      
+      // Reset selected file state to allow re-upload
+      setSelectedAvatarFile(null);
+      
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -801,6 +811,7 @@ export default function ProfileForm({
                 </div>
               )}
               <FileUpload
+                key={`avatar-${formData.avatar || 'empty'}`}
                 onFileSelect={setSelectedAvatarFile}
                 onFileUpload={handleAvatarUpload}
                 selectedFile={selectedAvatarFile}
@@ -860,6 +871,7 @@ export default function ProfileForm({
                   </div>
                 )}
                 <FileUpload
+                  key={`resume-${formData.resume || 'empty'}`}
                   onFileSelect={setSelectedResumeFile}
                   onFileUpload={handleResumeUpload}
                   selectedFile={selectedResumeFile}

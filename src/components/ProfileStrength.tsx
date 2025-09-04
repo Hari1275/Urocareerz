@@ -233,9 +233,22 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
   return (
     <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 ${className || ""}`}>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-          <Target className="h-5 w-5 text-blue-500" />
-          Profile Strength
+        <CardTitle className="text-lg font-semibold text-slate-900 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-blue-500" />
+            Profile Strength
+          </div>
+          {/* {onEdit && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={onEdit}
+              className="text-xs bg-white/80 border-slate-200 hover:bg-white"
+            >
+              <Edit3 className="h-3 w-3 mr-1" />
+              Edit
+            </Button>
+          )} */}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -266,9 +279,22 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
           </div>
           {completionPercentage < 100 && (
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-700">
-                Complete your profile to improve your visibility and get better opportunities!
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <p className="text-xs text-blue-700 mb-2">
+                    Complete your profile to improve your visibility and get better opportunities!
+                  </p>
+                </div>
+                {onEdit && (
+                  <Button 
+                    size="sm" 
+                    onClick={onEdit}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 h-7"
+                  >
+                    Complete Profile
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>
