@@ -18,6 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface DiscussionThread {
@@ -101,6 +111,17 @@ export default function DiscussionThreadsList({
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [showMyDiscussions, setShowMyDiscussions] = useState<boolean>(false);
+  
+  // Edit/Delete state management
+  const [editingThread, setEditingThread] = useState<DiscussionThread | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editTags, setEditTags] = useState("");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [threadToDelete, setThreadToDelete] = useState<DiscussionThread | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -167,27 +188,183 @@ export default function DiscussionThreadsList({
     return content.substring(0, maxLength) + "...";
   };
 
+  // Edit functionality
+  const handleEditClick = (thread: DiscussionThread) => {
+    setEditingThread(thread);
+    setEditTitle(thread.title);
+    setEditContent(thread.content);
+    setEditCategory(thread.category);
+    setEditTags(thread.tags.join(", "));
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editingThread) return;
+
+    // Validation
+    if (!editTitle.trim() || !editContent.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title and content are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (editTitle.length < 5 || editTitle.length > 200) {
+      toast({
+        title: "Validation Error",
+        description: "Title must be between 5 and 200 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (editContent.length < 10 || editContent.length > 5000) {
+      toast({
+        title: "Validation Error",
+        description: "Content must be between 10 and 5000 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/discussions/${editingThread.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          content: editContent.trim(),
+          category: editCategory,
+          tags: editTags
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter((tag) => tag.length > 0)
+            .slice(0, 5), // Limit to 5 tags
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to update discussion");
+      }
+
+      toast({
+        title: "Success",
+        description: "Discussion updated successfully",
+      });
+
+      // Close dialog and reset state
+      setIsEditDialogOpen(false);
+      setEditingThread(null);
+      setEditTitle("");
+      setEditContent("");
+      setEditCategory("");
+      setEditTags("");
+
+      // Refresh the discussions list
+      onRefresh(
+        selectedCategory === "ALL" ? "all" : selectedCategory,
+        selectedStatus === "ALL" ? "all" : selectedStatus,
+        1,
+        true,
+        true,
+        showMyDiscussions
+      );
+    } catch (error) {
+      console.error("Error updating discussion:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update discussion",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Delete functionality
+  const handleDeleteClick = (thread: DiscussionThread) => {
+    setThreadToDelete(thread);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!threadToDelete) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/discussions/${threadToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to delete discussion");
+      }
+
+      toast({
+        title: "Success",
+        description: "Discussion deleted successfully",
+      });
+
+      // Close dialog and reset state
+      setIsDeleteDialogOpen(false);
+      setThreadToDelete(null);
+
+      // Refresh the discussions list
+      onRefresh(
+        selectedCategory === "ALL" ? "all" : selectedCategory,
+        selectedStatus === "ALL" ? "all" : selectedStatus,
+        1,
+        true,
+        true,
+        showMyDiscussions
+      );
+    } catch (error) {
+      console.error("Error deleting discussion:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete discussion",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDialogClose = () => {
+    if (isSubmitting) return; // Prevent closing while submitting
+    
+    setIsEditDialogOpen(false);
+    setIsDeleteDialogOpen(false);
+    setEditingThread(null);
+    setThreadToDelete(null);
+    setEditTitle("");
+    setEditContent("");
+    setEditCategory("");
+    setEditTags("");
+  };
+
   return (
     <div className="space-y-6">
-      {/* Filters and Actions */}
-      <Card className="bg-white/70 backdrop-blur-lg shadow-xl border border-gray-100">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-900">
-            Discussion Filters
-          </CardTitle>
-          <CardDescription>
-            Filter discussions by category and status to find relevant
-            conversations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-wrap items-center gap-4">
+      {/* Filters */}
+      <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            {/* Filter Controls */}
+            <div className="flex flex-wrap items-center gap-3">
               <Select
                 value={selectedCategory}
                 onValueChange={handleCategoryChange}
               >
-                <SelectTrigger className="w-48 bg-white/80">
+                <SelectTrigger className="w-44 bg-white/80 border-slate-300">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -201,7 +378,7 @@ export default function DiscussionThreadsList({
               </Select>
 
               <Select value={selectedStatus} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-40 bg-white/80">
+                <SelectTrigger className="w-32 bg-white/80 border-slate-300">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,43 +395,36 @@ export default function DiscussionThreadsList({
                 size="sm"
                 onClick={() => handleMyDiscussionsChange(!showMyDiscussions)}
                 className={showMyDiscussions 
-                  ? "bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
-                  : "bg-white/80 hover:bg-white border-slate-300 text-slate-600 hover:text-slate-900"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-medium shadow-sm hover:from-purple-700 hover:to-indigo-600 border-0"
+                  : "bg-white/80 hover:bg-white border-slate-300 text-slate-700 hover:text-slate-900 font-medium"
                 }
               >
-                {showMyDiscussions ? "✓ My Discussions" : "My Discussions"}
+                <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                {showMyDiscussions ? "My Posts" : "My Posts"}
               </Button>
 
               {/* Clear Filters Button */}
               {(selectedCategory !== "ALL" || selectedStatus !== "ALL" || showMyDiscussions) && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => {
-                    console.log("🧹 Clear Filters clicked");
                     setSelectedCategory("ALL");
                     setSelectedStatus("ALL");
                     setShowMyDiscussions(false);
-                    console.log("📤 Clearing all filters - calling onRefresh with defaults");
                     onRefresh("all", "all", 1, true, true, false);
                   }}
-                  className="bg-white/80 hover:bg-white border-slate-300 text-slate-600 hover:text-slate-900"
+                  className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 font-medium"
                 >
-                  🧹 Clear Filters
+                  <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Clear
                 </Button>
               )}
             </div>
-
-            <Button
-              onClick={() =>
-                onNewDiscussion
-                  ? onNewDiscussion()
-                  : router.push("/discussions/new")
-              }
-              className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
-            >
-              Start New Discussion
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -415,105 +585,126 @@ export default function DiscussionThreadsList({
                   </div>
 
                   {/* Stats and Action */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                        {thread.viewCount}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                          />
-                        </svg>
-                        {thread._count.comments}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {/* Discussion Controls - Only show for owned posts */}
-                      {currentUser && thread.author.id === currentUser.id && (
-                        <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          {thread.viewCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                            />
+                          </svg>
+                          {thread._count.comments}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {/* Only render controls if the user is the owner */}
+                        {currentUser && thread.author.id === currentUser.id ? (
+                          <>
+                            {/* Discussion Controls for the owner */}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditClick(thread);
+                                }}
+                                className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                                title="Edit Discussion"
+                              >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClick(thread);
+                                }}
+                                className="h-8 w-8 p-0 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                title="Delete Discussion"
+                              >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </Button>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onViewDiscussion) {
+                                  onViewDiscussion(thread);
+                                } else {
+                                  window.open(
+                                    `/discussions/${thread.id}`,
+                                    "_blank",
+                                    "noopener,noreferrer"
+                                  );
+                                }
+                              }}
+                              className="bg-white/80 hover:bg-white shrink-0"
+                            >
+                              View
+                            </Button>
+                          </>
+                        ) : (
+                          /* View Button Only for Non-Owners */
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("✏️ Edit button clicked for thread:", thread.id);
-                              // Add edit functionality here
+                              if (onViewDiscussion) {
+                                onViewDiscussion(thread);
+                              } else {
+                                window.open(
+                                  `/discussions/${thread.id}`,
+                                  "_blank",
+                                  "noopener,noreferrer"
+                                );
+                              }
                             }}
-                            className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
-                            title="Edit Discussion"
+                            className="bg-white/80 hover:bg-white shrink-0"
                           >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
+                            View
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log("🗑️ Delete button clicked for thread:", thread.id);
-                              // Add delete functionality here
-                            }}
-                            className="h-8 w-8 p-0 text-slate-500 hover:text-red-600 hover:bg-red-50"
-                            title="Delete Discussion"
-                          >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </Button>
-                        </div>
-                      )}
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onViewDiscussion) {
-                            onViewDiscussion(thread);
-                          } else {
-                            window.open(
-                              `/discussions/${thread.id}`,
-                              "_blank",
-                              "noopener,noreferrer"
-                            );
-                          }
-                        }}
-                        className="bg-white/80 hover:bg-white shrink-0"
-                      >
-                        View
-                      </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
                 </div>
               </div>
             </CardContent>
@@ -535,26 +726,16 @@ export default function DiscussionThreadsList({
               </h3>
               <p className="text-sm">
                 {showMyDiscussions 
-                  ? "You haven't created any discussions yet. Start your first discussion to share ideas with the community!"
+                  ? "You haven't created any discussions yet. Try clearing filters or browse all discussions to see community posts."
                   : selectedCategory && selectedCategory !== "ALL"
                   ? `No discussions in the "${categoryLabels[
                   selectedCategory as keyof typeof categoryLabels
                   ]
                   }" category yet.`
-                  : "Be the first to start a discussion!"
+                  : "No discussions available with current filters."
                 }
               </p>
             </div>
-            <Button
-              onClick={() =>
-                onNewDiscussion
-                  ? onNewDiscussion()
-                  : router.push("/discussions/new")
-              }
-              className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
-            >
-              {showMyDiscussions ? "Start Your First Discussion" : "Start First Discussion"}
-            </Button>
           </CardContent>
         </Card>
       )}
@@ -614,6 +795,162 @@ export default function DiscussionThreadsList({
           </div>
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Discussion</DialogTitle>
+            <DialogDescription>
+              Make changes to your discussion. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="edit-title" className="text-sm font-medium">
+                Title
+              </label>
+              <Input
+                id="edit-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Enter discussion title"
+                className="w-full"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-gray-500">
+                {editTitle.length}/200 characters
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="edit-category" className="text-sm font-medium">
+                Category
+              </label>
+              <Select
+                value={editCategory}
+                onValueChange={setEditCategory}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(categoryLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="edit-content" className="text-sm font-medium">
+                Content
+              </label>
+              <Textarea
+                id="edit-content"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                placeholder="Enter discussion content"
+                className="min-h-[200px] resize-none"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-gray-500">
+                {editContent.length}/5000 characters
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="edit-tags" className="text-sm font-medium">
+                Tags
+              </label>
+              <Input
+                id="edit-tags"
+                value={editTags}
+                onChange={(e) => setEditTags(e.target.value)}
+                placeholder="Enter tags separated by commas (e.g., career, advice, networking)"
+                className="w-full"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-gray-500">
+                Separate tags with commas. Maximum 5 tags.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleDialogClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditSave}
+              disabled={isSubmitting || !editTitle.trim() || !editContent.trim()}
+              className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white hover:from-blue-700 hover:to-indigo-600"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Delete Discussion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this discussion? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {threadToDelete && (
+            <div className="py-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  {threadToDelete.title}
+                </h4>
+                <p className="text-sm text-gray-600 line-clamp-3">
+                  {truncateContent(threadToDelete.content, 100)}
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleDialogClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Deleting...</span>
+                </div>
+              ) : (
+                "Delete Discussion"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

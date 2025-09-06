@@ -2574,7 +2574,7 @@ export default function MenteeDashboardPage() {
                   </p>
                 </div>
 
-                {/* New Discussion Button */}
+                {/* Start New Discussion Button */}
                 <div className="flex justify-center">
                   <Button
                     className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
