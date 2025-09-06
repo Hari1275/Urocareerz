@@ -49,7 +49,7 @@ interface DiscussionThreadsListProps {
     total: number;
     pages: number;
   };
-  onRefresh: (category?: string, status?: string, page?: number, forceRefresh?: boolean, myDiscussions?: boolean) => void;
+  onRefresh: (category?: string, status?: string, page?: number, reset?: boolean, force?: boolean, myDiscussions?: boolean) => void;
   onNewDiscussion?: () => void;
   currentCategory?: string;
   currentStatus?: string;
@@ -106,14 +106,14 @@ export default function DiscussionThreadsList({
     setSelectedCategory(category);
     const categoryParam = category === "ALL" ? "all" : category;
     const statusParam = selectedStatus === "ALL" ? "all" : selectedStatus;
-    onRefresh(categoryParam, statusParam, 1, true, showMyDiscussions);
+    onRefresh(categoryParam, statusParam, 1, true, true, showMyDiscussions);
   };
 
   const handleStatusChange = (status: string) => {
     setSelectedStatus(status);
     const categoryParam = selectedCategory === "ALL" ? "all" : selectedCategory;
     const statusParam = status === "ALL" ? "all" : status;
-    onRefresh(categoryParam, statusParam, 1, true, showMyDiscussions);
+    onRefresh(categoryParam, statusParam, 1, true, true, showMyDiscussions);
   };
 
   const handleMyDiscussionsChange = (myDiscussions: boolean) => {
@@ -129,7 +129,7 @@ export default function DiscussionThreadsList({
     const categoryParam = selectedCategory === "ALL" ? "all" : selectedCategory;
     const statusParam = selectedStatus === "ALL" ? "all" : selectedStatus;
     console.log("📤 Calling onRefresh with:", { categoryParam, statusParam, myDiscussions, currentUserId: currentUser?.id });
-    onRefresh(categoryParam, statusParam, 1, true, myDiscussions);
+    onRefresh(categoryParam, statusParam, 1, true, true, myDiscussions);
   };
 
   // Sync internal state with props
@@ -236,7 +236,7 @@ export default function DiscussionThreadsList({
                     setSelectedStatus("ALL");
                     setShowMyDiscussions(false);
                     console.log("📤 Clearing all filters - calling onRefresh with defaults");
-                    onRefresh("all", "all", 1, true, false);
+                    onRefresh("all", "all", 1, true, true, false);
                   }}
                   className="bg-white/80 hover:bg-white border-slate-300 text-slate-600 hover:text-slate-900"
                 >
@@ -264,9 +264,7 @@ export default function DiscussionThreadsList({
         {threads.length > 0 && (
           <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-50 rounded">
             📄 Showing {threads.length} discussions
-            {currentUser && (
-              <span> | Current user: {currentUser.firstName} (ID: {currentUser.id})</span>
-            )}
+           
             {showMyDiscussions && (
               <span className="text-purple-600 font-semibold"> | 🔍 Filter: MY DISCUSSIONS ONLY</span>
             )}

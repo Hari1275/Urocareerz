@@ -931,6 +931,24 @@ export default function MenteeDashboardPage() {
     fetchApplications(1, true);
   }, [applicationStatusFilter, isClient]);
 
+  // Handle discussion filter changes
+  useEffect(() => {
+    if (!isClient || activeSection !== "discussions") return;
+    console.log("🔄 Discussion filters changed - refetching", {
+      currentDiscussionCategory,
+      currentDiscussionStatus,
+      showMyDiscussions
+    });
+    fetchDiscussions(
+      currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+      currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
+      1,
+      true,
+      true,
+      showMyDiscussions
+    );
+  }, [currentDiscussionCategory, currentDiscussionStatus, showMyDiscussions, isClient]);
+
   // Clear all filters function
   const handleClearFilters = () => {
     setSearchTerm("");
