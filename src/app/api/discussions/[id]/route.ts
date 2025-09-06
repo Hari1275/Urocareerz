@@ -158,7 +158,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { title, content, category, tags } = body;
+    const { title, content, category, tags, status } = body;
 
     // Validate required fields
     if (!title || !content) {
@@ -204,8 +204,10 @@ export async function PUT(
         title,
         content,
         category,
+        status,
         tags: tags ? tags.slice(0, 5) : undefined, // Limit to 5 tags
         updatedAt: new Date(),
+
       },
       include: {
         author: {

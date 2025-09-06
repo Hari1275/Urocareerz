@@ -118,6 +118,7 @@ export default function DiscussionThreadsList({
   const [editContent, setEditContent] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editTags, setEditTags] = useState("");
+  const [editStatus, setEditStatus] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [threadToDelete, setThreadToDelete] = useState<DiscussionThread | null>(null);
@@ -195,6 +196,7 @@ export default function DiscussionThreadsList({
     setEditContent(thread.content);
     setEditCategory(thread.category);
     setEditTags(thread.tags.join(", "));
+    setEditStatus(thread.status || "ACTIVE");
     setIsEditDialogOpen(true);
   };
 
@@ -240,6 +242,7 @@ export default function DiscussionThreadsList({
           title: editTitle.trim(),
           content: editContent.trim(),
           category: editCategory,
+          status: editStatus,
           tags: editTags
             .split(",")
             .map((tag) => tag.trim())
@@ -350,6 +353,7 @@ export default function DiscussionThreadsList({
     setEditContent("");
     setEditCategory("");
     setEditTags("");
+    setEditStatus("");
   };
 
   return (
@@ -859,6 +863,29 @@ export default function DiscussionThreadsList({
               />
               <p className="text-xs text-gray-500">
                 {editContent.length}/5000 characters
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="edit-status" className="text-sm font-medium">
+                Status
+              </label>
+              <Select
+                value={editStatus}
+                onValueChange={setEditStatus}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">🟢 Active</SelectItem>
+                  <SelectItem value="CLOSED">🔒 Closed</SelectItem>
+                  <SelectItem value="ARCHIVED">📁 Archived</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                Change the discussion status to manage visibility and interaction.
               </p>
             </div>
 

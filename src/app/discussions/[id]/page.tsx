@@ -5,12 +5,25 @@ import { useParams, useRouter } from "next/navigation";
 import SharedHeader from "@/components/shared-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, MessageCircle, Eye, Calendar, User } from "lucide-react";
-import DiscussionStatusControls from "@/components/DiscussionStatusControls";
+import { MessageCircle, Eye, Calendar, User, Settings } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import DiscussionComments, {
   FlatComment,
 } from "@/components/DiscussionComments";
@@ -68,9 +81,9 @@ export default function DiscussionThreadPage() {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   const threadId = params.id as string;
 
@@ -115,8 +128,6 @@ export default function DiscussionThreadPage() {
 
       const data = await response.json();
       setThread(data.thread);
-      setEditTitle(data.thread.title);
-      setEditContent(data.thread.content);
     } catch (error) {
       console.error("Error fetching thread:", error);
       toast({
@@ -129,60 +140,30 @@ export default function DiscussionThreadPage() {
     }
   };
 
-  const canModify =
+  // Check if user can manage status (author or admin)
+  const canManageStatus = 
     !!user &&
     !!thread &&
-    (user.id === thread.author.id || user.role === "ADMIN") &&
-    ((thread.comments && thread.comments.length === 0) || !thread.comments);
+    (user.id === thread.author.id || user.role === "ADMIN");
 
-  const handleSaveEdit = async () => {
-    if (!thread) return;
+  const handleStatusUpdate = async () => {
+    if (!newStatus || !thread) return;
+    
+    setStatusUpdating(true);
     try {
-      const res = await fetch(`/api/discussions/${thread.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: editTitle,
-          content: editContent,
-          category: thread.category,
-          tags: thread.tags,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update thread");
-      setThread(data.thread);
-      setIsEditing(false);
-      toast({
-        title: "Updated",
-        description: "Discussion updated successfully",
-      });
-    } catch (e) {
-      toast({
-        title: "Error",
-        description: "Failed to update discussion",
-        variant: "destructive",
-      });
+      await handleStatusChange(newStatus);
+      setStatusDialogOpen(false);
+      setNewStatus("");
+    } catch (error) {
+      // Error is already handled in handleStatusChange
+    } finally {
+      setStatusUpdating(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!thread) return;
-    if (!confirm("Delete this discussion? This cannot be undone.")) return;
-    try {
-      const res = await fetch(`/api/discussions/${thread.id}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to delete thread");
-      toast({ title: "Deleted", description: "Discussion deleted" });
-      router.push("/dashboard/mentee");
-    } catch (e) {
-      toast({
-        title: "Error",
-        description: "Failed to delete discussion",
-        variant: "destructive",
-      });
-    }
+  const openStatusDialog = () => {
+    setNewStatus(thread?.status || "");
+    setStatusDialogOpen(true);
   };
 
   const handleSubmitComment = async () => {
@@ -327,9 +308,88 @@ export default function DiscussionThreadPage() {
               {/* Discussion Info */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">
-                    Discussion Info
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold text-slate-900">
+                      Discussion Info
+                    </CardTitle>
+                    {canManageStatus && (
+                      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={openStatusDialog}
+                            className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                            title="Manage Status"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Manage Discussion Status</DialogTitle>
+                            <DialogDescription>
+                              Change the status of this discussion to control its visibility and interaction.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Status</label>
+                              <Select value={newStatus} onValueChange={setNewStatus}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="ACTIVE">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-green-600">🟢</span>
+                                      <div>
+                                        <div className="font-medium">Active</div>
+                                        <div className="text-xs text-gray-500">Allow new comments and visible to all</div>
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="CLOSED">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-yellow-600">🔒</span>
+                                      <div>
+                                        <div className="font-medium">Closed</div>
+                                        <div className="text-xs text-gray-500">Prevent new comments but keep visible</div>
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="ARCHIVED">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-600">📁</span>
+                                      <div>
+                                        <div className="font-medium">Archived</div>
+                                        <div className="text-xs text-gray-500">Hide from main discussion list</div>
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => setStatusDialogOpen(false)}
+                                disabled={statusUpdating}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleStatusUpdate}
+                                disabled={statusUpdating || newStatus === thread.status}
+                              >
+                                {statusUpdating ? "Updating..." : "Update Status"}
+                              </Button>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-2">
@@ -383,46 +443,6 @@ export default function DiscussionThreadPage() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Status Controls */}
-              {user && (
-                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold text-slate-900">
-                      Discussion Controls
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <DiscussionStatusControls
-                      discussionId={thread.id}
-                      currentStatus={
-                        thread.status as "ACTIVE" | "CLOSED" | "ARCHIVED"
-                      }
-                      isAuthor={user.id === thread.author.id}
-                      isAdmin={user.role === "ADMIN"}
-                      onStatusChange={handleStatusChange}
-                    />
-                    <div className="mt-4 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!canModify}
-                        onClick={() => setIsEditing((v) => !v)}
-                      >
-                        {isEditing ? "Cancel Edit" : "Edit"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={!canModify}
-                        onClick={handleDelete}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </div>
 
@@ -498,44 +518,7 @@ export default function DiscussionThreadPage() {
                 </CardContent>
               </Card>
 
-              {isEditing && (
-                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold text-slate-900">
-                      Edit Discussion
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      placeholder="Title"
-                    />
-                    <Textarea
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      rows={6}
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsEditing(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleSaveEdit}
-                        disabled={
-                          !canModify || !editTitle.trim() || !editContent.trim()
-                        }
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
+              
               {/* Comments List (Nested) */}
               <DiscussionComments
                 threadId={thread.id}
