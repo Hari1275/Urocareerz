@@ -27,6 +27,7 @@ import {
 import DiscussionComments, {
   FlatComment,
 } from "@/components/DiscussionComments";
+import DiscussionCommentForm from "@/components/DiscussionCommentForm";
 
 interface DiscussionThread {
   id: string;
@@ -78,8 +79,6 @@ export default function DiscussionThreadPage() {
   const { toast } = useToast();
   const [thread, setThread] = useState<DiscussionThread | null>(null);
   const [loading, setLoading] = useState(true);
-  const [comment, setComment] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState("");
@@ -166,47 +165,14 @@ export default function DiscussionThreadPage() {
     setStatusDialogOpen(true);
   };
 
-  const handleSubmitComment = async () => {
-    if (!comment.trim()) return;
-
-    setSubmitting(true);
-    try {
-      const response = await fetch(`/api/discussions/${threadId}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: comment }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to post comment");
-      }
-
-      const data = await response.json();
-      setThread((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          comments: [...prev.comments, data.comment],
-        };
-      });
-
-      setComment("");
-      toast({
-        title: "Comment posted",
-        description: "Your comment has been added successfully.",
-      });
-    } catch (error) {
-      console.error("Error posting comment:", error);
-      toast({
-        title: "Error",
-        description: "Failed to post comment. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
+  const handleCommentAdded = (newComment: DiscussionComment) => {
+    setThread((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        comments: [...prev.comments, newComment],
+      };
+    });
   };
 
   const handleStatusChange = async (newStatus: string) => {
@@ -480,43 +446,11 @@ export default function DiscussionThreadPage() {
               </Card>
 
               {/* Add Comment */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">
-                    Add Comment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    placeholder={
-                      thread.status !== "ACTIVE"
-                        ? "Commenting is disabled for closed or archived discussions"
-                        : "Add your comment..."
-                    }
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="min-h-[100px] mb-4 bg-white/80 border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
-                    disabled={thread.status !== "ACTIVE"}
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleSubmitComment}
-                      disabled={
-                        thread.status !== "ACTIVE" ||
-                        !comment.trim() ||
-                        submitting
-                      }
-                      className="bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600"
-                    >
-                      {submitting
-                        ? "Posting..."
-                        : thread.status !== "ACTIVE"
-                          ? "Comments disabled"
-                          : "Post Comment"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <DiscussionCommentForm
+                threadId={thread.id}
+                onCommentAdded={handleCommentAdded}
+                disabled={thread.status !== "ACTIVE"}
+              />
 
               
               {/* Comments List (Nested) */}
