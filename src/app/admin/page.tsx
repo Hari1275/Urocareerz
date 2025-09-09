@@ -916,7 +916,7 @@ export default function AdminDashboardPage() {
                 <p className="text-gray-600">
                   Track all platform activities and administrative actions
                 </p>
-              </div> */}
+              </div> ..*/}
 
               <AuditLogsTable />
             </div>
