@@ -120,7 +120,7 @@ export default function ContentModerationTable() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [opportunityToDelete, setOpportunityToDelete] = useState<Opportunity | null>(null);
   const [isClient, setIsClient] = useState(false);
-  
+
   // New state for mentee details
   const [applications, setApplications] = useState<Record<string, Mentee[]>>({});
   const [savedMentees, setSavedMentees] = useState<Record<string, Mentee[]>>({});
@@ -160,7 +160,7 @@ export default function ContentModerationTable() {
   useEffect(() => {
     pagination.actions.setTotalItems(filteredOpportunities.length);
   }, [filteredOpportunities, pagination.actions]);
-  
+
   const paginatedOpportunities = pagination.paginateData(filteredOpportunities);
 
   const fetchOpportunities = async () => {
@@ -192,7 +192,7 @@ export default function ContentModerationTable() {
 
   const fetchApplications = async (opportunityId: string) => {
     if (applications[opportunityId]) return;
-    
+
     try {
       setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-applications`]: true }));
       const response = await fetch(`/api/admin/opportunities/${opportunityId}/applications`);
@@ -210,7 +210,7 @@ export default function ContentModerationTable() {
 
   const fetchSavedMentees = async (opportunityId: string) => {
     if (savedMentees[opportunityId]) return;
-    
+
     try {
       setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-saved`]: true }));
       const response = await fetch(`/api/admin/opportunities/${opportunityId}/saved`);
@@ -478,8 +478,9 @@ export default function ContentModerationTable() {
             <div>
               <CardTitle>Content Moderation</CardTitle>
               <div className="text-sm text-muted-foreground">
-                Review, moderate, and manage all opportunities with comprehensive engagement metrics. 
-                Click on application/saved counts to see mentee details. Total opportunities: {opportunities.length}
+                Review, moderate, and manage all opportunities with comprehensive engagement metrics.
+
+                Total opportunities: {opportunities.length}
               </div>
             </div>
             <Button
@@ -606,7 +607,7 @@ export default function ContentModerationTable() {
                             </div>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <Badge 
+                            <Badge
                               variant={opportunity.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
                               className={opportunity.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
                             >
@@ -823,7 +824,7 @@ export default function ContentModerationTable() {
                           {opportunity.creator.email}
                         </div>
                         <div className="flex items-center gap-1 mt-1">
-                          <Badge 
+                          <Badge
                             variant={opportunity.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
                             className={opportunity.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800 text-xs' : 'bg-green-100 text-green-800 text-xs'}
                           >
@@ -986,7 +987,7 @@ export default function ContentModerationTable() {
 
           {/* Pagination */}
           <div className="flex items-center justify-between space-x-6 py-4">
-            <TablePagination 
+            <TablePagination
               pagination={pagination}
               showPageSizeSelector={true}
               showPageInfo={true}
@@ -1073,10 +1074,10 @@ export default function ContentModerationTable() {
                 ) : (
                   <div className="space-y-2">
                     {applications[selectedOpportunity?.id || ''].map((mentee) => {
-                      const displayName = mentee.firstName && mentee.lastName 
+                      const displayName = mentee.firstName && mentee.lastName
                         ? `${mentee.firstName} ${mentee.lastName}`
                         : mentee.firstName || mentee.lastName || 'No name provided';
-                      
+
                       const formattedDate = (() => {
                         if (!isClient) return 'Loading...';
                         try {
@@ -1129,10 +1130,10 @@ export default function ContentModerationTable() {
                 ) : (
                   <div className="space-y-2">
                     {savedMentees[selectedOpportunity?.id || ''].map((mentee) => {
-                      const displayName = mentee.firstName && mentee.lastName 
+                      const displayName = mentee.firstName && mentee.lastName
                         ? `${mentee.firstName} ${mentee.lastName}`
                         : mentee.firstName || mentee.lastName || 'No name provided';
-                      
+
                       const formattedDate = (() => {
                         if (!isClient) return 'Loading...';
                         try {
@@ -1221,7 +1222,7 @@ export default function ContentModerationTable() {
                           ? `${opportunityDetails.creator.firstName} ${opportunityDetails.creator.lastName}`
                           : "No name provided"}
                       </span>
-                      <Badge 
+                      <Badge
                         variant={opportunityDetails.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
                         className={opportunityDetails.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
                       >
@@ -1236,9 +1237,9 @@ export default function ContentModerationTable() {
                         <span className="font-medium">Source:</span>
                         <span>{opportunityDetails.sourceName}</span>
                         {opportunityDetails.sourceUrl && (
-                          <a 
-                            href={opportunityDetails.sourceUrl} 
-                            target="_blank" 
+                          <a
+                            href={opportunityDetails.sourceUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800 underline"
                           >

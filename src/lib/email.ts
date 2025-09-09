@@ -327,19 +327,12 @@ export async function sendCustomAnnouncementEmail(
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
     sendSmtpEmail.to = [{ email: data.email }];
-    sendSmtpEmail.subject = `UroCareerz Announcement: ${data.announcementTitle}`;
-    sendSmtpEmail.htmlContent = `
-      <html>
-        <body>
-          <h1>${data.announcementTitle}</h1>
-          <p>Hello ${data.userName},</p>
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            ${data.announcementContent}
-          </div>
-          <p>Best regards,<br>The UroCareerz Team</p>
-        </body>
-      </html>
-    `;
+    sendSmtpEmail.templateId = 2; // Announcement template ID
+    sendSmtpEmail.params = {
+      userName: data.userName,
+      content: data.announcementContent,
+      title: data.announcementTitle
+    };
 
     await apiInstance.sendTransacEmail(sendSmtpEmail);
 

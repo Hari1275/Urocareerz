@@ -249,12 +249,12 @@ export default function DiscussionManagementTable() {
     <Card className="max-w-full">
       <CardHeader>
         <CardTitle>Discussion Management</CardTitle>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground  pb-3">
           Manage discussion threads and their status
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4 pb-3">
           <div className="bg-blue-50 p-3 rounded-lg">
             <div className="text-xl md:text-2xl font-bold text-blue-600">
               {stats.total}

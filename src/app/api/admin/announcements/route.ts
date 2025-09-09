@@ -16,18 +16,50 @@ export const POST = withAdminAuth(async (req: NextRequest) => {
     }
 
     // Get all active users (excluding admins)
+    // First, let's check all users for debugging
+    const allUsers = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        otpSecret: true,
+        deletedAt: true,
+      },
+    });
+
+    console.log(`Total users in database: ${allUsers.length}`);
+    console.log('User breakdown:', {
+      total: allUsers.length,
+      admins: allUsers.filter(u => u.role === 'ADMIN').length,
+      nonAdmins: allUsers.filter(u => u.role !== 'ADMIN').length,
+      activeUsers: allUsers.filter(u => u.role !== 'ADMIN' && u.otpSecret === null && u.deletedAt === null).length,
+      pendingUsers: allUsers.filter(u => u.role !== 'ADMIN' && u.otpSecret !== null && u.otpSecret !== 'inactive_user' && u.deletedAt === null).length,
+      inactiveUsers: allUsers.filter(u => u.role !== 'ADMIN' && u.otpSecret === 'inactive_user' && u.deletedAt === null).length,
+      deletedUsers: allUsers.filter(u => u.deletedAt !== null).length,
+    });
+
+    // Now get the users we want to send announcements to
+    // Only include ACTIVE users (otpSecret: null) - exclude pending and inactive users
     const users = await prisma.user.findMany({
       where: {
-        role: { not: "ADMIN" },
-        otpSecret: null, // Only approved users
-        deletedAt: null,
+        role: { in: ["MENTOR", "MENTEE"] },
+        otpSecret: null, // Only verified/active users
+        // Temporarily removed deletedAt condition to test
       },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
+        otpSecret: true, // Include for debugging
       },
+    });
+
+    console.log(`Selected ${users.length} users for announcement:`);
+    users.forEach(user => {
+      console.log(`- ${user.firstName} ${user.lastName} (${user.email}) - otpSecret: ${user.otpSecret === null ? 'null (active)' : user.otpSecret === 'inactive_user' ? 'inactive' : 'pending'}`);  
     });
 
     if (users.length === 0) {

@@ -44,19 +44,22 @@ async function getAnalytics(request: NextRequest) {
       opportunityTypeDistribution,
       recentActivity,
     ] = await Promise.all([
-      // Total users
+      // Total users (exclude admins)
       prisma.user.count({
         where: {
+          role: { in: ["MENTOR", "MENTEE"] },
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
         },
       }),
       
-      // Pending users (users with OTP secret - not yet verified)
+      // Pending users (users with OTP secret - not yet verified, exclude admins)
       prisma.user.count({
         where: {
+          role: { in: ["MENTOR", "MENTEE"] },
           otpSecret: { not: null },
+          NOT: { otpSecret: "inactive_user" },
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
@@ -82,18 +85,20 @@ async function getAnalytics(request: NextRequest) {
         },
       }),
       
-      // Total mentee opportunities
+      // Total mentee opportunities (opportunities created by mentees)
       prisma.opportunity.count({
         where: {
+          creatorRole: "MENTEE",
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
         },
       }),
       
-      // Pending mentee opportunities
+      // Pending mentee opportunities (mentee-created, pending approval)
       prisma.opportunity.count({
         where: {
+          creatorRole: "MENTEE",
           status: "PENDING",
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,

@@ -11,6 +11,15 @@ export interface DatePickerProps {
   placeholder?: string
 }
 
+// Helper function to format date consistently for display
+const formatDateForDisplay = (date: Date) => {
+  // Use local date formatting to avoid timezone issues
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function DatePicker({ date, onChange, placeholder }: DatePickerProps) {
   const [open, setOpen] = React.useState(false)
   return (
@@ -21,7 +30,7 @@ export function DatePicker({ date, onChange, placeholder }: DatePickerProps) {
           className={"w-full justify-start text-left font-normal"}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "yyyy-MM-dd") : <span className="text-slate-400">{placeholder || "Pick a date"}</span>}
+          {date ? formatDateForDisplay(date) : <span className="text-slate-400">{placeholder || "Pick a date"}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -29,4 +38,4 @@ export function DatePicker({ date, onChange, placeholder }: DatePickerProps) {
       </PopoverContent>
     </Popover>
   )
-} 
+}

@@ -426,21 +426,33 @@ export default function AdminDashboardPage() {
                   <div className="flex gap-2">
                     <div className="w-full sm:w-36">
                       <DatePicker
-                        date={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
-                        onChange={date => setDateRange(prev => ({
-                          ...prev,
-                          startDate: date ? date.toISOString().split('T')[0] : ""
-                        }))}
+                        date={dateRange.startDate ? new Date(dateRange.startDate + 'T12:00:00') : undefined}
+                        onChange={date => {
+                          if (date) {
+                            const year = date.getFullYear()
+                            const month = String(date.getMonth() + 1).padStart(2, '0')
+                            const day = String(date.getDate()).padStart(2, '0')
+                            setDateRange(prev => ({ ...prev, startDate: `${year}-${month}-${day}` }))
+                          } else {
+                            setDateRange(prev => ({ ...prev, startDate: "" }))
+                          }
+                        }}
                         placeholder="Start Date"
                       />
                     </div>
                     <div className="w-full sm:w-36">
                       <DatePicker
-                        date={dateRange.endDate ? new Date(dateRange.endDate) : undefined}
-                        onChange={date => setDateRange(prev => ({
-                          ...prev,
-                          endDate: date ? date.toISOString().split('T')[0] : ""
-                        }))}
+                        date={dateRange.endDate ? new Date(dateRange.endDate + 'T12:00:00') : undefined}
+                        onChange={date => {
+                          if (date) {
+                            const year = date.getFullYear()
+                            const month = String(date.getMonth() + 1).padStart(2, '0')
+                            const day = String(date.getDate()).padStart(2, '0')
+                            setDateRange(prev => ({ ...prev, endDate: `${year}-${month}-${day}` }))
+                          } else {
+                            setDateRange(prev => ({ ...prev, endDate: "" }))
+                          }
+                        }}
                         placeholder="End Date"
                       />
                     </div>
@@ -792,7 +804,7 @@ export default function AdminDashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                {/* <Card>
                   <CardHeader>
                     <CardTitle>System Status</CardTitle>
                     <div className="text-sm text-muted-foreground">
@@ -828,21 +840,21 @@ export default function AdminDashboardPage() {
                       </Badge>
                     </div>
                   </CardContent>
-                </Card>
+                </Card> */}
               </div>
             </div>
           )}
 
           {activeTab === "users" && (
             <div className="space-y-6">
-              <div>
+              {/* <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                   User Management
                 </h2>
                 <p className="text-gray-600">
                   Manage user accounts, roles, and approvals
                 </p>
-              </div>
+              </div> */}
 
               <UserManagementTable />
             </div>
@@ -850,14 +862,14 @@ export default function AdminDashboardPage() {
 
           {activeTab === "content" && (
             <div className="space-y-6">
-              <div>
+              {/* <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                   Content Moderation
                 </h2>
                 <p className="text-gray-600">
                   Review, moderate, and manage all opportunities with comprehensive engagement metrics and detailed information
                 </p>
-              </div>
+              </div> */}
 
               <ContentModerationTable />
             </div>
@@ -865,7 +877,7 @@ export default function AdminDashboardPage() {
 
           {activeTab === "types" && (
             <div className="space-y-6">
-              <div>
+              {/* <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                   Opportunity Types
                 </h2>
@@ -873,7 +885,7 @@ export default function AdminDashboardPage() {
                   Manage different types of opportunities available in the
                   system
                 </p>
-              </div>
+              </div> */}
 
               <OpportunityTypeManagement />
             </div>
@@ -881,7 +893,7 @@ export default function AdminDashboardPage() {
 
           {activeTab === "discussions" && (
             <div className="space-y-6">
-              <div>
+              {/* <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                   Discussion Management
                 </h2>
@@ -889,7 +901,7 @@ export default function AdminDashboardPage() {
                   Manage discussion threads, moderate content, and control
                   discussion status
                 </p>
-              </div>
+              </div> */}
 
               <DiscussionManagementTable />
             </div>
@@ -897,14 +909,14 @@ export default function AdminDashboardPage() {
 
           {activeTab === "audit-logs" && (
             <div className="space-y-6">
-              <div>
+              {/* <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                   Audit Logs
                 </h2>
                 <p className="text-gray-600">
                   Track all platform activities and administrative actions
                 </p>
-              </div>
+              </div> */}
 
               <AuditLogsTable />
             </div>
