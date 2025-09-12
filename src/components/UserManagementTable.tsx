@@ -49,6 +49,7 @@ import {
   Search,
   UserX,
   UserCheck2,
+  X,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -90,37 +91,21 @@ export default function UserManagementTable() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Remove the display delay - it was causing input lag
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setDisplaySearchQuery(searchQuery);
-  //   }, 50); // 50ms delay for smooth typing feel
-
-  //   return () => clearTimeout(timer);
-  // }, [searchQuery]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [statusFilter, roleFilter, debouncedSearchQuery]);
-
-  // Update pagination when users change
-  useEffect(() => {
-    pagination.actions.setTotalItems(users.length);
-  }, [users, pagination.actions]);
-
-  const fetchUsers = async () => {
+  // Define fetchUsers first to avoid hoisting issues
+  const fetchUsers = useCallback(async () => {
     try {
-      // Show search loading only if it's a search request
-      if (debouncedSearchQuery) {
+      // Show search loading only if it's a search request, otherwise show general loading
+      if (debouncedSearchQuery && users.length > 0) {
         setSearchLoading(true);
       } else {
         setLoading(true);
       }
+      setError(null);
 
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (roleFilter !== "all") params.append("role", roleFilter);
-      if (debouncedSearchQuery) params.append("search", debouncedSearchQuery);
+      if (debouncedSearchQuery.trim()) params.append("search", debouncedSearchQuery.trim());
 
       const response = await fetch(`/api/admin/users?${params.toString()}`);
 
@@ -128,14 +113,29 @@ export default function UserManagementTable() {
         throw new Error("Failed to fetch users");
       }
       const data = await response.json();
-      setUsers(data.users);
+      setUsers(data.users || []);
     } catch (err: any) {
+      console.error("Error fetching users:", err);
       setError(err.message);
     } finally {
       setLoading(false);
       setSearchLoading(false);
     }
-  };
+  }, [statusFilter, roleFilter, debouncedSearchQuery, users.length]);
+
+  // Reset pagination to first page when search/filter changes
+  useEffect(() => {
+    pagination.actions.setCurrentPage(1);
+  }, [statusFilter, roleFilter, debouncedSearchQuery, pagination.actions]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // Update pagination when users change
+  useEffect(() => {
+    pagination.actions.setTotalItems(users.length);
+  }, [users, pagination.actions]);
 
   const handleApproveUser = async (userId: string) => {
     try {
@@ -317,6 +317,11 @@ export default function UserManagementTable() {
     setShowUserForm(true);
   };
 
+  const clearSearch = () => {
+    setSearchQuery("");
+    setDebouncedSearchQuery("");
+  };
+
   const handleRoleChange = async (
     userId: string,
     newRole: "MENTEE" | "MENTOR" | "ADMIN"
@@ -436,7 +441,8 @@ export default function UserManagementTable() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>User Management</CardTitle>
+              <h2 className="text-xl text-gray-900">User Management</h2>
+              {/* <CardTitle>User Management</CardTitle> */}
               <div className="text-sm text-muted-foreground">
                 Manage user accounts, roles, and approvals. Total users:{" "}
                 {users.length}
@@ -456,18 +462,34 @@ export default function UserManagementTable() {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder="Search by name, email, or role..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 transition-all duration-150 ease-in-out"
-                  disabled={searchLoading}
+                  className="pl-10 pr-10 transition-all duration-150 ease-in-out"
+                  disabled={loading}
                 />
-                {searchLoading && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                  {searchLoading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  </div>
-                )}
+                  )}
+                  {searchQuery && !searchLoading && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearSearch}
+                      className="h-6 w-6 p-0 hover:bg-gray-100"
+                      title="Clear search"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
+              {searchQuery && (
+                <div className="text-sm text-gray-500 whitespace-nowrap">
+                  {searchLoading ? "Searching..." : `${users.length} result${users.length !== 1 ? 's' : ''}`}
+                </div>
+              )}
             </div>
 
             {/* Filter Controls */}
@@ -597,7 +619,7 @@ export default function UserManagementTable() {
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit User
                               </DropdownMenuItem>
-                              <DropdownMenuItem
+                              {/* <DropdownMenuItem
                                 onClick={() =>
                                   handleRoleChange(user.id, "MENTEE")
                                 }
@@ -608,8 +630,8 @@ export default function UserManagementTable() {
                               >
                                 <UserCheck className="h-4 w-4 mr-2" />
                                 Set as Mentee
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
+                              </DropdownMenuItem> */}
+                              {/* <DropdownMenuItem
                                 onClick={() =>
                                   handleRoleChange(user.id, "MENTOR")
                                 }
@@ -620,8 +642,8 @@ export default function UserManagementTable() {
                               >
                                 <UserCheck className="h-4 w-4 mr-2" />
                                 Set as Mentor
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
+                              </DropdownMenuItem> */}
+                              {/* <DropdownMenuItem
                                 onClick={() =>
                                   handleRoleChange(user.id, "ADMIN")
                                 }
@@ -632,7 +654,7 @@ export default function UserManagementTable() {
                               >
                                 <UserCheck className="h-4 w-4 mr-2" />
                                 Set as Admin
-                              </DropdownMenuItem>
+                              </DropdownMenuItem> */}
                               <DropdownMenuItem
                                 onClick={() =>
                                   handleStatusChange(

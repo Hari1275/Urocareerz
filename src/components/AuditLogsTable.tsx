@@ -180,7 +180,8 @@ export default function AuditLogsTable() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Audit Logs</CardTitle>
+          <h2 className="text-xl text-gray-900">Audit Logs</h2>
+          {/* <CardTitle>Audit Logs</CardTitle> */}
           <Button
             variant="outline"
             size="sm"
@@ -336,7 +337,7 @@ export default function AuditLogsTable() {
                             : log.user.email}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {log.user.role} • {log.user.email}
+                          {log.user.role} 
                         </div>
                       </div>
                     </TableCell>

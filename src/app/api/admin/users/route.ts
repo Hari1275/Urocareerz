@@ -32,11 +32,51 @@ async function handler(req: NextRequest) {
       }
 
       if (search) {
-        where.OR = [
-          { email: { contains: search, mode: "insensitive" } },
-          { firstName: { contains: search, mode: "insensitive" } },
-          { lastName: { contains: search, mode: "insensitive" } },
-        ];
+        const searchTerms = search.trim().split(/\s+/); // Split by whitespace
+        
+        // Helper function to check if term matches a role
+        const getRoleMatch = (term: string) => {
+          const termLower = term.toLowerCase();
+          if (termLower.includes('mentee')) return 'MENTEE';
+          if (termLower.includes('mentor')) return 'MENTOR';
+          if (termLower.includes('admin')) return 'ADMIN';
+          return null;
+        };
+        
+        if (searchTerms.length === 1) {
+          // Single term search - search across all fields
+          const term = searchTerms[0];
+          const roleMatch = getRoleMatch(term);
+          const orConditions = [
+            { email: { contains: term, mode: "insensitive" } },
+            { firstName: { contains: term, mode: "insensitive" } },
+            { lastName: { contains: term, mode: "insensitive" } },
+          ];
+          
+          // Add role condition if term matches a role
+          if (roleMatch) {
+            orConditions.push({ role: roleMatch });
+          }
+          
+          where.OR = orConditions;
+        } else {
+          // Multi-term search - all terms must be found across any field
+          where.AND = searchTerms.map(term => {
+            const roleMatch = getRoleMatch(term);
+            const orConditions = [
+              { email: { contains: term, mode: "insensitive" } },
+              { firstName: { contains: term, mode: "insensitive" } },
+              { lastName: { contains: term, mode: "insensitive" } },
+            ];
+            
+            // Add role condition if term matches a role
+            if (roleMatch) {
+              orConditions.push({ role: roleMatch });
+            }
+            
+            return { OR: orConditions };
+          });
+        }
       }
 
       console.log("Users API: Where clause:", JSON.stringify(where, null, 2));

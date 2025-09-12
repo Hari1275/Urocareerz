@@ -129,11 +129,11 @@ export default function UserForm({
               </>
             )}
           </DialogTitle>
-          <DialogDescription>
+          {/* <DialogDescription>
             {isEditing
               ? "Update user information and role."
               : "Create a new user account with specified role."}
-          </DialogDescription>
+          </DialogDescription> */}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -171,11 +171,11 @@ export default function UserForm({
               required
               disabled={isEditing} // Don't allow email changes for existing users
             />
-            {isEditing && (
+            {/* {isEditing && (
               <p className="text-xs text-gray-500">
                 Email cannot be changed for existing users
               </p>
-            )}
+            )} */}
           </div>
 
           <div className="space-y-2">
@@ -195,19 +195,19 @@ export default function UserForm({
                     <Badge className="bg-purple-100 text-purple-800">
                       Mentee
                     </Badge>
-                    <span>Student seeking mentorship</span>
+                    {/* <span>Student seeking mentorship</span> */}
                   </div>
                 </SelectItem>
                 <SelectItem value="MENTOR">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-blue-100 text-blue-800">Mentor</Badge>
-                    <span>Professional offering guidance</span>
+                    {/* <span>Professional offering guidance</span> */}
                   </div>
                 </SelectItem>
                 <SelectItem value="ADMIN">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-red-100 text-red-800">Admin</Badge>
-                    <span>System administrator</span>
+                    {/* <span>System administrator</span> */}
                   </div>
                 </SelectItem>
               </SelectContent>

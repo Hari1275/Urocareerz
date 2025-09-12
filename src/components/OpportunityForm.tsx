@@ -203,11 +203,11 @@ export default function OpportunityForm({
               </>
             )}
           </DialogTitle>
-          <DialogDescription>
+          {/* <DialogDescription>
             {isEditing
               ? "Update opportunity details and status."
               : "Create a new opportunity for mentees."}
-          </DialogDescription>
+          </DialogDescription> */}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

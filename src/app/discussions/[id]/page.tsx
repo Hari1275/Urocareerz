@@ -311,7 +311,7 @@ export default function DiscussionThreadPage() {
                                       <span className="text-green-600">🟢</span>
                                       <div>
                                         <div className="font-medium">Active</div>
-                                        <div className="text-xs text-gray-500">Allow new comments and visible to all</div>
+                                        {/* <div className="text-xs text-gray-500">Allow new comments and visible to all</div> */}
                                       </div>
                                     </div>
                                   </SelectItem>
@@ -320,7 +320,7 @@ export default function DiscussionThreadPage() {
                                       <span className="text-yellow-600">🔒</span>
                                       <div>
                                         <div className="font-medium">Closed</div>
-                                        <div className="text-xs text-gray-500">Prevent new comments but keep visible</div>
+                                        {/* <div className="text-xs text-gray-500">Prevent new comments but keep visible</div> */}
                                       </div>
                                     </div>
                                   </SelectItem>
@@ -329,7 +329,7 @@ export default function DiscussionThreadPage() {
                                       <span className="text-gray-600">📁</span>
                                       <div>
                                         <div className="font-medium">Archived</div>
-                                        <div className="text-xs text-gray-500">Hide from main discussion list</div>
+                                        {/* <div className="text-xs text-gray-500">Hide from main discussion list</div> */}
                                       </div>
                                     </div>
                                   </SelectItem>
@@ -476,8 +476,8 @@ export default function DiscussionThreadPage() {
 
               {/* Author Info */}
               <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-slate-900">
+                <CardHeader className="pb-0 pt-3">
+                  <CardTitle className="text-base font-semibold text-slate-900 pb-0">
                     Author
                   </CardTitle>
                 </CardHeader>

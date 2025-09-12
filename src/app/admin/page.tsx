@@ -419,7 +419,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+                  <h2 className="text-xl text-gray-900">Dashboard Overview</h2>
                   <p className="text-gray-600">All platform metrics, trends, and recent activity</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -523,7 +523,7 @@ export default function AdminDashboardPage() {
                     </Card>
                   </div>
                   {/* Premium Analytics Graphs */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card className="bg-white rounded-xl shadow-lg p-4">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg font-bold"><TrendingUp className="h-5 w-5" />User Registrations (Last 30 Days)</CardTitle>
@@ -568,9 +568,9 @@ export default function AdminDashboardPage() {
                         </ResponsiveContainer>
                       </CardContent>
                     </Card>
-                  </div>
+                  </div> */}
                   {/* Distribution Charts as Pie Charts */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />User Role Distribution</CardTitle>
@@ -665,12 +665,13 @@ export default function AdminDashboardPage() {
                         )}
                       </CardContent>
                     </Card>
-                  </div>
+                  </div> */}
                   {/* Trends - show only last 7 days in table */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />User Registration Trends (Last 7 Days)</CardTitle>
+                        <h2 className="text-xl text-gray-900">User Registration Trends (Last 7 Days)</h2>
+                        {/* <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />User Registration Trends (Last 7 Days)</CardTitle> */}
                       </CardHeader>
                       <CardContent>
                         {analyticsData.trends.userRegistrationsByDate.length > 0 ? (
@@ -689,7 +690,8 @@ export default function AdminDashboardPage() {
                     </Card>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5" />Opportunity Submission Trends (Last 7 Days)</CardTitle>
+                        <h2 className="text-xl text-gray-900">Opportunity Submission Trends (Last 7 Days)</h2>
+                        {/* <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5" />Opportunity Submission Trends (Last 7 Days)</CardTitle> */}
                       </CardHeader>
                       <CardContent>
                         {analyticsData.trends.opportunitySubmissionsByDate.length > 0 ? (
@@ -712,7 +714,8 @@ export default function AdminDashboardPage() {
                     <CardHeader className="pb-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="min-w-0">
-                          <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+                          <h2 className="text-xl text-gray-900">Recent Activity</h2>
+                          {/* <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle> */}
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             Platform actions and events from the last 7 days
                           </p>
@@ -776,7 +779,8 @@ export default function AdminDashboardPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
+                    <h2 className="text-xl text-gray-900">Quick Actions</h2>
+                    {/* <CardTitle>Quick Actions</CardTitle> */}
                     <div className="text-sm text-muted-foreground">
                       Common administrative tasks
                     </div>

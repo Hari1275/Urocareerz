@@ -172,9 +172,10 @@ export default function OpportunityTypeManagement() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl text-gray-900">Opportunity Types</h2>
+              {/* <CardTitle className="text-xl font-semibold text-gray-900">
                 Opportunity Types
-              </CardTitle>
+              </CardTitle> */}
               <CardDescription>
                 Manage different types of opportunities available in the system
               </CardDescription>
@@ -281,11 +282,11 @@ export default function OpportunityTypeManagement() {
                 </>
               )}
             </DialogTitle>
-            <DialogDescription>
+            {/* <DialogDescription>
               {editingType
                 ? "Update opportunity type details."
                 : "Create a new opportunity type for the system."}
-            </DialogDescription>
+            </DialogDescription> */}
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">

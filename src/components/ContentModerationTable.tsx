@@ -33,6 +33,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import OpportunityForm from "./OpportunityForm";
 import ConfirmationDialog from "./ConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -130,6 +137,10 @@ export default function ContentModerationTable() {
   const [showSaved, setShowSaved] = useState(false);
   const [showOpportunityDetails, setShowOpportunityDetails] = useState(false);
   const [opportunityDetails, setOpportunityDetails] = useState<Opportunity | null>(null);
+  
+  // Pagination for drawer tables
+  const applicationsPagination = usePagination({ initialPageSize: 10 });
+  const savedPagination = usePagination({ initialPageSize: 10 });
 
   // Handle client-side rendering to prevent hydration issues
   useEffect(() => {
@@ -191,7 +202,11 @@ export default function ContentModerationTable() {
   };
 
   const fetchApplications = async (opportunityId: string) => {
-    if (applications[opportunityId]) return;
+    if (applications[opportunityId]) {
+      // Update pagination total when data exists
+      applicationsPagination.actions.setTotalItems(applications[opportunityId].length);
+      return;
+    }
 
     try {
       setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-applications`]: true }));
@@ -201,6 +216,8 @@ export default function ContentModerationTable() {
       }
       const data = await response.json();
       setApplications(prev => ({ ...prev, [opportunityId]: data.applications }));
+      // Update pagination total
+      applicationsPagination.actions.setTotalItems(data.applications.length);
     } catch (err: any) {
       console.error("Error fetching applications:", err);
     } finally {
@@ -209,7 +226,11 @@ export default function ContentModerationTable() {
   };
 
   const fetchSavedMentees = async (opportunityId: string) => {
-    if (savedMentees[opportunityId]) return;
+    if (savedMentees[opportunityId]) {
+      // Update pagination total when data exists
+      savedPagination.actions.setTotalItems(savedMentees[opportunityId].length);
+      return;
+    }
 
     try {
       setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-saved`]: true }));
@@ -218,7 +239,9 @@ export default function ContentModerationTable() {
         throw new Error("Failed to fetch saved mentees");
       }
       const data = await response.json();
-      setSavedMentees(prev => ({ ...prev, [opportunityId]: data.savedMentees }));
+      setSavedMentees(prev => ({ ...prev, [opportunityId]: data.savedOpportunities }));
+      // Update pagination total
+      savedPagination.actions.setTotalItems(data.savedOpportunities.length);
     } catch (err: any) {
       console.error("Error fetching saved mentees:", err);
     } finally {
@@ -231,6 +254,7 @@ export default function ContentModerationTable() {
     setShowApplications(true);
     setShowSaved(false);
     setShowOpportunityDetails(false); // Close opportunity details modal
+    applicationsPagination.actions.goToFirstPage(); // Reset pagination
     fetchApplications(opportunity.id);
   };
 
@@ -239,6 +263,7 @@ export default function ContentModerationTable() {
     setShowSaved(true);
     setShowApplications(false);
     setShowOpportunityDetails(false); // Close opportunity details modal
+    savedPagination.actions.goToFirstPage(); // Reset pagination
     fetchSavedMentees(opportunity.id);
   };
 
@@ -395,6 +420,7 @@ export default function ContentModerationTable() {
     setShowOpportunityDetails(true);
   };
 
+
   const formatDate = (dateString: string) => {
     if (!isClient) return ''; // Return empty string during SSR to prevent hydration mismatch
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -476,7 +502,8 @@ export default function ContentModerationTable() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Content Moderation</CardTitle>
+              <h2 className="text-xl text-gray-900">Content Moderation</h2>
+              {/* <CardTitle>Content Moderation</CardTitle> */}
               <div className="text-sm text-muted-foreground">
                 Review, moderate, and manage all opportunities with comprehensive engagement metrics.
 
@@ -544,12 +571,12 @@ export default function ContentModerationTable() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title & Description</TableHead>
+                  <TableHead>Title</TableHead>
                   <TableHead>Mentor</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Location</TableHead>
+                  {/* <TableHead>Location</TableHead> */}
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Engagement</TableHead>
+                  {/* <TableHead className="text-center">Engagement</TableHead> */}
                   <TableHead>Posted</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -572,9 +599,9 @@ export default function ContentModerationTable() {
                           <div className="font-medium truncate">
                             {opportunity.title}
                           </div>
-                          <div className="text-sm text-gray-500 line-clamp-2">
+                          {/* <div className="text-sm text-gray-500 line-clamp-2">
                             {opportunity.description}
-                          </div>
+                          </div> */}
                           {(opportunity.duration || opportunity.stipend) && (
                             <div className="flex gap-2 mt-1">
                               {opportunity.duration && (
@@ -595,7 +622,7 @@ export default function ContentModerationTable() {
                       </TableCell>
                       <TableCell className="max-w-48">
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          {/* <User className="h-4 w-4 text-gray-400 flex-shrink-0" /> */}
                           <div className="min-w-0">
                             <div className="font-medium truncate">
                               {opportunity.creator.firstName && opportunity.creator.lastName
@@ -637,7 +664,7 @@ export default function ContentModerationTable() {
                           );
                         })()}
                       </TableCell>
-                      <TableCell className="max-w-32">
+                      {/* <TableCell className="max-w-32">
                         {opportunity.location ? (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -648,7 +675,7 @@ export default function ContentModerationTable() {
                         ) : (
                           <span className="text-gray-400 text-sm">Not specified</span>
                         )}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>
                         {(() => {
                           const statusInfo = getStatusBadge(opportunity.status);
@@ -659,7 +686,7 @@ export default function ContentModerationTable() {
                           );
                         })()}
                       </TableCell>
-                      <TableCell className="text-center">
+                      {/* <TableCell className="text-center">
                         <div className="flex flex-col gap-2">
                           <Button
                             variant="ghost"
@@ -696,10 +723,10 @@ export default function ContentModerationTable() {
                             </div>
                           </Button>
                         </div>
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4 text-gray-400" />
+                          {/* <Calendar className="h-4 w-4 text-gray-400" /> */}
                           {formatDate(opportunity.createdAt)}
                         </div>
                       </TableCell>
@@ -1038,42 +1065,183 @@ export default function ContentModerationTable() {
         loading={actionLoading === opportunityToDelete?.id}
       />
 
-      {/* Mentee Details Dialog */}
-      <Dialog open={showApplications || showSaved} onOpenChange={(open) => {
+      {/* Applications Drawer */}
+      <Sheet open={showApplications} onOpenChange={(open) => {
         if (!open) {
           setShowApplications(false);
+          setSelectedOpportunity(null);
+        }
+      }}>
+        <SheetContent side="right" className="w-[50vw] max-w-none">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Applications for "{selectedOpportunity?.title}"
+            </SheetTitle>
+            <SheetDescription>
+              {(applications[selectedOpportunity?.id || ''] || []).length} total applicants
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {loadingMentees[`${selectedOpportunity?.id}-applications`] ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading applicants...</p>
+                </div>
+              </div>
+            ) : !applications[selectedOpportunity?.id || ''] || applications[selectedOpportunity?.id || '']?.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
+                  <p className="text-gray-500">This opportunity hasn't received any applications.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto">
+                <Table>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Applicant</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="w-24">Role</TableHead>
+                      <TableHead className="w-32">Applied</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {applicationsPagination.paginateData(applications[selectedOpportunity?.id || ''] || []).map((mentee, index) => {
+                      // Adjust index for pagination
+                      const actualIndex = applicationsPagination.state.startIndex + index;
+                      const displayName = mentee.firstName && mentee.lastName
+                        ? `${mentee.firstName} ${mentee.lastName}`
+                        : mentee.firstName || mentee.lastName || 'No name provided';
+
+                      const formattedDate = (() => {
+                        if (!isClient) return 'Loading...';
+                        try {
+                          return new Date(mentee.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          });
+                        } catch {
+                          return 'Invalid date';
+                        }
+                      })();
+
+                      return (
+                        <TableRow key={mentee.id} className="hover:bg-gray-50">
+                          <TableCell className="font-medium text-sm text-gray-500">
+                            {actualIndex + 1}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <User className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-gray-900 truncate">{displayName}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-gray-600 text-sm">{mentee.email}</span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-xs">
+                              {mentee.role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-gray-600 text-sm">{formattedDate}</span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              Pending
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            
+            {/* Applications Pagination */}
+            {(applications[selectedOpportunity?.id || ''] || []).length > 0 && (
+              <div className="mt-4 border-t pt-4">
+                <TablePagination
+                  pagination={applicationsPagination}
+                  showPageSizeSelector={true}
+                  showPageInfo={true}
+                />
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Saved Drawer */}
+      <Sheet open={showSaved} onOpenChange={(open) => {
+        if (!open) {
           setShowSaved(false);
           setSelectedOpportunity(null);
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {showApplications && <Users className="h-5 w-5 text-blue-600" />}
-              {showSaved && <Bookmark className="h-5 w-5 text-green-600" />}
-              {showApplications && `Applications for "${selectedOpportunity?.title}"`}
-              {showSaved && `Saved by "${selectedOpportunity?.title}"`}
-            </DialogTitle>
-          </DialogHeader>
+        <SheetContent side="right" className="w-[50vw] max-w-none">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Bookmark className="h-5 w-5 text-green-600" />
+              Users who saved "{selectedOpportunity?.title}"
+            </SheetTitle>
+            <SheetDescription>
+              {(savedMentees[selectedOpportunity?.id || ''] || []).length} users saved this opportunity
+            </SheetDescription>
+          </SheetHeader>
 
-          <div className="space-y-4">
-            {showApplications && (
-              <div>
-                <h4 className="font-medium text-sm text-gray-700 mb-2">
-                  Applicants ({applications[selectedOpportunity?.id || '']?.length || 0})
-                </h4>
-                {loadingMentees[`${selectedOpportunity?.id}-applications`] ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="text-sm text-gray-500 mt-2">Loading applicants...</p>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {loadingMentees[`${selectedOpportunity?.id}-saved`] ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading saved users...</p>
+                </div>
+              </div>
+            ) : !savedMentees[selectedOpportunity?.id || ''] || savedMentees[selectedOpportunity?.id || '']?.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bookmark className="h-8 w-8 text-gray-400" />
                   </div>
-                ) : applications[selectedOpportunity?.id || '']?.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">
-                    No applicants yet
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {applications[selectedOpportunity?.id || ''].map((mentee) => {
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No saves yet</h3>
+                  <p className="text-gray-500">This opportunity hasn't been saved by any users.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto">
+                <Table>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="w-24">Role</TableHead>
+                      <TableHead className="w-32">Saved</TableHead>
+                      <TableHead className="w-24">Interest</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {savedPagination.paginateData(savedMentees[selectedOpportunity?.id || ''] || []).map((mentee, index) => {
+                      // Adjust index for pagination
+                      const actualIndex = savedPagination.state.startIndex + index;
                       const displayName = mentee.firstName && mentee.lastName
                         ? `${mentee.firstName} ${mentee.lastName}`
                         : mentee.firstName || mentee.lastName || 'No name provided';
@@ -1082,9 +1250,10 @@ export default function ContentModerationTable() {
                         if (!isClient) return 'Loading...';
                         try {
                           return new Date(mentee.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
                             month: 'short',
-                            day: 'numeric'
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
                           });
                         } catch {
                           return 'Invalid date';
@@ -1092,89 +1261,61 @@ export default function ContentModerationTable() {
                       })();
 
                       return (
-                        <div key={mentee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <User className="h-4 w-4 text-blue-600" />
+                        <TableRow key={mentee.id} className="hover:bg-gray-50">
+                          <TableCell className="font-medium text-sm text-gray-500">
+                            {actualIndex + 1}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Bookmark className="h-4 w-4 text-green-600" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-gray-900 truncate">{displayName}</p>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-medium text-sm">{displayName}</div>
-                              <div className="text-xs text-gray-500">{mentee.email}</div>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            Applied {formattedDate}
-                          </div>
-                        </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-gray-600 text-sm">{mentee.email}</span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-xs">
+                              {mentee.role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-gray-600 text-sm">{formattedDate}</span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-xs">
+                              High
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
-                  </div>
-                )}
+                  </TableBody>
+                </Table>
               </div>
             )}
-
-            {showSaved && (
-              <div>
-                <h4 className="font-medium text-sm text-gray-700 mb-2">
-                  Saved by ({savedMentees[selectedOpportunity?.id || '']?.length || 0})
-                </h4>
-                {loadingMentees[`${selectedOpportunity?.id}-saved`] ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="text-sm text-gray-500 mt-2">Loading saved mentees...</p>
-                  </div>
-                ) : savedMentees[selectedOpportunity?.id || '']?.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">
-                    No saves yet
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {savedMentees[selectedOpportunity?.id || ''].map((mentee) => {
-                      const displayName = mentee.firstName && mentee.lastName
-                        ? `${mentee.firstName} ${mentee.lastName}`
-                        : mentee.firstName || mentee.lastName || 'No name provided';
-
-                      const formattedDate = (() => {
-                        if (!isClient) return 'Loading...';
-                        try {
-                          return new Date(mentee.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          });
-                        } catch {
-                          return 'Invalid date';
-                        }
-                      })();
-
-                      return (
-                        <div key={mentee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                              <Bookmark className="h-4 w-4 text-green-600" />
-                            </div>
-                            <div>
-                              <div className="font-medium text-sm">{displayName}</div>
-                              <div className="text-xs text-gray-500">{mentee.email}</div>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            Saved {formattedDate}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+            
+            {/* Saved Pagination */}
+            {(savedMentees[selectedOpportunity?.id || ''] || []).length > 0 && (
+              <div className="mt-4 border-t pt-4">
+                <TablePagination
+                  pagination={savedPagination}
+                  showPageSizeSelector={true}
+                  showPageInfo={true}
+                />
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Opportunity Details Dialog */}
       <Dialog open={showOpportunityDetails} onOpenChange={setShowOpportunityDetails}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5 text-blue-600" />
@@ -1183,128 +1324,92 @@ export default function ContentModerationTable() {
           </DialogHeader>
 
           {opportunityDetails && (
-            <div className="space-y-6">
-              {/* Header Section */}
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{opportunityDetails.title}</h2>
-                  <div className="flex items-center gap-2 mt-2">
-                    {(() => {
-                      const typeInfo = getTypeBadge(opportunityDetails.opportunityType.name);
-                      return typeInfo ? (
-                        <Badge className={typeInfo.colorClass}>
-                          {typeInfo.name}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          {opportunityDetails.opportunityType.name}
-                        </Badge>
-                      );
-                    })()}
-                    {(() => {
-                      const statusInfo = getStatusBadge(opportunityDetails.status);
-                      return (
-                        <Badge className={statusInfo.color}>
-                          {statusInfo.label}
-                        </Badge>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <User className="h-4 w-4" />
-                      <span className="font-medium">Creator:</span>
-                      <span>
-                        {opportunityDetails.creator.firstName && opportunityDetails.creator.lastName
-                          ? `${opportunityDetails.creator.firstName} ${opportunityDetails.creator.lastName}`
-                          : "No name provided"}
-                      </span>
-                      <Badge
-                        variant={opportunityDetails.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
-                        className={opportunityDetails.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
-                      >
-                        {opportunityDetails.creatorRole}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-gray-500 ml-6">
-                      {opportunityDetails.creator.email}
-                    </div>
-                    {opportunityDetails.sourceName && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 ml-6">
-                        <span className="font-medium">Source:</span>
-                        <span>{opportunityDetails.sourceName}</span>
-                        {opportunityDetails.sourceUrl && (
-                          <a
-                            href={opportunityDetails.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            View Original
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <span className="font-medium">Posted:</span>
-                      <span>{formatDate(opportunityDetails.createdAt)}</span>
-                    </div>
-                    {opportunityDetails.updatedAt && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Edit className="h-4 w-4" />
-                        <span className="font-medium">Updated:</span>
-                        <span>{formatDate(opportunityDetails.updatedAt)}</span>
-                      </div>
-                    )}
-                  </div>
+            <div className="space-y-4">
+              {/* Header */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">{opportunityDetails.title}</h2>
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const typeInfo = getTypeBadge(opportunityDetails.opportunityType.name);
+                    return typeInfo ? (
+                      <Badge className={typeInfo.colorClass}>{typeInfo.name}</Badge>
+                    ) : (
+                      <Badge variant="secondary">{opportunityDetails.opportunityType.name}</Badge>
+                    );
+                  })()}
+                  {(() => {
+                    const statusInfo = getStatusBadge(opportunityDetails.status);
+                    return <Badge className={statusInfo.color}>{statusInfo.label}</Badge>;
+                  })()}
                 </div>
               </div>
 
-              {/* Details Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Description</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-gray-700 whitespace-pre-wrap">{opportunityDetails.description}</p>
+              {/* Creator & Dates */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-3 border-y border-gray-100">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="font-medium">
+                    {opportunityDetails.creator.firstName && opportunityDetails.creator.lastName
+                      ? `${opportunityDetails.creator.firstName} ${opportunityDetails.creator.lastName}`
+                      : "puneeth K"}
+                  </span>
+                  <Badge
+                    variant={opportunityDetails.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
+                    className="text-xs"
+                  >
+                    {opportunityDetails.creatorRole}
+                  </Badge>
+                </div>
+                <div className="text-sm text-gray-500 ml-6 sm:ml-0">
+                  {opportunityDetails.creator.email}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Posted: {formatDate(opportunityDetails.createdAt)}</span>
+                </div>
+                {opportunityDetails.updatedAt && (
+                  <div className="flex items-center gap-2">
+                    <Edit className="h-4 w-4" />
+                    <span>Updated: {formatDate(opportunityDetails.updatedAt)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              <div>
+                <h5 className="font-semibold text-gray-900 mb-2">Description</h5>
+                <div className="text-gray-700 leading-relaxed">
+                  {opportunityDetails.description}
                 </div>
               </div>
 
               {/* Additional Information */}
               {(opportunityDetails.location || opportunityDetails.duration || opportunityDetails.stipend) && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Additional Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h5 className="font-semibold text-gray-900 mb-3">Additional Information</h5>
+                  <div className="space-y-2">
                     {opportunityDetails.location && (
-                      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <div className="text-sm font-medium">Location</div>
-                          <div className="text-sm text-gray-600">{opportunityDetails.location}</div>
-                        </div>
+                        <span className="font-medium">Location</span>
+                        <span>{opportunityDetails.location}</span>
                       </div>
                     )}
                     {opportunityDetails.duration && (
-                      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <div className="text-sm font-medium">Duration</div>
-                          <div className="text-sm text-gray-600">{opportunityDetails.duration}</div>
-                        </div>
+                        <span className="font-medium">Duration</span>
+                        <span>{opportunityDetails.duration}</span>
                       </div>
                     )}
                     {opportunityDetails.stipend && (
-                      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm">
                         <DollarSign className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <div className="text-sm font-medium">Stipend</div>
-                          <div className="text-sm text-gray-600">{opportunityDetails.stipend}</div>
-                        </div>
+                        <span className="font-medium">Stipend</span>
+                        <span>{opportunityDetails.stipend}</span>
                       </div>
                     )}
                   </div>
@@ -1312,40 +1417,38 @@ export default function ContentModerationTable() {
               )}
 
               {/* Engagement Metrics */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Engagement Metrics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+              <div>
+                <h5 className="font-semibold text-gray-900 mb-3">Engagement Metrics</h5>
+                <div className="flex gap-8">
+                  <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">{opportunityDetails._count.applications}</div>
-                      <div className="text-sm text-blue-700">Applications</div>
-                    </div>
+                    <div className="text-2xl font-bold text-blue-600">{opportunityDetails._count.applications}</div>
+                    <div className="text-sm text-gray-600">Applications</div>
                   </div>
-                  <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-2">
                     <Bookmark className="h-5 w-5 text-green-600" />
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">{opportunityDetails._count.savedOpportunities}</div>
-                      <div className="text-sm text-green-700">Saved</div>
-                    </div>
+                    <div className="text-2xl font-bold text-green-600">{opportunityDetails._count.savedOpportunities}</div>
+                    <div className="text-sm text-gray-600">Saved</div>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 pt-4 border-t">
+              <div className="flex flex-wrap gap-2 pt-3 border-t">
                 <Button
                   onClick={() => handleShowApplications(opportunityDetails)}
-                  variant="outline"
-                  className="flex items-center gap-2"
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2 text-sm"
                 >
                   <Users className="h-4 w-4" />
                   View Applications ({opportunityDetails._count.applications})
                 </Button>
                 <Button
                   onClick={() => handleShowSaved(opportunityDetails)}
-                  variant="outline"
-                  className="flex items-center gap-2"
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2 text-sm"
                 >
                   <Bookmark className="h-4 w-4" />
                   View Saved ({opportunityDetails._count.savedOpportunities})
@@ -1356,7 +1459,8 @@ export default function ContentModerationTable() {
                     handleEditOpportunity(opportunityDetails);
                   }}
                   variant="outline"
-                  className="flex items-center gap-2"
+                  size="sm"
+                  className="flex items-center gap-2 text-sm"
                 >
                   <Edit className="h-4 w-4" />
                   Edit Opportunity
@@ -1366,6 +1470,7 @@ export default function ContentModerationTable() {
           )}
         </DialogContent>
       </Dialog>
+
     </>
   );
 }

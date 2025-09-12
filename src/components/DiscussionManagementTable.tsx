@@ -248,7 +248,8 @@ export default function DiscussionManagementTable() {
   return (
     <Card className="max-w-full">
       <CardHeader>
-        <CardTitle>Discussion Management</CardTitle>
+        <h2 className="text-xl text-gray-900">Discussion Management</h2>
+        {/* <CardTitle>Discussion Management</CardTitle> */}
         <div className="text-sm text-muted-foreground  pb-3">
           Manage discussion threads and their status
         </div>
@@ -338,14 +339,14 @@ export default function DiscussionManagementTable() {
                       <div className="font-medium break-words text-sm">
                         {discussion.title}
                       </div>
-                      <div className="text-xs text-muted-foreground break-words">
+                      {/* <div className="text-xs text-muted-foreground break-words">
                         {truncateText(discussion.content, 60)}
-                      </div>
+                      </div> */}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <User className="h-3 w-3 flex-shrink-0" />
+                      {/* <User className="h-3 w-3 flex-shrink-0" /> */}
                       <div className="min-w-0">
                         <div className="font-medium truncate text-sm">
                           {discussion.author.firstName}{" "}
