@@ -210,31 +210,33 @@ export default function FileUpload({
     <div className={`space-y-4 ${className}`}>
       {/* File Upload Area */}
       <Card
-        className={`p-6 border-2 border-dashed transition-colors ${
+        className={`p-8 sm:p-12 border-2 border-dashed transition-colors ${
           dragActive
             ? "border-blue-500 bg-blue-50"
             : "border-gray-300 hover:border-gray-400"
         }`}
       >
         <div
-          className="flex flex-col items-center justify-center space-y-4"
+          className="flex flex-col items-center justify-center space-y-6 min-h-[200px]"
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <div className="flex flex-col items-center space-y-2">
-            <Upload className="h-8 w-8 text-gray-400" />
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-100 to-indigo-100 flex items-center justify-center">
+              <Upload className="h-8 w-8 text-blue-600" />
+            </div>
+            <div className="text-center max-w-md">
+              <p className="text-lg font-semibold text-gray-700 mb-2">
                 {isImage ? "Upload Profile Picture" : "Upload Resume"}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 mb-1">
                 {isImage
                   ? "Drag and drop an image here, or click to select"
                   : "Drag and drop a file here, or click to select"}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400">
                 {isImage
                   ? `Max size: ${maxSize}MB (JPEG, PNG, GIF)`
                   : `Max size: ${maxSize}MB (${accept})`}
@@ -247,7 +249,7 @@ export default function FileUpload({
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="mt-2"
+            className="px-8 py-3 text-base font-semibold"
           >
             Select {fileTypeText}
           </Button>
@@ -265,21 +267,21 @@ export default function FileUpload({
       {/* Selected File Display */}
       {selectedFile && (
         <Card className="p-4 border-2 border-blue-200 bg-blue-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-start gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               {isImage && previewUrl ? (
-                <div className="relative">
+                <div className="flex-shrink-0">
                   <img
                     src={previewUrl}
                     alt="Preview"
-                    className="h-16 w-16 object-cover rounded-lg border"
+                    className="h-12 w-12 sm:h-16 sm:w-16 object-cover rounded-lg border"
                   />
                 </div>
               ) : (
-                <FileText className="h-8 w-8 text-blue-600" />
+                <FileText className="h-8 w-8 text-blue-600 flex-shrink-0" />
               )}
-              <div>
-                <p className="text-sm font-medium text-gray-900">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-sm font-medium text-gray-900 truncate" title={selectedFile.name}>
                   {selectedFile.name}
                 </p>
                 <p className="text-xs text-gray-500">
@@ -292,7 +294,7 @@ export default function FileUpload({
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
               {/* Show Upload button again since auto-upload is removed */}
               <Button
                 type="button"
@@ -300,17 +302,17 @@ export default function FileUpload({
                 size="sm"
                 onClick={onFileUpload}
                 disabled={isUploading}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 text-xs whitespace-nowrap"
                 style={{ display: autoUpload ? 'none' : 'inline-flex' }}
               >
                 {isUploading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
                     Uploading...
                   </>
                 ) : (
                   <>
-                    📤 Upload Resume
+                    📤 Upload {isImage ? 'Image' : 'Resume'}
                   </>
                 )}
               </Button>
@@ -320,8 +322,9 @@ export default function FileUpload({
                 size="sm"
                 onClick={handleRemoveFile}
                 disabled={isUploading}
+                className="px-2 py-2"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </Button>
             </div>
           </div>
@@ -337,54 +340,6 @@ export default function FileUpload({
         </Card>
       )}
 
-      {/* Uploaded File Display */}
-      {uploadedFileUrl && uploadedFileName && (
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {isImage ? (
-                <img
-                  src={uploadedPreviewUrl || uploadedFileUrl}
-                  alt="Avatar"
-                  className="h-16 w-16 object-cover rounded-lg border"
-                />
-              ) : (
-                <FileText className="h-8 w-8 text-gray-400" />
-              )}
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {uploadedFileName}
-                </p>
-                <Badge variant="secondary" className="text-xs">
-                  {isImage ? "Image" : "Document"} Uploaded
-                </Badge>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                {isImage ? "View" : "Download"}
-              </Button>
-              {onFileDelete && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onFileDelete}
-                  disabled={isDeleting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

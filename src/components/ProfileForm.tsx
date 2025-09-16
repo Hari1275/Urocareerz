@@ -475,438 +475,612 @@ export default function ProfileForm({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Basic Information Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-            <User className="w-4 h-4 text-blue-600" />
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200/60 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-blue-500 shadow-md">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">
+                Basic Information
+              </h3>
+              <p className="text-sm text-slate-600">
+                Your personal details and bio
+              </p>
+            </div>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Basic Information
-          </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label
-              htmlFor="firstName"
-              className="text-sm font-medium text-gray-700"
-            >
-              First Name
+        <div className="p-6 space-y-6">
+          {/* Name Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label
+                htmlFor="firstName"
+                className="text-sm font-semibold text-slate-700 flex items-center gap-2"
+              >
+                First Name
+                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  Read-only
+                </span>
+              </Label>
+              <Input
+                id="firstName"
+                value={profile?.user?.firstName || ""}
+                disabled
+                className="h-12 bg-slate-50 border-slate-200 text-slate-600 font-medium"
+              />
+            </div>
+            <div className="space-y-3">
+              <Label
+                htmlFor="lastName"
+                className="text-sm font-semibold text-slate-700 flex items-center gap-2"
+              >
+                Last Name
+                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  Read-only
+                </span>
+              </Label>
+              <Input
+                id="lastName"
+                value={profile?.user?.lastName || ""}
+                disabled
+                className="h-12 bg-slate-50 border-slate-200 text-slate-600 font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div className="space-y-3">
+            <Label htmlFor="bio" className="text-sm font-semibold text-slate-700">
+              Professional Bio
             </Label>
-            <Input
-              id="firstName"
-              value={profile?.user?.firstName || ""}
-              disabled
-              className="input-primary h-11 bg-gray-50"
+            <Textarea
+              id="bio"
+              value={formData.bio}
+              onChange={(e) => handleInputChange("bio", e.target.value)}
+              placeholder="Write a brief professional bio that describes your background, expertise, and what you're passionate about..."
+              className="min-h-[120px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-base"
+              maxLength={500}
             />
+            <div className="flex justify-between items-center text-xs text-slate-500">
+              <span>This will be visible to other users on your profile</span>
+              <span>{formData.bio.length}/500</span>
+            </div>
           </div>
-          <div className="space-y-2">
+
+          {/* Location */}
+          <div className="space-y-3">
             <Label
-              htmlFor="lastName"
-              className="text-sm font-medium text-gray-700"
+              htmlFor="location"
+              className="text-sm font-semibold text-slate-700"
             >
-              Last Name
+              Location
             </Label>
-            <Input
-              id="lastName"
-              value={profile?.user?.lastName || ""}
-              disabled
-              className="input-primary h-11 bg-gray-50"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="bio" className="text-sm font-medium text-gray-700">
-            Bio
-          </Label>
-          <Textarea
-            id="bio"
-            value={formData.bio}
-            onChange={(e) => handleInputChange("bio", e.target.value)}
-            placeholder="Tell us about yourself..."
-            className="input-primary min-h-[100px] resize-none"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label
-            htmlFor="location"
-            className="text-sm font-medium text-gray-700"
-          >
-            Location
-          </Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => handleInputChange("location", e.target.value)}
-              placeholder="City, Country"
-              className="input-primary h-11 pl-10"
-            />
+            <div className="relative">
+              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleInputChange("location", e.target.value)}
+                placeholder="e.g., New York, NY, USA"
+                className="h-12 pl-12 border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-base"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Role-specific Information */}
       {profile?.user?.role === "MENTEE" ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Education & Interests
-            </h3>
-          </div>
-
-          <div className="space-y-2">
-            <Label
-              htmlFor="education"
-              className="text-sm font-medium text-gray-700"
-            >
-              Education
-            </Label>
-            <Input
-              id="education"
-              value={formData.education}
-              onChange={(e) => handleInputChange("education", e.target.value)}
-              placeholder="Your educational background"
-              className="input-primary h-11"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label
-              htmlFor="purposeOfRegistration"
-              className="text-sm font-medium text-gray-700"
-            >
-              Purpose of Registration
-            </Label>
-            <Textarea
-              id="purposeOfRegistration"
-              value={formData.purposeOfRegistration}
-              onChange={(e) =>
-                handleInputChange("purposeOfRegistration", e.target.value)
-              }
-              placeholder="Why are you joining our platform?"
-              className="input-primary min-h-[100px] resize-none"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Interests
-            </Label>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <Input
-                  value={newInterest}
-                  onChange={(e) => setNewInterest(e.target.value)}
-                  placeholder="Add an interest"
-                  className="input-primary h-11 flex-1"
-                  onKeyPress={(e) => e.key === "Enter" && handleInterestAdd()}
-                />
-                <Button
-                  type="button"
-                  onClick={handleInterestAdd}
-                  disabled={!newInterest.trim()}
-                  className="bg-gradient-to-tr from-green-600 to-blue-600 text-white font-semibold shadow-md hover:from-green-700 hover:to-blue-700 h-11 px-4"
-                >
-                  Add
-                </Button>
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-slate-200/60 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-500 shadow-md">
+                <GraduationCap className="w-5 h-5 text-white" />
               </div>
-              {formData.interests.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.interests.map((interest, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="bg-blue-100 text-blue-800 hover:bg-blue-200"
-                    >
-                      {interest}
-                      <button
-                        type="button"
-                        onClick={() => handleInterestRemove(interest)}
-                        className="ml-1 text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Education & Interests
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Your academic background and areas of interest
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {/* Education */}
+            <div className="space-y-3">
+              <Label
+                htmlFor="education"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Educational Background
+              </Label>
+              <Input
+                id="education"
+                value={formData.education}
+                onChange={(e) => handleInputChange("education", e.target.value)}
+                placeholder="e.g., MD from Harvard Medical School, BS in Biology from MIT"
+                className="h-12 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 text-base"
+              />
+            </div>
+
+            {/* Purpose */}
+            <div className="space-y-3">
+              <Label
+                htmlFor="purposeOfRegistration"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Goals & Aspirations
+              </Label>
+              <Textarea
+                id="purposeOfRegistration"
+                value={formData.purposeOfRegistration}
+                onChange={(e) =>
+                  handleInputChange("purposeOfRegistration", e.target.value)
+                }
+                placeholder="What are your career goals? What kind of mentorship are you seeking? What do you hope to achieve?"
+                className="min-h-[120px] resize-none border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 text-base"
+                maxLength={300}
+              />
+              <div className="flex justify-between items-center text-xs text-slate-500">
+                <span>Help mentors understand how they can best support you</span>
+                <span>{formData.purposeOfRegistration.length}/300</span>
+              </div>
+            </div>
+
+            {/* Interests */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-slate-700">
+                Areas of Interest
+              </Label>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Input
+                    value={newInterest}
+                    onChange={(e) => setNewInterest(e.target.value)}
+                    placeholder="e.g., Cardiology, Research, Surgery"
+                    className="h-12 flex-1 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 text-base"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleInterestAdd();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleInterestAdd}
+                    disabled={!newInterest.trim() || formData.interests.length >= 10}
+                    className="bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold shadow-md hover:from-emerald-600 hover:to-green-600 h-12 px-6 whitespace-nowrap"
+                  >
+                    Add Interest
+                  </Button>
                 </div>
-              )}
+                {formData.interests.length > 0 && (
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="flex flex-wrap gap-2">
+                      {formData.interests.map((interest, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 px-3 py-1 text-sm"
+                        >
+                          {interest}
+                          <button
+                            type="button"
+                            onClick={() => handleInterestRemove(interest)}
+                            className="ml-2 text-emerald-600 hover:text-emerald-800 font-bold"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      {formData.interests.length}/10 interests added
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
-              <Award className="w-4 h-4 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Professional Information
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="specialty"
-                className="text-sm font-medium text-gray-700"
-              >
-                Specialty
-              </Label>
-              <Input
-                id="specialty"
-                value={formData.specialty}
-                onChange={(e) => handleInputChange("specialty", e.target.value)}
-                placeholder="Your specialty"
-                className="input-primary h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="subSpecialty"
-                className="text-sm font-medium text-gray-700"
-              >
-                Sub-specialty
-              </Label>
-              <Input
-                id="subSpecialty"
-                value={formData.subSpecialty}
-                onChange={(e) =>
-                  handleInputChange("subSpecialty", e.target.value)
-                }
-                placeholder="Your sub-specialty"
-                className="input-primary h-11"
-              />
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-slate-200/60 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-purple-500 shadow-md">
+                <Award className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Professional Information
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Your medical expertise and practice details
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="workplace"
-                className="text-sm font-medium text-gray-700"
-              >
-                Workplace
-              </Label>
-              <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="p-6 space-y-6">
+            {/* Specialty Fields */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label
+                  htmlFor="specialty"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Primary Specialty
+                </Label>
                 <Input
-                  id="workplace"
-                  value={formData.workplace}
+                  id="specialty"
+                  value={formData.specialty}
+                  onChange={(e) => handleInputChange("specialty", e.target.value)}
+                  placeholder="e.g., Urology, Internal Medicine, Surgery"
+                  className="h-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label
+                  htmlFor="subSpecialty"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Sub-specialty
+                </Label>
+                <Input
+                  id="subSpecialty"
+                  value={formData.subSpecialty}
                   onChange={(e) =>
-                    handleInputChange("workplace", e.target.value)
+                    handleInputChange("subSpecialty", e.target.value)
                   }
-                  placeholder="Hospital/Institution"
-                  className="input-primary h-11 pl-10"
+                  placeholder="e.g., Pediatric Urology, Oncology"
+                  className="h-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="yearsOfExperience"
-                className="text-sm font-medium text-gray-700"
-              >
-                Years of Experience
-              </Label>
-              <Input
-                id="yearsOfExperience"
-                type="number"
-                value={formData.yearsOfExperience}
-                onChange={(e) =>
-                  handleInputChange("yearsOfExperience", e.target.value)
-                }
-                placeholder="Number of years"
-                className="input-primary h-11"
-              />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label
-              htmlFor="availabilityStatus"
-              className="text-sm font-medium text-gray-700"
-            >
-              Availability Status
-            </Label>
-            <Select
-              value={formData.availabilityStatus}
-              onValueChange={(value) =>
-                handleInputChange("availabilityStatus", value)
-              }
-            >
-              <SelectTrigger className="input-primary h-11">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Available">Available</SelectItem>
-                <SelectItem value="Limited">Limited</SelectItem>
-                <SelectItem value="Unavailable">Unavailable</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Workplace and Experience */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label
+                  htmlFor="workplace"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Current Workplace
+                </Label>
+                <div className="relative">
+                  <Briefcase className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="workplace"
+                    value={formData.workplace}
+                    onChange={(e) =>
+                      handleInputChange("workplace", e.target.value)
+                    }
+                    placeholder="e.g., Mayo Clinic, Johns Hopkins Hospital"
+                    className="h-12 pl-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
+                  />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <Label
+                  htmlFor="yearsOfExperience"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Years of Experience
+                </Label>
+                <Input
+                  id="yearsOfExperience"
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={formData.yearsOfExperience}
+                  onChange={(e) =>
+                    handleInputChange("yearsOfExperience", e.target.value)
+                  }
+                  placeholder="e.g., 10"
+                  className="h-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
+                />
+              </div>
+            </div>
+
+            {/* Availability Status */}
+            <div className="space-y-3">
+              <Label
+                htmlFor="availabilityStatus"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Mentorship Availability
+              </Label>
+              <Select
+                value={formData.availabilityStatus}
+                onValueChange={(value) =>
+                  handleInputChange("availabilityStatus", value)
+                }
+              >
+                <SelectTrigger className="h-12 border-slate-200 focus:border-purple-400 text-base">
+                  <SelectValue placeholder="Select your availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Available">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      Available - Actively mentoring
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Limited">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      Limited - Selective mentoring
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Unavailable">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      Unavailable - Not mentoring currently
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">
+                This helps mentees understand your current availability for new mentoring relationships
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       {/* File Upload Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-            <Target className="w-4 h-4 text-orange-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Files & Documents
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Avatar Upload */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-gray-700">
-              Profile Picture
-            </Label>
-            <div className="space-y-3">
-              {getAvatarUrl() && (
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-green-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-green-800">
-                      Avatar uploaded
-                    </p>
-                    <p className="text-xs text-green-600">
-                      {formData.avatarFileName || "Profile picture"}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAvatarDelete}
-                    disabled={isDeletingAvatar}
-                    className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                  >
-                    {isDeletingAvatar ? "Deleting..." : "Remove"}
-                  </Button>
-                </div>
-              )}
-              <FileUpload
-                key={`avatar-${formData.avatar || 'empty'}`}
-                onFileSelect={setSelectedAvatarFile}
-                onFileUpload={handleAvatarUpload}
-                selectedFile={selectedAvatarFile}
-                uploadedFileUrl={getAvatarUrl()}
-                uploadedFileName={formData.avatarFileName}
-                isUploading={isUploadingAvatar}
-                isDeleting={isDeletingAvatar}
-                accept="image/*"
-                maxSize={5}
-                type="avatar"
-              />
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-slate-200/60 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-orange-500 shadow-md">
+              <Target className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">
+                Files & Documents
+              </h3>
+              <p className="text-sm text-slate-600">
+                {profile?.user?.role === "MENTEE" 
+                  ? "Upload your profile picture and resume"
+                  : "Upload your professional profile picture"
+                }
+              </p>
             </div>
           </div>
+        </div>
 
-          {/* Resume Upload (Mentee only) */}
-          {profile?.user?.role === "MENTEE" && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700">
-                Resume/CV
-              </Label>
-              <div className="space-y-3">
-                {getResumeUrl() && (
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+        <div className="p-6">
+          <div className="space-y-8">
+            {/* Avatar Upload - Full Width */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-lg bg-blue-100">
+                  <User className="w-4 h-4 text-blue-600" />
+                </div>
+                <Label className="text-base font-semibold text-slate-700">
+                  Profile Picture
+                </Label>
+              </div>
+              
+              <div className="max-w-2xl mx-auto space-y-4">
+                {getAvatarUrl() && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-green-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                        <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                          <p className="text-sm font-semibold text-green-800 truncate">
+                            Profile Picture Uploaded
+                          </p>
+                        </div>
+                        {formData.avatarFileName && (
+                          <p className="text-xs text-green-600 mb-2 truncate" title={formData.avatarFileName}>
+                            {formData.avatarFileName}
+                          </p>
+                        )}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              const avatarUrl = getAvatarUrl();
+                              if (avatarUrl) {
+                                try {
+                                  // If it's already a direct URL, open it
+                                  if (avatarUrl.startsWith('http') && !avatarUrl.includes('/api/download')) {
+                                    window.open(avatarUrl, '_blank');
+                                    return;
+                                  }
+                                  
+                                  // Otherwise, fetch the download URL from our API
+                                  const response = await fetch(avatarUrl, {
+                                    credentials: 'include',
+                                  });
+                                  
+                                  if (response.ok) {
+                                    const data = await response.json();
+                                    if (data.downloadUrl) {
+                                      window.open(data.downloadUrl, '_blank');
+                                    } else {
+                                      alert('Could not get download URL for preview');
+                                    }
+                                  } else {
+                                    const errorData = await response.json();
+                                    alert(`Preview failed: ${errorData.error || 'Unknown error'}`);
+                                  }
+                                } catch (error) {
+                                  console.error('Preview error:', error);
+                                  alert('Failed to open preview. Please check your internet connection.');
+                                }
+                              }
+                            }}
+                            className="text-green-700 border-green-300 hover:bg-green-100 text-xs flex-shrink-0"
+                          >
+                            Preview
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAvatarDelete}
+                            disabled={isDeletingAvatar}
+                            className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 text-xs flex-shrink-0"
+                          >
+                            {isDeletingAvatar ? "Removing..." : "Remove"}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-blue-800">
-                        Resume uploaded
-                      </p>
-                      <p className="text-xs text-blue-600">
-                        {formData.resumeFileName || "Resume document"}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResumeDelete}
-                      disabled={isDeletingResume}
-                      className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                    >
-                      {isDeletingResume ? "Deleting..." : "Remove"}
-                    </Button>
                   </div>
                 )}
                 <FileUpload
-                  key={`resume-${formData.resume || 'empty'}`}
-                  onFileSelect={setSelectedResumeFile}
-                  onFileUpload={handleResumeUpload}
-                  selectedFile={selectedResumeFile}
-                  uploadedFileUrl={getResumeUrl()}
-                  uploadedFileName={formData.resumeFileName}
-                  isUploading={isUploadingResume}
-                  isDeleting={isDeletingResume}
-                  accept=".pdf,.doc,.docx"
-                  maxSize={10}
-                  type="resume"
+                  key={`avatar-${formData.avatar || 'empty'}`}
+                  onFileSelect={setSelectedAvatarFile}
+                  onFileUpload={handleAvatarUpload}
+                  selectedFile={selectedAvatarFile}
+                  uploadedFileUrl={getAvatarUrl()}
+                  uploadedFileName={formData.avatarFileName}
+                  isUploading={isUploadingAvatar}
+                  isDeleting={isDeletingAvatar}
+                  accept="image/*"
+                  maxSize={5}
+                  type="avatar"
                 />
               </div>
             </div>
-          )}
+
+            {/* Resume Upload (Mentee only) - Full Width */}
+            {profile?.user?.role === "MENTEE" && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded-lg bg-purple-100">
+                    <FileText className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <Label className="text-base font-semibold text-slate-700">
+                    Resume/CV
+                  </Label>
+                </div>
+                
+                <div className="max-w-2xl mx-auto space-y-4">
+                  {getResumeUrl() && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                          <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                            <p className="text-sm font-semibold text-blue-800 truncate">
+                              Resume Uploaded
+                            </p>
+                          </div>
+                          {formData.resumeFileName && (
+                            <p className="text-xs text-blue-600 mb-2 truncate" title={formData.resumeFileName}>
+                              {formData.resumeFileName}
+                            </p>
+                          )}
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => getResumeUrl() && window.open(getResumeUrl(), '_blank')}
+                              className="text-blue-700 border-blue-300 hover:bg-blue-100 text-xs flex-shrink-0"
+                            >
+                              Preview
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleResumeDelete}
+                              disabled={isDeletingResume}
+                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 text-xs flex-shrink-0"
+                            >
+                              {isDeletingResume ? "Removing..." : "Remove"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <FileUpload
+                    key={`resume-${formData.resume || 'empty'}`}
+                    onFileSelect={setSelectedResumeFile}
+                    onFileUpload={handleResumeUpload}
+                    selectedFile={selectedResumeFile}
+                    uploadedFileUrl={getResumeUrl()}
+                    uploadedFileName={formData.resumeFileName}
+                    isUploading={isUploadingResume}
+                    isDeleting={isDeletingResume}
+                    accept=".pdf,.doc,.docx"
+                    maxSize={10}
+                    type="resume"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-gray-200">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          className="flex-1 h-11 sm:h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="flex-1 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600 h-11 sm:h-12"
-        >
-          {isSubmitting ? "Saving..." : "Save Profile"}
-        </Button>
+      {/* Action Buttons - Sticky Footer */}
+      <div className="bg-white border-t border-slate-200/60 p-6 rounded-2xl mt-2">
+        <div className="flex flex-col sm:flex-row gap-4 max-w-md ml-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="flex-1 h-12 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold transition-all duration-200"
+          >
+            Cancel Changes
+          </Button>
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isSubmitting || isUploadingAvatar || isUploadingResume}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-indigo-700 h-12 transition-all duration-200 disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                Saving Profile...
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <User className="w-4 h-4" />
+                Save Profile
+              </div>
+            )}
+          </Button>
+        </div>
+        
+        {/* Progress indicator */}
+        {(isUploadingAvatar || isUploadingResume || isSubmitting) && (
+          <div className="mt-4 text-center">
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
+              <div className="w-3 h-3 border border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+              {isUploadingAvatar && "Uploading profile picture..."}
+              {isUploadingResume && "Uploading resume..."}
+              {isSubmitting && "Saving your profile changes..."}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

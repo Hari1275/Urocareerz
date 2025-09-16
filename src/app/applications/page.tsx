@@ -139,36 +139,36 @@ export default function ApplicationsPage() {
     switch (status) {
       case "PENDING":
         return (
-          <Badge variant="outline" className="border-yellow-500 text-yellow-700">
-            <Clock className="w-3 h-3 mr-1" />
+          <Badge variant="outline" className="border-yellow-500 text-yellow-700 font-semibold text-sm">
+            <Clock className="w-4 h-4 mr-1" />
             Pending Review
           </Badge>
         );
       case "APPROVED":
         return (
-          <Badge variant="outline" className="border-green-500 text-green-700">
-            <CheckCircle className="w-3 h-3 mr-1" />
+          <Badge variant="outline" className="border-green-500 text-green-700 font-semibold text-sm">
+            <CheckCircle className="w-4 h-4 mr-1" />
             Approved
           </Badge>
         );
       case "REJECTED":
         return (
-          <Badge variant="outline" className="border-red-500 text-red-700">
-            <XCircle className="w-3 h-3 mr-1" />
+          <Badge variant="outline" className="border-red-500 text-red-700 font-semibold text-sm">
+            <XCircle className="w-4 h-4 mr-1" />
             Rejected
           </Badge>
         );
       case "WITHDRAWN":
         return (
-          <Badge variant="outline" className="border-gray-500 text-gray-700">
-            <AlertCircle className="w-3 h-3 mr-1" />
+          <Badge variant="outline" className="border-gray-500 text-gray-700 font-semibold text-sm">
+            <AlertCircle className="w-4 h-4 mr-1" />
             Withdrawn
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline">
-            <AlertCircle className="w-3 h-3 mr-1" />
+          <Badge variant="outline" className="font-semibold text-sm">
+            <AlertCircle className="w-4 h-4 mr-1" />
             {status}
           </Badge>
         );
@@ -387,7 +387,7 @@ export default function ApplicationsPage() {
                 <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <CardTitle className="text-lg font-bold text-slate-900 mb-3">
+                      <CardTitle className="text-xl font-bold text-slate-900 mb-3">
                         {application.opportunity.title}
                       </CardTitle>
                       <div className="flex items-center gap-3 mb-2">
@@ -405,9 +405,9 @@ export default function ApplicationsPage() {
                           </Badge>
                         )}
                         {application.opportunity.location && (
-                          <div className="flex items-center gap-1 text-sm text-slate-500">
+                          <div className="flex items-center gap-1 text-base text-slate-500">
                             <MapPin className="h-4 w-4" />
-                            <span>{application.opportunity.location}</span>
+                            <span className="font-medium">{application.opportunity.location}</span>
                           </div>
                         )}
                       </div>
@@ -418,24 +418,24 @@ export default function ApplicationsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pb-4">
-                  <p className="text-slate-600 mb-4 line-clamp-3 text-sm leading-relaxed">
-                    {application.opportunity.description}
+                  <p className="text-slate-600 mb-4 line-clamp-3 text-base leading-relaxed">
+                    {application.opportunity.description?.replace(/\s+/g, ' ').trim() || ''}
                   </p>
                   <div className="space-y-2">
                     {application.opportunity.experienceLevel && (
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <div className="flex items-center gap-2 text-base text-slate-500">
                         <Briefcase className="h-4 w-4 text-slate-400" />
-                        <span>{application.opportunity.experienceLevel}</span>
+                        <span className="font-medium">{application.opportunity.experienceLevel}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2 text-base text-slate-500">
                       <Calendar className="h-4 w-4 text-slate-400" />
-                      <span>Applied on {formatDate(application.createdAt)}</span>
+                      <span className="font-medium">Applied on {formatDate(application.createdAt)}</span>
                     </div>
                     {application.opportunity.creator && (
-                      <div className="text-sm text-slate-500">
+                      <div className="text-base text-slate-500">
                         <span>Posted by </span>
-                        <span className="font-medium text-slate-700">
+                        <span className="font-semibold text-slate-700">
                           Dr. {application.opportunity.creator.firstName} {application.opportunity.creator.lastName}
                         </span>
                       </div>

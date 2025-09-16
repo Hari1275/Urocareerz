@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, X, Settings, LogOut } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,12 +22,18 @@ interface User {
   role: string;
 }
 
+interface UserProfile {
+  avatar?: string;
+  avatarFileName?: string;
+}
+
 interface SharedHeaderProps {
   showUserInfo?: boolean;
   className?: string;
   onMobileMenuToggle?: () => void;
   isMobileMenuOpen?: boolean;
   onEditProfile?: () => void;
+  refreshProfile?: boolean; // Trigger to refresh profile data
 }
 
 export default function SharedHeader({
@@ -36,9 +42,11 @@ export default function SharedHeader({
   onMobileMenuToggle,
   isMobileMenuOpen = false,
   onEditProfile,
+  refreshProfile,
 }: SharedHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -49,6 +57,18 @@ export default function SharedHeader({
       if (response.ok) {
         const userData = await response.json();
         setUser(userData.user);
+        
+        // Also fetch user profile for avatar
+        try {
+          const profileResponse = await fetch("/api/profile", { credentials: "include" });
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            setUserProfile(profileData.profile || null);
+          }
+        } catch (profileError) {
+          console.log("Could not fetch user profile for avatar");
+          setUserProfile(null);
+        }
       } else {
         setUser(null);
         router.push("/login");
@@ -92,6 +112,13 @@ export default function SharedHeader({
       fetchUserData();
     }
   }, [isClient, showUserInfo, user]);
+  
+  // Refresh profile when refreshProfile prop changes
+  useEffect(() => {
+    if (refreshProfile && isClient && user) {
+      fetchUserData();
+    }
+  }, [refreshProfile, isClient, user]);
 
   const userName = user
     ? user.firstName && user.lastName
@@ -102,6 +129,56 @@ export default function SharedHeader({
   const userInitials = user
     ? (user.firstName?.[0] || user.email?.[0] || "U").toUpperCase()
     : "U";
+
+  // Get avatar URL for display
+  const getAvatarUrl = () => {
+    if (userProfile?.avatar) {
+      if (
+        userProfile.avatar === "https://example.com" ||
+        userProfile.avatar === "example.com"
+      ) {
+        return undefined;
+      }
+      // If it's a full URL, use it directly
+      if (userProfile.avatar.startsWith("http")) {
+        return userProfile.avatar;
+      }
+      // Otherwise, use the download API
+      return `/api/download?key=${encodeURIComponent(userProfile.avatar)}`;
+    }
+    return undefined;
+  };
+
+  const [avatarImageUrl, setAvatarImageUrl] = useState<string | undefined>(undefined);
+  
+  // Convert avatar URL to displayable image URL
+  useEffect(() => {
+    const fetchAvatarUrl = async () => {
+      const avatarUrl = getAvatarUrl();
+      if (avatarUrl && avatarUrl.includes('/api/download')) {
+        try {
+          const response = await fetch(avatarUrl, { credentials: 'include' });
+          if (response.ok) {
+            const data = await response.json();
+            setAvatarImageUrl(data.downloadUrl);
+          }
+        } catch (error) {
+          console.log('Could not fetch avatar display URL');
+          setAvatarImageUrl(undefined);
+        }
+      } else if (avatarUrl) {
+        setAvatarImageUrl(avatarUrl);
+      } else {
+        setAvatarImageUrl(undefined);
+      }
+    };
+    
+    if (userProfile?.avatar) {
+      fetchAvatarUrl();
+    } else {
+      setAvatarImageUrl(undefined);
+    }
+  }, [userProfile?.avatar]);
 
   return (
     <header
@@ -158,6 +235,13 @@ export default function SharedHeader({
                       className="flex items-center gap-2 p-1 h-auto hover:bg-slate-100"
                     >
                       <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
+                        {avatarImageUrl && (
+                          <AvatarImage 
+                            src={avatarImageUrl} 
+                            alt={`${userName}'s profile picture`}
+                            className="object-cover"
+                          />
+                        )}
                         <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm">
                           {userInitials}
                         </AvatarFallback>
@@ -175,6 +259,13 @@ export default function SharedHeader({
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="flex items-center gap-2 p-2">
                       <Avatar className="h-8 w-8">
+                        {avatarImageUrl && (
+                          <AvatarImage 
+                            src={avatarImageUrl} 
+                            alt={`${userName}'s profile picture`}
+                            className="object-cover"
+                          />
+                        )}
                         <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm">
                           {userInitials}
                         </AvatarFallback>

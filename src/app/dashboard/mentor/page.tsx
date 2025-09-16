@@ -157,8 +157,8 @@ interface Application {
   menteeEmail: string;
   status: string;
   appliedAt: string;
-  resumeUrl?: string;
-  coverLetter?: string;
+  resumeUrl?: string | null;
+  coverLetter?: string | null;
 }
 
 export default function MentorDashboardPage() {
@@ -479,6 +479,8 @@ export default function MentorDashboardPage() {
   };
 
   const handleReviewApplication = (application: Application) => {
+    console.log('Application data for review:', application);
+    console.log('Resume URL:', application.resumeUrl);
     setSelectedApplication(application);
     setShowReviewModal(true);
   };
@@ -992,19 +994,40 @@ export default function MentorDashboardPage() {
   const getApplicationStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING":
-        return <Badge variant="secondary">Pending Review</Badge>;
+        return (
+          <Badge variant="outline" className="border-amber-500 text-amber-700 bg-amber-50 font-semibold text-sm">
+            <Clock className="w-4 h-4 mr-1" />
+            Pending Review
+          </Badge>
+        );
       case "ACCEPTED":
         return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-semibold text-sm">
+            <CheckCircle className="w-4 h-4 mr-1" />
             Accepted
           </Badge>
         );
       case "REJECTED":
-        return <Badge variant="destructive">Rejected</Badge>;
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-semibold text-sm">
+            <XCircle className="w-4 h-4 mr-1" />
+            Rejected
+          </Badge>
+        );
       case "WITHDRAWN":
-        return <Badge variant="outline">Withdrawn</Badge>;
+        return (
+          <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-semibold text-sm">
+            <AlertCircle className="w-4 h-4 mr-1" />
+            Withdrawn
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return (
+          <Badge variant="secondary" className="font-semibold text-sm">
+            <AlertCircle className="w-4 h-4 mr-1" />
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -1602,7 +1625,7 @@ export default function MentorDashboardPage() {
                                         {opportunity.title}
                                       </h3>
                                       <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                                        {opportunity.description}
+                                        {opportunity.description?.replace(/\s+/g, ' ').trim() || ''}
                                       </p>
                                     </div>
                                     {isNewlyCreated && (
@@ -1612,12 +1635,6 @@ export default function MentorDashboardPage() {
                                     )}
                                   </div>
                                 </div>
-                              </div>
-                              
-                              {/* Click hint - visible on desktop hover */}
-                              <div className="hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity duration-200 items-center text-xs text-blue-600">
-                                <Eye className="h-3 w-3 mr-1" />
-                                <span>Click to view</span>
                               </div>
                             </div>
                             
@@ -2038,7 +2055,7 @@ export default function MentorDashboardPage() {
                                     </div>
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold text-base sm:text-lg text-slate-900 line-clamp-1 group-hover:text-purple-600 transition-colors duration-200">
+                                        <h3 className="font-bold text-lg sm:text-xl text-slate-900 line-clamp-1 group-hover:text-purple-600 transition-colors duration-200">
                                           {application.menteeName}
                                         </h3>
                                         {isPending && (
@@ -2047,7 +2064,7 @@ export default function MentorDashboardPage() {
                                           </Badge>
                                         )}
                                       </div>
-                                      <p className="text-sm text-slate-600 line-clamp-1 mb-2">
+                                      <p className="text-base font-medium text-slate-600 line-clamp-1 mb-2">
                                         {application.menteeEmail}
                                       </p>
                                     </div>
@@ -2067,7 +2084,7 @@ export default function MentorDashboardPage() {
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        "text-xs font-medium",
+                                        "text-sm font-semibold",
                                         application.status === "ACCEPTED" &&
                                         "bg-green-50 text-green-700 border-green-200",
                                         application.status === "PENDING" &&
@@ -2089,18 +2106,18 @@ export default function MentorDashboardPage() {
                                     </Badge>
                                     
                                     {opportunity && (
-                                      <div className="flex items-center gap-1 text-xs text-slate-600">
-                                        <Briefcase className="h-3 w-3 flex-shrink-0" />
-                                        <span className="font-medium truncate">{opportunity.title}</span>
+                                      <div className="flex items-center gap-1 text-sm text-slate-600">
+                                        <Briefcase className="h-4 w-4 flex-shrink-0" />
+                                        <span className="font-semibold truncate">{opportunity.title}</span>
                                       </div>
                                     )}
                                   </div>
                                   
                                   {/* Secondary Info Row */}
-                                  <div className="flex items-center justify-between text-xs text-slate-500">
+                                  <div className="flex items-center justify-between text-sm text-slate-500">
                                     <div className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                      <span>Applied {new Date(application.appliedAt).toLocaleDateString('en-US', { 
+                                      <Calendar className="h-4 w-4" />
+                                      <span className="font-medium">Applied {new Date(application.appliedAt).toLocaleDateString('en-US', { 
                                         month: 'short', 
                                         day: 'numeric',
                                         year: new Date(application.appliedAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
@@ -2109,8 +2126,8 @@ export default function MentorDashboardPage() {
                                     
                                     {application.resumeUrl && (
                                       <div className="flex items-center gap-1 text-blue-600">
-                                        <FileText className="h-3 w-3" />
-                                        <span className="font-medium">Resume attached</span>
+                                        <FileText className="h-4 w-4" />
+                                        <span className="font-semibold">Resume attached</span>
                                       </div>
                                     )}
                                   </div>
@@ -2135,7 +2152,7 @@ export default function MentorDashboardPage() {
                                       )}
                                     >
                                       <Eye className="h-4 w-4 mr-1" />
-                                      <span className="text-xs">{isPending ? "Review Now" : "View Details"}</span>
+                                      <span className="text-sm font-semibold">{isPending ? "Review Now" : "View Details"}</span>
                                     </Button>
                                   </div>
                                 </div>
@@ -3649,104 +3666,233 @@ export default function MentorDashboardPage() {
         </Dialog>
       )}
 
-      {/* Review Application Modal */}
+      {/* Enhanced Review Application Modal */}
       {showReviewModal && selectedApplication && (
         <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Review Application
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6">
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-slate-900 mb-2">
-                  Applicant Information
-                </h3>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Name:
-                    </span>
-                    <p className="text-sm text-slate-900">
+          <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto p-0">
+            <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 shadow-lg">
+                    <FileText className="h-6 w-6 text-white" />
+                  </div>
+                  Review Application
+                </DialogTitle>
+                <p className="text-base text-slate-600 mt-2">
+                  Review and decide on this mentee's application
+                </p>
+              </DialogHeader>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Enhanced Applicant Information Card */}
+              <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 p-6 rounded-xl">
+                <div className="flex items-start gap-6">
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl shadow-lg flex-shrink-0">
+                    {selectedApplication.menteeName?.[0]?.toUpperCase() || "M"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">
                       {selectedApplication.menteeName}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Email:
-                    </span>
-                    <p className="text-sm text-slate-900">
-                      {selectedApplication.menteeEmail}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Applied on:
-                    </span>
-                    <p className="text-sm text-slate-900">
-                      {new Date(
-                        selectedApplication.appliedAt
-                      ).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Current Status:
-                    </span>
-                    <div className="mt-1">
-                      {getApplicationStatusBadge(selectedApplication.status)}
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-semibold text-slate-700">
+                            Email:
+                          </span>
+                          <p className="text-base text-slate-900 font-medium break-all">
+                            {selectedApplication.menteeEmail}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-semibold text-slate-700">
+                            Applied:
+                          </span>
+                          <p className="text-base text-slate-900 font-medium">
+                            {new Date(selectedApplication.appliedAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex flex-col gap-2">
+                          <span className="text-sm font-semibold text-slate-700">
+                            Status:
+                          </span>
+                          <div className="flex items-start">
+                            {getApplicationStatusBadge(selectedApplication.status)}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <span className="text-sm font-semibold text-slate-700">
+                            Resume:
+                          </span>
+                          <div className="flex items-start">
+                            {selectedApplication.resumeUrl ? (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                <FileText className="h-3 w-3 mr-1" />
+                                Available
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Not Provided
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* Enhanced Cover Letter Section */}
               {selectedApplication.coverLetter && (
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">
-                    Cover Letter
-                  </h3>
-                  <div className="bg-white p-4 rounded-lg border border-slate-200">
-                    <p className="text-sm text-slate-600 whitespace-pre-wrap">
-                      {selectedApplication.coverLetter}
-                    </p>
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <div className="p-1 rounded-lg bg-green-100">
+                        <FileText className="h-4 w-4 text-green-600" />
+                      </div>
+                      Cover Letter
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                      <div className="prose max-w-none">
+                        <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap m-0">
+                          {selectedApplication.coverLetter}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {selectedApplication.resumeUrl && (
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">Resume</h3>
-                  <a
-                    href={selectedApplication.resumeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    <FileText className="h-4 w-4" />
-                    View Resume
-                  </a>
+              {/* Enhanced Resume Section */}
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-slate-200">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <div className="p-1 rounded-lg bg-blue-100">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                    </div>
+                    Resume Attachment
+                  </h3>
                 </div>
-              )}
+                <div className="p-6">
+                  {selectedApplication.resumeUrl ? (
+                    <div className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-lg bg-blue-500 shadow-md">
+                          <FileText className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-slate-900">
+                            {selectedApplication.menteeName}'s Resume
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            PDF Document • Click to view or download
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => window.open(selectedApplication.resumeUrl!, '_blank')}
+                          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md font-semibold"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = selectedApplication.resumeUrl!;
+                            link.download = `${selectedApplication.menteeName.replace(/\s+/g, '_')}_Resume.pdf`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          className="bg-white border-slate-300 hover:bg-slate-50 font-semibold"
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-8">
+                      <div className="text-center">
+                        <div className="p-3 rounded-lg bg-gray-200 inline-flex mb-3">
+                          <XCircle className="h-6 w-6 text-gray-500" />
+                        </div>
+                        <p className="text-base font-semibold text-gray-700 mb-1">
+                          No Resume Attached
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          This mentee has not uploaded a resume yet.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
+              {/* Enhanced Decision Section */}
               {selectedApplication.status === "PENDING" && (
-                <div className="flex justify-end space-x-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleUpdateApplicationStatus("REJECTED")}
-                    disabled={reviewing}
-                    className="border-red-200 text-red-700 hover:bg-red-50"
-                  >
-                    {reviewing ? "Processing..." : "Reject"}
-                  </Button>
-                  <Button
-                    onClick={() => handleUpdateApplicationStatus("ACCEPTED")}
-                    disabled={reviewing}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {reviewing ? "Processing..." : "Accept"}
-                  </Button>
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-amber-900 mb-4 flex items-center gap-2">
+                    <div className="p-1 rounded-lg bg-amber-100">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                    </div>
+                    Make Your Decision
+                  </h3>
+                  <p className="text-base text-amber-800 mb-6">
+                    Review all the information above and decide whether to accept or reject this application.
+                  </p>
+                  <div className="flex justify-end gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleUpdateApplicationStatus("REJECTED")}
+                      disabled={reviewing}
+                      className="min-w-[120px] bg-white border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 font-semibold"
+                    >
+                      {reviewing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Reject
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => handleUpdateApplicationStatus("ACCEPTED")}
+                      disabled={reviewing}
+                      className="min-w-[120px] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg font-semibold"
+                    >
+                      {reviewing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Accept
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -3754,16 +3900,39 @@ export default function MentorDashboardPage() {
         </Dialog>
       )}
 
-      {/* Profile Editing Modal */}
+      {/* Enhanced Profile Editing Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className="sm:max-w-4xl w-[95vw] max-w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Edit Profile
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-2 sm:py-4">
+        <DialogContent className="max-w-6xl w-[98vw] sm:w-[95vw] max-h-[98vh] overflow-hidden p-0 bg-gradient-to-br from-slate-50 to-white">
+          {/* Modal Header - Sticky */}
+          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
+                  <User className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-bold text-slate-900">
+                    Edit Profile
+                  </DialogTitle>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Update your professional information and preferences
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowProfileModal(false)}
+                className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg p-2"
+                disabled={isSavingProfile}
+              >
+                <XCircle className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* Modal Body - Scrollable */}
+          <div className="overflow-y-auto max-h-[calc(98vh-120px)] px-6 py-6">
             <ProfileForm
               profile={profile ? { ...profile, user } : { user }}
               onSubmit={async (profileData: any) => {
@@ -3778,15 +3947,27 @@ export default function MentorDashboardPage() {
                   });
                   if (!response.ok) {
                     const err = await response.json();
-                    alert(err.error || "Failed to save profile");
+                    toast({
+                      title: "Error",
+                      description: err.error || "Failed to save profile",
+                      variant: "destructive",
+                    });
                     return;
                   }
                   const saved = await response.json();
                   setProfile(saved.profile);
                   setShowProfileModal(false);
+                  toast({
+                    title: "Success!",
+                    description: "Profile updated successfully",
+                  });
                 } catch (err) {
                   console.error("Failed to save profile", err);
-                  alert("Failed to save profile. Please try again.");
+                  toast({
+                    title: "Error",
+                    description: "Failed to save profile. Please try again.",
+                    variant: "destructive",
+                  });
                 } finally {
                   setIsSavingProfile(false);
                 }

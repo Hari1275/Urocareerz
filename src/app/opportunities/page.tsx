@@ -422,7 +422,7 @@ function OpportunitiesContent() {
               </CardHeader>
               <CardContent className="pb-4">
                 <p className="text-slate-600 mb-4 line-clamp-3 text-sm leading-relaxed">
-                  {opportunity.description}
+                  {opportunity.description?.replace(/\s+/g, ' ').trim() || ''}
                 </p>
                 <div className="space-y-2">
                   {opportunity.experienceLevel && (

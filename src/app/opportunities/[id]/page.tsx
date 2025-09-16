@@ -430,8 +430,8 @@ export default function OpportunityDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-                    {opportunity.description}
+                  <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                    {opportunity.description?.replace(/\n\s*\n\s*\n/g, '\n\n').trim()}
                   </p>
                 </div>
               </CardContent>
@@ -445,8 +445,8 @@ export default function OpportunityDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-                      {opportunity.requirements}
+                    <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                      {opportunity.requirements?.replace(/\n\s*\n\s*\n/g, '\n\n').trim()}
                     </p>
                   </div>
                 </CardContent>
@@ -461,8 +461,8 @@ export default function OpportunityDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-                      {opportunity.benefits}
+                    <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                      {opportunity.benefits?.replace(/\n\s*\n\s*\n/g, '\n\n').trim()}
                     </p>
                   </div>
                 </CardContent>
