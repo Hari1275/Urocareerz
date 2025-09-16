@@ -91,23 +91,13 @@ export default function UserManagementTable() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Define fetchUsers first to avoid hoisting issues
+  // Simplified fetchUsers - just get all users from server, filter on client
   const fetchUsers = useCallback(async () => {
     try {
-      // Show search loading only if it's a search request, otherwise show general loading
-      if (debouncedSearchQuery && users.length > 0) {
-        setSearchLoading(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (roleFilter !== "all") params.append("role", roleFilter);
-      if (debouncedSearchQuery.trim()) params.append("search", debouncedSearchQuery.trim());
-
-      const response = await fetch(`/api/admin/users?${params.toString()}`);
+      const response = await fetch(`/api/admin/users`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch users");
@@ -119,23 +109,34 @@ export default function UserManagementTable() {
       setError(err.message);
     } finally {
       setLoading(false);
-      setSearchLoading(false);
     }
-  }, [statusFilter, roleFilter, debouncedSearchQuery, users.length]);
-
-  // Reset pagination to first page when search/filter changes
-  useEffect(() => {
-    pagination.actions.setCurrentPage(1);
-  }, [statusFilter, roleFilter, debouncedSearchQuery, pagination.actions]);
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
-  // Update pagination when users change
+  // Filtering logic - client side like ContentModerationTable
+  const filteredUsers = users.filter((user) => {
+    if (statusFilter !== "all" && user.status !== statusFilter) return false;
+    if (roleFilter !== "all" && user.role !== roleFilter) return false;
+    if (debouncedSearchQuery) {
+      const searchLower = debouncedSearchQuery.toLowerCase();
+      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
+      const email = user.email.toLowerCase();
+      const role = user.role.toLowerCase();
+      if (!fullName.includes(searchLower) && !email.includes(searchLower) && !role.includes(searchLower)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
   useEffect(() => {
-    pagination.actions.setTotalItems(users.length);
-  }, [users, pagination.actions]);
+    pagination.actions.setTotalItems(filteredUsers.length);
+  }, [filteredUsers, pagination.actions]);
+
+  const paginatedUsers = pagination.paginateData(filteredUsers);
 
   const handleApproveUser = async (userId: string) => {
     try {
@@ -392,8 +393,6 @@ export default function UserManagementTable() {
     return <Badge variant="secondary">{role}</Badge>;
   };
 
-  const filteredUsers = users; // Server-side filtering now
-  const paginatedUsers = pagination.paginateData(filteredUsers);
 
   if (loading) {
     return (

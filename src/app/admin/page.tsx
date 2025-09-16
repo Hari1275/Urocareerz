@@ -374,7 +374,7 @@ export default function AdminDashboardPage() {
                 }}
               >
                 <FileText className="h-4 w-4 mr-3" />
-                Content Moderation
+                Opportunities
               </Button>
               <Button
                 variant={activeTab === "types" ? "default" : "ghost"}
@@ -457,15 +457,30 @@ export default function AdminDashboardPage() {
                       />
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={fetchAnalytics}
-                    disabled={analyticsLoading}
-                    className="w-full sm:w-auto"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDateRange({ startDate: "", endDate: "" });
+                        // Optionally refresh data immediately after clearing
+                        setTimeout(() => fetchAnalytics(), 100);
+                      }}
+                      disabled={analyticsLoading || (!dateRange.startDate && !dateRange.endDate)}
+                      className="flex-1 sm:flex-initial"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Clear Dates
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={fetchAnalytics}
+                      disabled={analyticsLoading}
+                      className="flex-1 sm:flex-initial"
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
+                      Refresh
+                    </Button>
+                  </div>
                 </div>
               </div>
               {analyticsLoading && (

@@ -137,7 +137,7 @@ export default function ContentModerationTable() {
   const [showSaved, setShowSaved] = useState(false);
   const [showOpportunityDetails, setShowOpportunityDetails] = useState(false);
   const [opportunityDetails, setOpportunityDetails] = useState<Opportunity | null>(null);
-  
+
   // Pagination for drawer tables
   const applicationsPagination = usePagination({ initialPageSize: 10 });
   const savedPagination = usePagination({ initialPageSize: 10 });
@@ -181,6 +181,7 @@ export default function ContentModerationTable() {
       } else {
         setLoading(true);
       }
+      setError(null); // Clear previous errors
 
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
@@ -189,12 +190,15 @@ export default function ContentModerationTable() {
 
       const response = await fetch(`/api/admin/opportunities?${params.toString()}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch opportunities");
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setOpportunities(data.opportunities);
+      setOpportunities(data.opportunities || []);
     } catch (err: any) {
+      console.error('Error fetching opportunities:', err);
       setError(err.message);
+      setOpportunities([]); // Set empty array on error
     } finally {
       setLoading(false);
       setSearchLoading(false);
@@ -502,7 +506,7 @@ export default function ContentModerationTable() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl text-gray-900">Content Moderation</h2>
+              <h2 className="text-xl text-gray-900">Opportunities</h2>
               {/* <CardTitle>Content Moderation</CardTitle> */}
               <div className="text-sm text-muted-foreground">
                 Review, moderate, and manage all opportunities with comprehensive engagement metrics.
@@ -522,7 +526,7 @@ export default function ContentModerationTable() {
         <CardContent>
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="flex-1">
+            <div className="w-full sm:w-64 sm:flex-shrink-0">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -540,7 +544,7 @@ export default function ContentModerationTable() {
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-56">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -552,7 +556,7 @@ export default function ContentModerationTable() {
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-56">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
@@ -572,7 +576,7 @@ export default function ContentModerationTable() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Title</TableHead>
-                  <TableHead>Mentor</TableHead>
+                  <TableHead>Name & Role</TableHead>
                   <TableHead>Type</TableHead>
                   {/* <TableHead>Location</TableHead> */}
                   <TableHead>Status</TableHead>
@@ -588,7 +592,20 @@ export default function ContentModerationTable() {
                       colSpan={8}
                       className="text-center py-8 text-gray-500"
                     >
-                      No opportunities found
+                      {statusFilter !== "all" || typeFilter !== "all" || debouncedSearchQuery ? (
+                        <div className="space-y-2">
+                          <p>No opportunities found matching your filters</p>
+                          <p className="text-sm">
+                            {statusFilter !== "all" && `Status: ${statusFilter}`}
+                            {statusFilter !== "all" && (typeFilter !== "all" || debouncedSearchQuery) && " • "}
+                            {typeFilter !== "all" && `Type: ${typeFilter}`}
+                            {typeFilter !== "all" && debouncedSearchQuery && " • "}
+                            {debouncedSearchQuery && `Search: "${debouncedSearchQuery}"`}
+                          </p>
+                        </div>
+                      ) : (
+                        "No opportunities found"
+                      )}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -810,7 +827,20 @@ export default function ContentModerationTable() {
           <div className="lg:hidden space-y-4">
             {paginatedOpportunities.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                No opportunities found
+                {statusFilter !== "all" || typeFilter !== "all" || debouncedSearchQuery ? (
+                  <div className="space-y-2">
+                    <p>No opportunities found matching your filters</p>
+                    <p className="text-sm">
+                      {statusFilter !== "all" && `Status: ${statusFilter}`}
+                      {statusFilter !== "all" && (typeFilter !== "all" || debouncedSearchQuery) && " • "}
+                      {typeFilter !== "all" && `Type: ${typeFilter}`}
+                      {typeFilter !== "all" && debouncedSearchQuery && " • "}
+                      {debouncedSearchQuery && `Search: "${debouncedSearchQuery}"`}
+                    </p>
+                  </div>
+                ) : (
+                  "No opportunities found"
+                )}
               </div>
             ) : (
               paginatedOpportunities.map((opportunity) => (
@@ -1174,7 +1204,7 @@ export default function ContentModerationTable() {
                 </Table>
               </div>
             )}
-            
+
             {/* Applications Pagination */}
             {(applications[selectedOpportunity?.id || ''] || []).length > 0 && (
               <div className="mt-4 border-t pt-4">
@@ -1298,7 +1328,7 @@ export default function ContentModerationTable() {
                 </Table>
               </div>
             )}
-            
+
             {/* Saved Pagination */}
             {(savedMentees[selectedOpportunity?.id || ''] || []).length > 0 && (
               <div className="mt-4 border-t pt-4">

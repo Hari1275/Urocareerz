@@ -84,12 +84,15 @@ export function TablePagination({
                 <PaginationPrevious
                   onClick={(e) => {
                     e.preventDefault();
-                    actions.previousPage();
+                    e.stopPropagation();
+                    if (state.hasPreviousPage) {
+                      actions.previousPage();
+                    }
                   }}
                   className={
                     !state.hasPreviousPage
                       ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
+                      : "cursor-pointer hover:bg-accent hover:text-accent-foreground"
                   }
                 />
               </PaginationItem>
@@ -101,10 +104,11 @@ export function TablePagination({
                     <PaginationLink
                       onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         actions.setCurrentPage(pageNumber);
                       }}
                       isActive={pageNumber === state.currentPage}
-                      className="cursor-pointer"
+                      className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
                     >
                       {pageNumber}
                     </PaginationLink>
@@ -115,12 +119,15 @@ export function TablePagination({
                 <PaginationNext
                   onClick={(e) => {
                     e.preventDefault();
-                    actions.nextPage();
+                    e.stopPropagation();
+                    if (state.hasNextPage) {
+                      actions.nextPage();
+                    }
                   }}
                   className={
                     !state.hasNextPage
                       ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
+                      : "cursor-pointer hover:bg-accent hover:text-accent-foreground"
                   }
                 />
               </PaginationItem>

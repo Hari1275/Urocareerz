@@ -22,7 +22,10 @@ async function handler(req: NextRequest) {
       if (status === "active") {
         where.otpSecret = null; // Verified users
       } else if (status === "pending") {
-        where.otpSecret = { not: null }; // Pending verification
+        where.AND = [
+          { otpSecret: { not: null } }, // Has otpSecret
+          { otpSecret: { not: "inactive_user" } } // But not inactive
+        ];
       } else if (status === "inactive") {
         where.otpSecret = "inactive_user"; // Inactive users
       }
@@ -58,10 +61,15 @@ async function handler(req: NextRequest) {
             orConditions.push({ role: roleMatch });
           }
           
-          where.OR = orConditions;
+          // If there are existing AND conditions, combine with them
+          if (where.AND) {
+            where.AND = [...where.AND, { OR: orConditions }];
+          } else {
+            where.OR = orConditions;
+          }
         } else {
           // Multi-term search - all terms must be found across any field
-          where.AND = searchTerms.map(term => {
+          const searchConditions = searchTerms.map(term => {
             const roleMatch = getRoleMatch(term);
             const orConditions = [
               { email: { contains: term, mode: "insensitive" } },
@@ -76,6 +84,11 @@ async function handler(req: NextRequest) {
             
             return { OR: orConditions };
           });
+          if (where.AND) {
+            where.AND = [...where.AND, ...searchConditions];
+          } else {
+            where.AND = searchConditions;
+          }
         }
       }
 

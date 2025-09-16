@@ -66,7 +66,8 @@ export function usePagination(options: PaginationOptions = {}): UsePaginationRet
 
   const actions = useMemo((): PaginationActions => ({
     setCurrentPage: (page: number) => {
-      setCurrentPage(Math.max(1, Math.min(page, state.totalPages)));
+      const totalPages = Math.ceil(totalItems / pageSize);
+      setCurrentPage(Math.max(1, Math.min(page, totalPages)));
     },
     setPageSize: (size: number) => {
       setPageSize(size);
@@ -82,23 +83,27 @@ export function usePagination(options: PaginationOptions = {}): UsePaginationRet
       }
     },
     nextPage: () => {
-      if (state.hasNextPage) {
-        setCurrentPage(currentPage + 1);
+      const totalPages = Math.ceil(totalItems / pageSize);
+      if (currentPage < totalPages) {
+        setCurrentPage(prev => prev + 1);
       }
     },
     previousPage: () => {
-      if (state.hasPreviousPage) {
-        setCurrentPage(currentPage - 1);
+      if (currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
       }
     },
     goToFirstPage: () => setCurrentPage(1),
-    goToLastPage: () => setCurrentPage(state.totalPages),
+    goToLastPage: () => {
+      const totalPages = Math.ceil(totalItems / pageSize);
+      setCurrentPage(totalPages);
+    },
     reset: () => {
       setCurrentPage(initialPage);
       setPageSize(initialPageSize);
       setTotalItems(0);
     },
-  }), [currentPage, pageSize, state.hasNextPage, state.hasPreviousPage, state.totalPages, initialPage, initialPageSize]);
+  }), [currentPage, pageSize, totalItems, initialPage, initialPageSize]);
 
   const paginateData = useCallback(<T>(data: T[]): T[] => {
     const start = state.startIndex;

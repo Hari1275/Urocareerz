@@ -70,7 +70,7 @@ const categoryLabels: Record<string, string> = {
 const statusLabels: Record<string, string> = {
   ACTIVE: "Active",
   CLOSED: "Closed",
-  PINNED: "Pinned",
+  ARCHIVED: "Archived",
 };
 
 export default function DiscussionThreadPage() {
@@ -363,16 +363,21 @@ export default function DiscussionThreadPage() {
                       {categoryLabels[thread.category] || thread.category}
                     </Badge>
                     <Badge
-                      variant={
-                        thread.status === "PINNED" ? "default" : "outline"
-                      }
+                      variant="outline"
                       className={
-                        thread.status === "PINNED"
-                          ? "bg-yellow-100 text-yellow-800"
+                        thread.status === "ACTIVE"
+                          ? "bg-green-100 text-green-800 border-green-200"
+                          : thread.status === "CLOSED"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          : thread.status === "ARCHIVED"
+                          ? "bg-gray-100 text-gray-800 border-gray-200"
                           : "bg-white/50"
                       }
                     >
-                      {statusLabels[thread.status] || thread.status}
+                      {thread.status === "ACTIVE" && "🟢 Active"}
+                      {thread.status === "CLOSED" && "🔒 Closed"}
+                      {thread.status === "ARCHIVED" && "📁 Archived"}
+                      {!thread.status && "🟢 Active"}
                     </Badge>
                   </div>
 

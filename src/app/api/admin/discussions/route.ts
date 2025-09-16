@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const skip = (page - 1) * limit;
 
-    // Build where clause
+    // Build where clause (temporarily removing deletedAt filter due to MongoDB null handling)
     const where: any = {};
 
     if (status && status !== "all") {

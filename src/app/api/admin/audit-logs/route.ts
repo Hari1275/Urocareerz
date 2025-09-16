@@ -36,10 +36,14 @@ async function getAuditLogs(request: NextRequest) {
     if (startDate || endDate) {
       where.createdAt = {};
       if (startDate) {
-        where.createdAt.gte = new Date(startDate);
+        // Parse date and set to start of day in UTC
+        const start = new Date(startDate + 'T00:00:00.000Z');
+        where.createdAt.gte = start;
       }
       if (endDate) {
-        where.createdAt.lte = new Date(endDate);
+        // Parse date and set to end of day in UTC
+        const end = new Date(endDate + 'T23:59:59.999Z');
+        where.createdAt.lte = end;
       }
     }
 

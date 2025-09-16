@@ -122,9 +122,65 @@ async function handler(request: NextRequest) {
     }
   }
 
+  if (request.method === "DELETE") {
+    try {
+      const body = await request.json();
+      const { id } = body;
+
+      if (!id) {
+        return NextResponse.json(
+          { error: "ID is required" },
+          { status: 400 }
+        );
+      }
+
+      // Check if type exists
+      const existingType = await prisma.opportunityType.findUnique({
+        where: { id },
+      });
+
+      if (!existingType) {
+        return NextResponse.json(
+          { error: "Opportunity type not found" },
+          { status: 404 }
+        );
+      }
+
+      // Check if there are any opportunities using this type
+      const opportunitiesUsingType = await prisma.opportunity.count({
+        where: { opportunityTypeId: existingType.id },
+      });
+
+      if (opportunitiesUsingType > 0) {
+        return NextResponse.json(
+          { 
+            error: `Cannot delete opportunity type '${existingType.name}' because it is being used by ${opportunitiesUsingType} opportunity(ies). Please remove or change the type of these opportunities first.` 
+          },
+          { status: 400 }
+        );
+      }
+
+      // Delete the opportunity type
+      await prisma.opportunityType.delete({
+        where: { id },
+      });
+
+      return NextResponse.json({ 
+        message: "Opportunity type deleted successfully" 
+      });
+    } catch (error) {
+      console.error("Error deleting opportunity type:", error);
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export const GET = withAdminAuth(handler);
 export const POST = withAdminAuth(handler);
 export const PUT = withAdminAuth(handler);
+export const DELETE = withAdminAuth(handler);

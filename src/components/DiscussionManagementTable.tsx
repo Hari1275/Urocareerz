@@ -44,8 +44,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { usePagination } from "@/hooks/use-pagination";
-import { TablePagination } from "./TablePagination";
 import React from "react"; // Added missing import for React
 
 interface Discussion {
@@ -68,13 +66,18 @@ interface Discussion {
 }
 
 export default function DiscussionManagementTable() {
-  const pagination = usePagination({ initialPageSize: 10 });
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    pages: 0,
+  });
   const [stats, setStats] = useState({
     total: 0,
     statusCounts: {} as Record<string, number>,
@@ -91,12 +94,17 @@ export default function DiscussionManagementTable() {
 
   useEffect(() => {
     fetchDiscussions();
-  }, [statusFilter, categoryFilter]);
+  }, [statusFilter, categoryFilter, pagination.page, pagination.limit]);
 
-  useEffect(() => {
-    pagination.actions.setTotalItems(discussions.length);
-  }, [discussions, pagination.actions]);
-  const paginatedDiscussions = pagination.paginateData(discussions);
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleCategoryFilterChange = (value: string) => {
+    setCategoryFilter(value);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
 
   const fetchDiscussions = async () => {
     try {
@@ -104,6 +112,8 @@ export default function DiscussionManagementTable() {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (categoryFilter !== "all") params.append("category", categoryFilter);
+      params.append("page", pagination.page.toString());
+      params.append("limit", pagination.limit.toString());
 
       const response = await fetch(`/api/admin/discussions?${params}`);
       if (!response.ok) {
@@ -112,6 +122,15 @@ export default function DiscussionManagementTable() {
       const data = await response.json();
       setDiscussions(data.discussions);
       setStats(data.stats);
+      
+      // Update pagination info from API response
+      if (data.pagination) {
+        setPagination(prev => ({
+          ...prev,
+          total: data.pagination.total,
+          pages: data.pagination.pages,
+        }));
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -287,7 +306,7 @@ export default function DiscussionManagementTable() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-4">
           <div className="flex-1 min-w-0">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
@@ -300,7 +319,7 @@ export default function DiscussionManagementTable() {
             </Select>
           </div>
           <div className="flex-1 min-w-0">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
@@ -332,7 +351,7 @@ export default function DiscussionManagementTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedDiscussions.map((discussion) => (
+              {discussions.map((discussion) => (
                 <TableRow key={discussion.id}>
                   <TableCell>
                     <div>
@@ -492,7 +511,7 @@ export default function DiscussionManagementTable() {
           </Table>
         </div>
 
-        {paginatedDiscussions.length === 0 && (
+        {discussions.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             No discussions found with the current filters.
           </div>
@@ -500,11 +519,30 @@ export default function DiscussionManagementTable() {
 
         {/* Pagination */}
         <div className="flex items-center justify-between space-x-6 py-4">
-          <TablePagination
-            pagination={pagination}
-            showPageSizeSelector={true}
-            showPageInfo={true}
-          />
+          <div className="text-sm text-muted-foreground">
+            Showing {discussions.length} of {pagination.total} discussions
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pagination.page <= 1}
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+            >
+              Previous
+            </Button>
+            <span className="text-sm">
+              Page {pagination.page} of {pagination.pages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pagination.page >= pagination.pages}
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </CardContent>
 
