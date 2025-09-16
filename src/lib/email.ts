@@ -70,6 +70,15 @@ export interface EmailMenteeOpportunityRejectionData {
   adminName?: string;
 }
 
+export interface EmailMentorMessageData {
+  mentorEmail: string;
+  mentorName: string;
+  menteeEmail: string;
+  menteeName: string;
+  subject: string;
+  message: string;
+}
+
 export interface EmailResponse {
   success: boolean;
   messageId?: string;
@@ -446,6 +455,87 @@ export async function sendMenteeOpportunityRejectionEmail(
     };
   } catch (error) {
     console.error("Failed to send mentee opportunity rejection email:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Send mentor message to mentee
+ */
+export async function sendMentorMessageEmail(
+  data: EmailMentorMessageData
+): Promise<EmailResponse> {
+  try {
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    sendSmtpEmail.to = [{ email: data.menteeEmail }];
+    sendSmtpEmail.sender = { email: "urocareerz@gmail.com", name: "UroCareerz" };
+    sendSmtpEmail.replyTo = { email: data.mentorEmail, name: data.mentorName };
+    sendSmtpEmail.subject = data.subject;
+    sendSmtpEmail.htmlContent = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+      
+      <!-- Header -->
+      <div style="background-color: #4f46e5; color: white; padding: 24px; text-align: center; border-radius: 6px 6px 0 0;">
+        <h1 style="margin: 0; font-size: 24px; font-weight: 600;">UroCareerz</h1>
+      </div>
+      
+      <!-- Content -->
+      <div style="padding: 32px; text-align: left;">
+        
+        <!-- From Section -->
+        <div style="background-color: #f8f9fa; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
+          <p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 500;">Message from</p>
+          <h2 style="margin: 0; font-size: 18px; color: #1f2937;">${data.mentorName}</h2>
+          <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">${data.mentorEmail}</p>
+        </div>
+        
+        <!-- Subject -->
+        <h3 style="margin: 0 0 20px 0; font-size: 20px; color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+          ${data.subject}
+        </h3>
+        
+        <!-- Message -->
+        <div style="line-height: 1.6; color: #374151; font-size: 16px; white-space: pre-line; margin-bottom: 32px; text-align: left;">${data.message.trim()}</div>
+        
+        <!-- Reply Instructions -->
+        <div style="background-color: #eff6ff; padding: 16px; border-radius: 4px; border-left: 3px solid #4f46e5;">
+          <p style="margin: 0; font-size: 14px; color: #1e40af;">
+            <strong>Reply directly to this email</strong> to respond to ${data.mentorName}.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-radius: 0 0 6px 6px; border-top: 1px solid #e5e7eb;">
+        <p style="margin: 0; font-size: 12px; color: #6b7280;">
+          Sent via UroCareerz mentorship platform
+        </p>
+      </div>
+      
+    </div>
+  </body>
+</html>`;
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+
+    console.log("Mentor message email sent successfully");
+
+    return {
+      success: true,
+      messageId: "sent",
+    };
+  } catch (error) {
+    console.error("Failed to send mentor message email:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

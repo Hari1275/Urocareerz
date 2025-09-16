@@ -1,6 +1,3 @@
-// @ts-nocheck
-// @ts-ignore
-/* eslint-disable */
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -71,6 +68,7 @@ import MentorDashboardSidebar from "@/components/mentor-dashboard-sidebar";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { useMenteeSearch } from "@/hooks/use-mentee-search";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import {
   LayoutDashboard,
   Search,
@@ -100,6 +98,8 @@ import {
   Filter,
   Edit3,
   Loader2,
+  Mail,
+  Phone,
 } from "lucide-react";
 
 // Utility to read a cookie value by name (client-side only)
@@ -163,6 +163,7 @@ interface Application {
 
 export default function MentorDashboardPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const {
     opportunityTypes,
     loading: opportunityTypesLoading,
@@ -227,6 +228,14 @@ export default function MentorDashboardPage() {
   >({});
   const [savingOpportunity, setSavingOpportunity] = useState(false);
   const [selectedMentee, setSelectedMentee] = useState<any>(null);
+  const [showMenteeProfileModal, setShowMenteeProfileModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    subject: "",
+    message: "",
+    template: "general",
+  });
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   // Form states for Post Opportunity and Find Mentees
   const [postOpportunityForm, setPostOpportunityForm] = useState({
@@ -253,11 +262,13 @@ export default function MentorDashboardPage() {
   const [applicationStatusFilter, setApplicationStatusFilter] = useState("all");
   const [applicationOpportunityFilter, setApplicationOpportunityFilter] =
     useState("all");
-
+  
+  // Using single card view - simpler and more user-friendly
+  
   const [findMenteesForm, setFindMenteesForm] = useState({
     search: "",
     location: "",
-    experienceLevel: "",
+    experienceLevel: "all",
     interests: "",
   });
   const [searchingMentees, setSearchingMentees] = useState(false);
@@ -531,8 +542,13 @@ export default function MentorDashboardPage() {
           setOpportunities(data.opportunities || []);
         }
       } catch { }
-      setSuccessMessage("Opportunity deleted successfully.");
-      setTimeout(() => setSuccessMessage(null), 3000);
+      
+      // Show success toast
+      toast({
+        title: "✅ Deleted Successfully",
+        description: "The opportunity has been permanently removed.",
+        duration: 3000,
+      });
     } catch (err) {
       console.error("Delete failed:", err);
     } finally {
@@ -613,9 +629,13 @@ export default function MentorDashboardPage() {
         );
         setShowReviewModal(false);
         setSelectedApplication(null);
-        setSuccessMessage(`Application ${status.toLowerCase()} successfully!`);
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        // Show success toast
+        toast({
+          title: `✅ Application ${status === 'ACCEPTED' ? 'Accepted' : 'Rejected'}`,
+          description: `The mentee's application has been ${status.toLowerCase()} successfully.`,
+          duration: 4000,
+        });
       } else {
         if (response.status === 401) {
           router.push("/login");
@@ -663,6 +683,37 @@ export default function MentorDashboardPage() {
     }
 
     setPostingOpportunity(true);
+    
+    // Get the opportunity type for optimistic update
+    const selectedOpportunityType = opportunityTypes.find(
+      (type) => type.id === postOpportunityForm.opportunityTypeId
+    );
+    
+    // Create optimistic opportunity object
+    const optimisticOpportunity: Opportunity = {
+      id: `temp-${Date.now()}`, // Temporary ID
+      title: postOpportunityForm.title,
+      description: postOpportunityForm.description,
+      location: postOpportunityForm.location,
+      experienceLevel: postOpportunityForm.experienceLevel,
+      opportunityType: selectedOpportunityType || {
+        id: postOpportunityForm.opportunityTypeId,
+        name: "Unknown",
+      },
+      status: "APPROVED",
+      mentorId: user?.id || "",
+      requirements: postOpportunityForm.requirements,
+      benefits: postOpportunityForm.benefits,
+      duration: postOpportunityForm.duration,
+      compensation: postOpportunityForm.compensation,
+      applicationDeadline: postOpportunityForm.applicationDeadline,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // Optimistically add to opportunities list
+    setOpportunities((prev) => [optimisticOpportunity, ...prev]);
+    
     try {
       const response = await fetch("/api/opportunities", {
         method: "POST",
@@ -677,7 +728,23 @@ export default function MentorDashboardPage() {
       });
 
       if (response.ok) {
-        setSuccessMessage("Opportunity posted successfully and is now live!");
+        const responseData = await response.json();
+        const newOpportunity = responseData.opportunity;
+        
+        // Replace optimistic opportunity with real one
+        setOpportunities((prev) => 
+          prev.map((opp) => 
+            opp.id === optimisticOpportunity.id ? newOpportunity : opp
+          )
+        );
+        
+        // Show success toast
+        toast({
+          title: "✅ Success!",
+          description: "Opportunity posted successfully and is now live!",
+          duration: 4000,
+        });
+        
         // Clear any form errors
         setFormError(null);
         // Reset form
@@ -693,17 +760,33 @@ export default function MentorDashboardPage() {
           compensation: "",
           applicationDeadline: "",
         });
-        // Stay on current route - don't redirect to main dashboard
-        // Refresh opportunities list
-        fetchOpportunities();
-        // Auto-remove success message after 5 seconds
-        setTimeout(() => setSuccessMessage(null), 5000);
+        
+        // Auto-switch to opportunities tab to show the new opportunity
+        setTimeout(() => {
+          setActiveSection("opportunities");
+          toast({
+            title: "📋 Redirected to My Opportunities",
+            description: "Your new opportunity is now visible and ready to receive applications!",
+            duration: 5000,
+          });
+        }, 1500);
       } else {
+        // Remove optimistic opportunity on failure
+        setOpportunities((prev) => 
+          prev.filter((opp) => opp.id !== optimisticOpportunity.id)
+        );
+        
         const errorData = await response.json();
         setFormError(errorData.error || "Failed to post opportunity");
       }
     } catch (error) {
       console.error("Error posting opportunity:", error);
+      
+      // Remove optimistic opportunity on error
+      setOpportunities((prev) => 
+        prev.filter((opp) => opp.id !== optimisticOpportunity.id)
+      );
+      
       setFormError("Failed to post opportunity. Please try again.");
     } finally {
       setPostingOpportunity(false);
@@ -724,7 +807,12 @@ export default function MentorDashboardPage() {
         interests: findMenteesForm.interests,
       });
 
-      setSuccessMessage("Search completed successfully!");
+      // Show search completion toast
+      toast({
+        title: "🔍 Search Completed",
+        description: `Found ${mentees.length} mentee${mentees.length !== 1 ? 's' : ''} matching your criteria.`,
+        duration: 3000,
+      });
       setFormError(null);
       setSearchingMentees(false);
     } catch (error) {
@@ -736,8 +824,86 @@ export default function MentorDashboardPage() {
 
   const handleViewMenteeProfile = (mentee: any) => {
     setSelectedMentee(mentee);
-    setShowProfileModal(true);
+    setShowMenteeProfileModal(true);
   };
+
+  const handleContactMentee = (mentee: any) => {
+    setSelectedMentee(mentee);
+    setContactForm({
+      subject: `Mentorship Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
+      message: `Hi ${mentee.firstName},\n\nI hope this message finds you well. I came across your profile on UroCareerz and I'm impressed by your background and interests.\n\nAs a mentor in the field, I'd love to discuss potential mentorship opportunities with you. I believe my experience could be valuable for your career development.\n\nWould you be interested in having a conversation about this?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
+      template: "general",
+    });
+    setShowContactModal(true);
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedMentee || !contactForm.subject.trim() || !contactForm.message.trim()) {
+      toast({
+        title: "⚠️ Missing Information",
+        description: "Please fill in both subject and message before sending.",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+
+    setSendingMessage(true);
+    
+    try {
+      const response = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          menteeEmail: selectedMentee.email,
+          menteeName: `${selectedMentee.firstName} ${selectedMentee.lastName}`,
+          subject: contactForm.subject,
+          message: contactForm.message,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast({
+          title: "✅ Message Sent Successfully!",
+          description: `Your message has been sent to ${selectedMentee.firstName}. They'll receive it in their email inbox.`,
+          duration: 5000,
+        });
+        
+        // Reset form and close modal
+        setContactForm({
+          subject: "",
+          message: "",
+          template: "general",
+        });
+        setShowContactModal(false);
+      } else {
+        // Handle API errors
+        const errorMessage = result.error || "Failed to send message. Please try again.";
+        toast({
+          title: "❌ Failed to Send Message",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 6000,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "❌ Network Error",
+        description: "Unable to send message. Please check your connection and try again.",
+        variant: "destructive",
+        duration: 6000,
+      });
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+  
+  // Using single card view for simplified UX
 
   // Filter opportunities based on search and filters
   const filteredOpportunities = opportunities.filter((opportunity) => {
@@ -1102,75 +1268,75 @@ export default function MentorDashboardPage() {
                   </p>
                 </div>
 
-                {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
-                          <Briefcase className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                {/* Essential Stats - Streamlined */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  <Card 
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-blue-300/60 transition-all duration-200 cursor-pointer group"
+                    onClick={() => setActiveSection("opportunities")}
+                  >
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg group-hover:shadow-xl transition-shadow">
+                          <Briefcase className="h-6 w-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
+                        <div className="flex-1">
+                          <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                             {stats.totalOpportunities}
                           </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
+                          <p className="text-sm text-slate-600 font-medium group-hover:text-blue-700 transition-colors">
                             My Opportunities
                           </p>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg">
-                          <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
-                            {stats.pendingApplications}
-                          </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Pending Review
-                          </p>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ArrowRight className="h-5 w-5 text-blue-600" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg">
-                          <Users className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                  <Card 
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-emerald-300/60 transition-all duration-200 cursor-pointer group"
+                    onClick={() => setActiveSection("applications")}
+                  >
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg group-hover:shadow-xl transition-shadow">
+                          <Users className="h-6 w-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
+                        <div className="flex-1">
+                          <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
                             {stats.totalApplications}
                           </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Applications
+                          <p className="text-sm text-slate-600 font-medium group-hover:text-emerald-700 transition-colors">
+                            Applications Received
                           </p>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ArrowRight className="h-5 w-5 text-emerald-600" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 shadow-lg">
-                          <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                  <Card 
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-amber-300/60 transition-all duration-200 cursor-pointer group"
+                    onClick={() => setActiveSection("applications")}
+                  >
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg group-hover:shadow-xl transition-shadow">
+                          <Clock className="h-6 w-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold text-slate-900">
-                            {stats.approvedOpportunities}
+                        <div className="flex-1">
+                          <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
+                            {stats.pendingApplications}
                           </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Approved
+                          <p className="text-sm text-slate-600 font-medium group-hover:text-amber-700 transition-colors">
+                            Awaiting Review
                           </p>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ArrowRight className="h-5 w-5 text-amber-600" />
                         </div>
                       </div>
                     </CardContent>
@@ -1266,10 +1432,10 @@ export default function MentorDashboardPage() {
                   </div>
                   <Button
                     onClick={() => setActiveSection("post-opportunity")}
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg w-full sm:w-auto"
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg w-full sm:w-auto transition-all duration-200"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Post New
+                    Post New Opportunity
                   </Button>
                 </div>
 
@@ -1291,13 +1457,13 @@ export default function MentorDashboardPage() {
                         value={opportunityTypeFilter}
                         onValueChange={setOpportunityTypeFilter}
                       >
-                        <SelectTrigger className="w-full sm:w-[150px] bg-white/80">
-                          <SelectValue placeholder="Type" />
+                        <SelectTrigger className="w-full sm:w-[220px] bg-white/80">
+                          <SelectValue placeholder="Type" className="truncate" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Types</SelectItem>
                           {opportunityTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.name}>
+                            <SelectItem key={type.id} value={type.name} className="truncate">
                               {type.name}
                             </SelectItem>
                           ))}
@@ -1331,7 +1497,7 @@ export default function MentorDashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* Opportunities Grid */}
+                {/* Enhanced Card View - Single, Clean, Responsive Design */}
                 {loadingOpportunities ? (
                   <div className="grid gap-4 sm:gap-6">
                     {[1, 2, 3].map((i) => (
@@ -1375,7 +1541,7 @@ export default function MentorDashboardPage() {
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {/* Results count and pagination info */}
+                    {/* Results Summary */}
                     <div className="flex justify-between items-center">
                       <p className="text-sm text-slate-600">
                         Showing {startOpportunityIndex + 1}-
@@ -1400,99 +1566,167 @@ export default function MentorDashboardPage() {
                           </Button>
                         )}
                     </div>
-                    {paginatedOpportunities.map((opportunity) => (
-                      <Card
-                        key={opportunity.id}
-                        className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow"
-                      >
-                        <CardContent className="p-6">
-                          <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
-                              <Briefcase className="h-6 w-6 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1">
-                                    {opportunity.title}
-                                  </h3>
-                                  <p className="text-sm text-slate-600 mb-3 line-clamp-2">
-                                    {opportunity.description}
-                                  </p>
-                                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                                    <Badge
-                                      variant="outline"
-                                      className={cn(
-                                        "text-xs",
-                                        opportunity.status === "APPROVED" &&
-                                        "bg-green-50 text-green-700 border-green-200",
-                                        opportunity.status === "PENDING" &&
-                                        "bg-yellow-50 text-yellow-700 border-yellow-200",
-                                        opportunity.status === "REJECTED" &&
-                                        "bg-red-50 text-red-700 border-red-200"
-                                      )}
-                                    >
-                                      {opportunity.status}
-                                    </Badge>
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      {opportunity.opportunityType?.name ||
-                                        "No Type"}
-                                    </Badge>
-                                    {opportunity.location && (
-                                      <div className="flex items-center gap-1 text-xs text-slate-500">
-                                        <MapPin className="h-3 w-3" />
-                                        <span>{opportunity.location}</span>
-                                      </div>
+                    
+                    {/* Enhanced Card Layout */}
+                    <div className="space-y-4">
+                    {paginatedOpportunities.map((opportunity) => {
+                      // Check if opportunity is newly created (within last 30 minutes)
+                      const isNewlyCreated = opportunity.id.startsWith('temp-') || 
+                        (new Date().getTime() - new Date(opportunity.createdAt).getTime()) < 30 * 60 * 1000;
+                      
+                      return (
+                        <Card
+                          key={opportunity.id}
+                          className={cn(
+                            "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-blue-300/60 transition-all duration-300 cursor-pointer group",
+                            isNewlyCreated && "ring-2 ring-green-500/30 border-green-200 bg-green-50/50"
+                          )}
+                          onClick={() => handleViewOpportunity(opportunity)}
+                        >
+                          <CardContent className="p-4 sm:p-6">
+                            {/* Header Section */}
+                            <div className="flex items-start justify-between mb-3 sm:mb-4">
+                              <div className="flex items-start gap-3">
+                                <div className={cn(
+                                  "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0",
+                                  isNewlyCreated 
+                                    ? "bg-gradient-to-tr from-green-500 to-emerald-500" 
+                                    : "bg-gradient-to-tr from-blue-500 to-indigo-500"
+                                )}>
+                                  <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-start gap-3 mb-2">
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="font-semibold text-base sm:text-lg text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors duration-200 mb-1">
+                                        {opportunity.title}
+                                      </h3>
+                                      <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                                        {opportunity.description}
+                                      </p>
+                                    </div>
+                                    {isNewlyCreated && (
+                                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs animate-pulse flex-shrink-0">
+                                        ✨ New
+                                      </Badge>
                                     )}
                                   </div>
-                                  <p className="text-xs text-slate-500">
-                                    Posted on{" "}
-                                    {new Date(
-                                      opportunity.createdAt
-                                    ).toLocaleDateString()}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleViewOpportunity(opportunity)
-                                    }
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleEditOpportunity(opportunity)
-                                    }
-                                  >
-                                    <Edit3 className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() =>
-                                      requestDeleteOpportunity(opportunity)
-                                    }
-                                  >
-                                    Delete
-                                  </Button>
                                 </div>
                               </div>
+                              
+                              {/* Click hint - visible on desktop hover */}
+                              <div className="hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity duration-200 items-center text-xs text-blue-600">
+                                <Eye className="h-3 w-3 mr-1" />
+                                <span>Click to view</span>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-
+                            
+                            {/* Information Grid - Redesigned with better alignment */}
+                            <div className="space-y-3 sm:space-y-4 mb-4">
+                              {/* Primary Info Row */}
+                              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-xs font-medium",
+                                    opportunity.status === "APPROVED" &&
+                                    "bg-green-50 text-green-700 border-green-200",
+                                    opportunity.status === "PENDING" &&
+                                    "bg-yellow-50 text-yellow-700 border-yellow-200",
+                                    opportunity.status === "REJECTED" &&
+                                    "bg-red-50 text-red-700 border-red-200"
+                                  )}
+                                >
+                                  {opportunity.status}
+                                </Badge>
+                                
+                                <Badge variant="secondary" className="text-xs font-medium">
+                                  {opportunity.opportunityType?.name || "No Type"}
+                                </Badge>
+                                
+                                {opportunity.location && (
+                                  <div className="flex items-center gap-1 text-xs text-slate-600">
+                                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                                    <span className="font-medium">{opportunity.location}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Secondary Info Row */}
+                              <div className="flex items-center justify-between text-xs text-slate-500">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>Posted {new Date(opportunity.createdAt).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    year: new Date(opportunity.createdAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                                  })}</span>
+                                </div>
+                                
+                                {opportunity.applicationDeadline && (
+                                  <div className="flex items-center gap-1 text-orange-600">
+                                    <Clock className="h-3 w-3" />
+                                    <span className="font-medium">
+                                      Deadline: {new Date(opportunity.applicationDeadline).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric'
+                                      })}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                              <div 
+                                className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200" 
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewOpportunity(opportunity);
+                                  }}
+                                  className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-2 sm:px-3"
+                                >
+                                  <Eye className="h-4 w-4 sm:mr-1" />
+                                  <span className="text-xs hidden sm:inline">View</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditOpportunity(opportunity);
+                                  }}
+                                  className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 px-2 sm:px-3"
+                                >
+                                  <Edit3 className="h-4 w-4 sm:mr-1" />
+                                  <span className="text-xs hidden sm:inline">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    requestDeleteOpportunity(opportunity);
+                                  }}
+                                  className="text-slate-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3"
+                                >
+                                  <XCircle className="h-4 w-4 sm:mr-1" />
+                                  <span className="text-xs hidden sm:inline">Delete</span>
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                    </div>
+                    
                     {/* Pagination Controls */}
                     {totalOpportunityPages > 1 && (
                       <div className="flex justify-center mt-6">
@@ -1577,114 +1811,74 @@ export default function MentorDashboardPage() {
             {activeSection === "applications" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
-                      Applications
-                    </h1>
-                    <p className="text-sm sm:text-base text-slate-600">
-                      Review and manage applications from mentees.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={fetchApplications}
-                    variant="outline"
-                    className="bg-white/80 border-slate-200 hover:bg-white w-full sm:w-auto transition-all duration-200"
-                    disabled={loadingApplications}
-                  >
-                    {loadingApplications ? (
-                      <>
-                        <LoadingSpinner
-                          size="sm"
-                          variant="minimal"
-                          color="slate"
-                          showText={false}
-                          className="mr-2"
-                        />
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        <ArrowRight className="h-4 w-4 mr-2 rotate-45" />
-                        Refresh
-                      </>
-                    )}
-                  </Button>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                    Applications
+                  </h1>
+                  <p className="text-sm sm:text-base text-slate-600">
+                    Review and manage applications from mentees.
+                  </p>
                 </div>
 
-                {/* Status Overview Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {/* Quick Stats - Streamlined like main dashboard */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
-                          <FileText className="h-4 w-4 text-white" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg">
+                          <Clock className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-slate-900">
-                            {applications.length}
-                          </p>
-                          <p className="text-xs text-slate-600">Total</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg">
-                          <Clock className="h-4 w-4 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-slate-900">
+                          <p className="text-2xl sm:text-3xl font-bold text-slate-900">
                             {
                               applications.filter(
                                 (app) => app.status === "PENDING"
                               ).length
                             }
                           </p>
-                          <p className="text-xs text-slate-600">Pending</p>
+                          <p className="text-sm text-slate-600 font-medium">
+                            Awaiting Review
+                          </p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg">
-                          <CheckCircle className="h-4 w-4 text-white" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg">
+                          <CheckCircle className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-slate-900">
+                          <p className="text-2xl sm:text-3xl font-bold text-slate-900">
                             {
                               applications.filter(
                                 (app) => app.status === "ACCEPTED"
                               ).length
                             }
                           </p>
-                          <p className="text-xs text-slate-600">Accepted</p>
+                          <p className="text-sm text-slate-600 font-medium">
+                            Accepted
+                          </p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-tr from-red-500 to-pink-500 shadow-lg">
-                          <XCircle className="h-4 w-4 text-white" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-lg">
+                          <Users className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-slate-900">
-                            {
-                              applications.filter(
-                                (app) => app.status === "REJECTED"
-                              ).length
-                            }
+                          <p className="text-2xl sm:text-3xl font-bold text-slate-900">
+                            {applications.length}
                           </p>
-                          <p className="text-xs text-slate-600">Rejected</p>
+                          <p className="text-sm text-slate-600 font-medium">
+                            Total Applications
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -1714,7 +1908,7 @@ export default function MentorDashboardPage() {
                           setApplicationPage(1);
                         }}
                       >
-                        <SelectTrigger className="w-full sm:w-[150px] bg-white/80">
+                        <SelectTrigger className="w-full sm:w-[160px] bg-white/80">
                           <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1732,14 +1926,16 @@ export default function MentorDashboardPage() {
                           setApplicationPage(1);
                         }}
                       >
-                        <SelectTrigger className="w-full sm:w-[150px] bg-white/80">
-                          <SelectValue placeholder="Opportunity" />
+                        <SelectTrigger className="w-full sm:w-[220px] md:w-[280px] bg-white/80">
+                          <SelectValue placeholder="Opportunity" className="truncate" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-w-[280px] sm:max-w-[350px]">
                           <SelectItem value="all">All Opportunities</SelectItem>
                           {opportunities.map((opp) => (
-                            <SelectItem key={opp.id} value={opp.id}>
-                              {opp.title}
+                            <SelectItem key={opp.id} value={opp.id} className="truncate">
+                              <span className="truncate" title={opp.title}>
+                                {opp.title}
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1748,22 +1944,8 @@ export default function MentorDashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* Applications Table */}
-                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-tr from-purple-500 to-pink-500">
-                          <Users className="h-4 w-4 text-white" />
-                        </div>
-                        Applications Management
-                      </CardTitle>
-                      <Badge variant="outline" className="bg-slate-50">
-                        {applications.length} Total
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
+                {/* Applications Display */}
+                <div className="space-y-4">
                     {loadingApplications ? (
                       <div className="space-y-4">
                         {[1, 2, 3, 4].map((i) => (
@@ -1836,83 +2018,129 @@ export default function MentorDashboardPage() {
                           const opportunity = opportunities.find(
                             (opp) => opp.id === application.opportunityId
                           );
+                          const isPending = application.status === "PENDING";
+                          
                           return (
-                            <div
+                            <Card
                               key={application.id}
-                              className="group flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+                              className={cn(
+                                "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-purple-300/60 transition-all duration-300 cursor-pointer group",
+                                isPending && "ring-1 ring-amber-200 border-amber-200 bg-amber-50/30"
+                              )}
+                              onClick={() => handleReviewApplication(application)}
                             >
-                              <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg">
-                                  {application.menteeName?.[0]?.toUpperCase() ||
-                                    "M"}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-slate-900 text-base sm:text-lg leading-tight">
-                                    {application.menteeName}
-                                  </p>
-                                  <p className="text-sm text-slate-600 mt-1 truncate">
-                                    {application.menteeEmail}
-                                  </p>
-                                  {opportunity && (
-                                    <div className="flex items-center gap-2 mt-1 sm:mt-2">
-                                      <Briefcase className="h-3 w-3 text-slate-400" />
-                                      <p className="text-xs text-slate-500 font-medium truncate">
-                                        {opportunity.title}
+                              <CardContent className="p-4 sm:p-6">
+                                {/* Header Section */}
+                                <div className="flex items-start justify-between mb-3 sm:mb-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
+                                      {application.menteeName?.[0]?.toUpperCase() || "M"}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-semibold text-base sm:text-lg text-slate-900 line-clamp-1 group-hover:text-purple-600 transition-colors duration-200">
+                                          {application.menteeName}
+                                        </h3>
+                                        {isPending && (
+                                          <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs animate-pulse flex-shrink-0">
+                                            ⏳ New
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-sm text-slate-600 line-clamp-1 mb-2">
+                                        {application.menteeEmail}
                                       </p>
                                     </div>
-                                  )}
-                                  <div className="flex items-center gap-2 mt-1 sm:mt-2">
-                                    <Calendar className="h-3 w-3 text-slate-400" />
-                                    <p className="text-xs text-slate-500">
-                                      Applied on{" "}
-                                      {new Date(
-                                        application.appliedAt
-                                      ).toLocaleDateString("en-US", {
-                                        year: "numeric",
-                                        month: "short",
-                                        day: "numeric",
-                                      })}
-                                    </p>
+                                  </div>
+                                  
+                                  {/* Click hint - visible on desktop hover */}
+                                  <div className="hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity duration-200 items-center text-xs text-purple-600">
+                                    <Eye className="h-3 w-3 mr-1" />
+                                    <span>Click to review</span>
                                   </div>
                                 </div>
-                              </div>
-                              <div className="flex items-center justify-between sm:justify-end gap-3 mt-2 sm:mt-0">
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "text-xs font-medium px-2 sm:px-3 py-1",
-                                    application.status === "ACCEPTED" &&
-                                    "bg-green-50 text-green-700 border-green-200",
-                                    application.status === "PENDING" &&
-                                    "bg-amber-50 text-amber-700 border-amber-200",
-                                    application.status === "REJECTED" &&
-                                    "bg-red-50 text-red-700 border-red-200"
-                                  )}
-                                >
-                                  {application.status === "PENDING" && (
-                                    <Clock className="h-3 w-3 mr-1" />
-                                  )}
-                                  {application.status === "ACCEPTED" && (
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                  )}
-                                  {application.status === "REJECTED" && (
-                                    <XCircle className="h-3 w-3 mr-1" />
-                                  )}
-                                  {application.status}
-                                </Badge>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleReviewApplication(application)
-                                  }
-                                  className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 hover:text-slate-900 font-medium text-xs sm:text-sm"
-                                >
-                                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                  Review
-                                </Button>
-                              </div>
-                            </div>
+                                
+                                {/* Information Section */}
+                                <div className="space-y-3 sm:space-y-4 mb-4">
+                                  {/* Primary Info Row */}
+                                  <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                                    <Badge
+                                      variant="outline"
+                                      className={cn(
+                                        "text-xs font-medium",
+                                        application.status === "ACCEPTED" &&
+                                        "bg-green-50 text-green-700 border-green-200",
+                                        application.status === "PENDING" &&
+                                        "bg-amber-50 text-amber-700 border-amber-200",
+                                        application.status === "REJECTED" &&
+                                        "bg-red-50 text-red-700 border-red-200"
+                                      )}
+                                    >
+                                      {application.status === "PENDING" && (
+                                        <Clock className="h-3 w-3 mr-1" />
+                                      )}
+                                      {application.status === "ACCEPTED" && (
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                      )}
+                                      {application.status === "REJECTED" && (
+                                        <XCircle className="h-3 w-3 mr-1" />
+                                      )}
+                                      {application.status}
+                                    </Badge>
+                                    
+                                    {opportunity && (
+                                      <div className="flex items-center gap-1 text-xs text-slate-600">
+                                        <Briefcase className="h-3 w-3 flex-shrink-0" />
+                                        <span className="font-medium truncate">{opportunity.title}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Secondary Info Row */}
+                                  <div className="flex items-center justify-between text-xs text-slate-500">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>Applied {new Date(application.appliedAt).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: new Date(application.appliedAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                                      })}</span>
+                                    </div>
+                                    
+                                    {application.resumeUrl && (
+                                      <div className="flex items-center gap-1 text-blue-600">
+                                        <FileText className="h-3 w-3" />
+                                        <span className="font-medium">Resume attached</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                {/* Action Footer */}
+                                <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                                  <div 
+                                    className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200" 
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleReviewApplication(application);
+                                      }}
+                                      className={cn(
+                                        "text-slate-600 hover:text-purple-600 hover:bg-purple-50 px-3",
+                                        isPending && "text-amber-700 hover:text-amber-800 hover:bg-amber-50"
+                                      )}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      <span className="text-xs">{isPending ? "Review Now" : "View Details"}</span>
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
                           );
                         })}
 
@@ -1999,8 +2227,7 @@ export default function MentorDashboardPage() {
                         )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                </div>
               </div>
             )}
 
@@ -2267,18 +2494,26 @@ export default function MentorDashboardPage() {
                         >
                           Cancel
                         </Button>
-                        <Button type="submit" disabled={postingOpportunity}>
+                        <Button 
+                          type="submit" 
+                          disabled={postingOpportunity}
+                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg min-w-[160px] transition-all duration-200"
+                        >
                           {postingOpportunity ? (
                             <span className="inline-flex items-center gap-2">
                               <LoadingSpinner
                                 size="sm"
                                 variant="minimal"
                                 showText={false}
+                                color="white"
                               />
-                              <span>Creating...</span>
+                              <span>Posting...</span>
                             </span>
                           ) : (
-                            <span>Create Opportunity</span>
+                            <span className="inline-flex items-center gap-2">
+                              <Plus className="h-4 w-4" />
+                              <span>Post Opportunity</span>
+                            </span>
                           )}
                         </Button>
                       </div>
@@ -2291,32 +2526,50 @@ export default function MentorDashboardPage() {
             {/* Find Mentees Section */}
             {activeSection === "find-mentees" && (
               <div className="space-y-4 sm:space-y-6">
-                {/* Page Header */}
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
-                    Find Mentees
-                  </h1>
-                  <p className="text-sm sm:text-base text-slate-600">
-                    Search and connect with potential mentees.
-                  </p>
+                {/* Enhanced Page Header with Stats */}
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex-1">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                        Find Mentees
+                      </h1>
+                      <p className="text-sm sm:text-base text-slate-600">
+                        Discover and connect with talented mentees looking for guidance.
+                      </p>
+                    </div>
+                    {mentees.length > 0 && (
+                      <div className="flex-shrink-0">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg px-3 py-2">
+                          <span className="text-xs sm:text-sm font-semibold text-blue-700">
+                            {mentees.length} mentee{mentees.length !== 1 ? 's' : ''} found
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Search Form */}
-                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Search className="h-5 w-5" />
-                      Search Mentees
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {/* Enhanced Search Interface */}
+                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200/60 px-4 sm:px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
+                        <Search className="h-5 w-5 text-white" />
+                      </div>
                       <div>
-                        <Label className="text-sm font-medium text-slate-700 mb-2">
-                          Search by Name or Email
-                        </Label>
+                        <h3 className="font-semibold text-slate-900">Smart Mentee Search</h3>
+                        <p className="text-sm text-slate-600">Use advanced filters to find your ideal mentees</p>
+                      </div>
+                    </div>
+                  </div>
+                  <CardContent className="p-4 sm:p-6">
+                    {/* Main Search Bar */}
+                    <div className="mb-6">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                         <Input
-                          placeholder="Search mentees..."
+                          placeholder="Search by name, email, or keywords..."
+                          className="pl-10 h-12 text-base bg-white/80 border-slate-200 focus:border-blue-300 focus:ring-blue-200"
                           value={findMenteesForm.search}
                           onChange={(e) =>
                             setFindMenteesForm((prev) => ({
@@ -2329,12 +2582,18 @@ export default function MentorDashboardPage() {
                           }
                         />
                       </div>
+                    </div>
+
+                    {/* Advanced Filters */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
                       <div>
-                        <Label className="text-sm font-medium text-slate-700 mb-2">
+                        <Label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
                           Location
                         </Label>
                         <Input
-                          placeholder="e.g., New York, NY"
+                          placeholder="City, State, or Country"
+                          className="bg-white/80 border-slate-200 focus:border-blue-300"
                           value={findMenteesForm.location}
                           onChange={(e) =>
                             setFindMenteesForm((prev) => ({
@@ -2347,12 +2606,51 @@ export default function MentorDashboardPage() {
                           }
                         />
                       </div>
+                      
                       <div>
-                        <Label className="text-sm font-medium text-slate-700 mb-2">
-                          Interests (comma-separated)
+                        <Label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                          <Briefcase className="h-4 w-4" />
+                          Experience Level
+                        </Label>
+                        <Select
+                          value={findMenteesForm.experienceLevel}
+                          onValueChange={(value) => {
+                            setFindMenteesForm((prev) => ({
+                              ...prev,
+                              experienceLevel: value,
+                            }));
+                            // Trigger search immediately when experience level changes
+                            updateFilters({
+                              query: findMenteesForm.search,
+                              location: findMenteesForm.location,
+                              experienceLevel: value,
+                              interests: findMenteesForm.interests,
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="bg-white/80 border-slate-200 focus:border-blue-300">
+                            <SelectValue placeholder="Any level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Experience Level</SelectItem>
+                            <SelectItem value="beginner">Beginner (0-1 years)</SelectItem>
+                            <SelectItem value="intermediate">Intermediate (1-3 years)</SelectItem>
+                            <SelectItem value="advanced">Advanced (3+ years)</SelectItem>
+                            <SelectItem value="student">Student</SelectItem>
+                            <SelectItem value="resident">Resident</SelectItem>
+                            <SelectItem value="fellow">Fellow</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                          <Target className="h-4 w-4" />
+                          Speciality Interests
                         </Label>
                         <Input
-                          placeholder="e.g., urology, research, surgery"
+                          placeholder="urology, surgery, research..."
+                          className="bg-white/80 border-slate-200 focus:border-blue-300"
                           value={findMenteesForm.interests}
                           onChange={(e) =>
                             setFindMenteesForm((prev) => ({
@@ -2366,154 +2664,310 @@ export default function MentorDashboardPage() {
                         />
                       </div>
                     </div>
-                    <div className="flex gap-2">
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap items-center gap-3">
                       <Button
                         onClick={handleFindMentees}
                         disabled={searchingMentees}
+                        className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg px-6"
                       >
-                        {searchingMentees ? "Searching..." : "Search"}
+                        {searchingMentees ? (
+                          <>
+                            <LoadingSpinner size="sm" variant="minimal" showText={false} color="white" className="mr-2" />
+                            Searching...
+                          </>
+                        ) : (
+                          <>
+                            <Search className="h-4 w-4 mr-2" />
+                            Search Mentees
+                          </>
+                        )}
                       </Button>
+                      
                       <Button
                         variant="outline"
                         onClick={() => {
                           setFindMenteesForm({
                             search: "",
                             location: "",
-                            experienceLevel: "",
+                            experienceLevel: "all",
                             interests: "",
                           });
                           clearSearch();
                         }}
+                        className="border-slate-200 hover:bg-slate-50"
                       >
+                        <XCircle className="h-4 w-4 mr-2" />
                         Clear Filters
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Search Results */}
-                {mentees.length > 0 && (
-                  <div className="mb-4">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                      Found {mentees.length} mentee
-                      {mentees.length !== 1 ? "s" : ""}
-                    </h2>
-                  </div>
-                )}
-
+                {/* Enhanced Empty State */}
                 {mentees.length === 0 && !searchingMentees && (
                   <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                    <CardContent className="text-center py-12">
-                      <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-slate-900 mb-2">
-                        No mentees found
+                    <CardContent className="text-center py-16">
+                      <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-100 flex items-center justify-center">
+                        <Search className="h-12 w-12 text-blue-500" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-3">
+                        Start Your Mentee Discovery
                       </h3>
-                      <p className="text-slate-500">
-                        Try adjusting your search criteria to find mentees.
+                      <p className="text-slate-600 mb-6 max-w-md mx-auto leading-relaxed">
+                        Use the search filters above to find mentees who match your expertise and interests. Try searching by location, experience level, or specific specialties.
                       </p>
+                      <div className="flex flex-wrap justify-center gap-2 mb-6">
+                        {['urology', 'surgery', 'research', 'clinical', 'oncology'].map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="cursor-pointer hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+                            onClick={() => {
+                              setFindMenteesForm(prev => ({ ...prev, interests: tag }));
+                              handleFindMentees();
+                            }}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setFindMenteesForm(prev => ({ ...prev, search: '' }));
+                          handleFindMentees();
+                        }}
+                        variant="outline"
+                        className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Browse All Mentees
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
 
-                {/* Mentee Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {mentees.map((mentee) => (
-                    <Card
-                      key={mentee.id}
-                      className="hover:shadow-lg transition-shadow bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
-                    >
-                      <CardHeader>
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                            {mentee.profile?.avatar ? (
-                              <img
-                                src={mentee.profile.avatar}
-                                alt="Avatar"
-                                className="h-12 w-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <User className="h-6 w-6 text-blue-600" />
-                            )}
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">
-                              {mentee.firstName} {mentee.lastName}
-                            </CardTitle>
-                            <p className="text-sm text-slate-500">
-                              {mentee.email}
-                            </p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {mentee.profile?.location && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <MapPin className="h-4 w-4 text-slate-400" />
-                            <span className="text-sm text-slate-600">
-                              {mentee.profile.location}
-                            </span>
-                          </div>
-                        )}
+                {/* Enhanced Mentee Profile Cards */}
+                {mentees.length > 0 && (
+                  <div className="space-y-4">
+                    {/* Results Header */}
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold text-slate-900">
+                        {mentees.length} mentee{mentees.length !== 1 ? 's' : ''} found
+                      </h2>
+                    </div>
 
-                        {mentee.profile?.education && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <User className="h-4 w-4 text-slate-400" />
-                            <span className="text-sm text-slate-600">
-                              {mentee.profile.education}
-                            </span>
-                          </div>
-                        )}
-
-                        {mentee.profile?.bio && (
-                          <p className="text-sm text-slate-600 mb-3 line-clamp-2">
-                            {mentee.profile.bio}
-                          </p>
-                        )}
-
-                        {mentee.profile?.interests &&
-                          mentee.profile.interests.length > 0 && (
-                            <div className="mb-3">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Target className="h-4 w-4 text-slate-400" />
-                                <span className="text-sm font-medium text-slate-700">
-                                  Interests:
-                                </span>
-                              </div>
-                              <div className="flex flex-wrap gap-1">
-                                {mentee.profile.interests.map(
-                                  (interest, index) => (
-                                    <Badge
-                                      key={index}
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      {interest}
-                                    </Badge>
-                                  )
-                                )}
+                    {/* Enhanced Mentee Cards Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                      {mentees.map((mentee, index) => (
+                        <Card
+                          key={mentee.id}
+                          className="group bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-blue-300/60 transition-all duration-300 cursor-pointer overflow-hidden"
+                          onClick={() => handleViewMenteeProfile(mentee)}
+                        >
+                          <CardContent className="p-0">
+                            {/* Profile Header with Background Gradient */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 border-b border-slate-200/60">
+                              <div className="flex items-start gap-3 sm:gap-4">
+                                <div className="relative">
+                                  <div className="h-16 w-16 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                                    {mentee.profile?.avatar ? (
+                                      <img
+                                        src={mentee.profile.avatar}
+                                        alt={`${mentee.firstName} ${mentee.lastName}`}
+                                        className="h-16 w-16 rounded-xl object-cover"
+                                      />
+                                    ) : (
+                                      <span className="text-white font-bold text-xl">
+                                        {mentee.firstName?.[0]?.toUpperCase()}{mentee.lastName?.[0]?.toUpperCase()}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="absolute -bottom-2 -right-2 h-6 w-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                                    <div className="h-2 w-2 bg-white rounded-full"></div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
+                                      {mentee.firstName} {mentee.lastName}
+                                    </h3>
+                                  </div>
+                                  <p className="text-sm text-slate-600 mb-2">{mentee.email}</p>
+                                  
+                                  {/* Quick Info Pills */}
+                                  <div className="flex flex-wrap gap-2">
+                                    {mentee.profile?.location && (
+                                      <div className="inline-flex items-center gap-1 bg-white/80 px-2 py-1 rounded-md text-xs text-slate-600">
+                                        <MapPin className="h-3 w-3" />
+                                        {mentee.profile.location}
+                                      </div>
+                                    )}
+                                    <div className="inline-flex items-center gap-1 bg-white/80 px-2 py-1 rounded-md text-xs text-slate-600">
+                                      <Calendar className="h-3 w-3" />
+                                      Joined {new Date(mentee.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Action Hint */}
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-blue-600 flex items-center gap-1">
+                                  <Eye className="h-3 w-3" />
+                                  <span className="hidden sm:inline">View Profile</span>
+                                </div>
                               </div>
                             </div>
-                          )}
 
-                        {mentee.profile?.purposeOfRegistration && (
-                          <div className="mb-3">
-                            <span className="text-sm font-medium text-slate-700">
-                              Purpose:
-                            </span>
-                            <p className="text-sm text-slate-600 mt-1">
-                              {mentee.profile.purposeOfRegistration}
-                            </p>
+                            {/* Profile Details */}
+                            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                              {/* Bio/Description */}
+                              {mentee.profile?.bio && (
+                                <div>
+                                  <p className="text-sm text-slate-700 leading-relaxed line-clamp-2">
+                                    {mentee.profile.bio}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Education */}
+                              {mentee.profile?.education && (
+                                <div className="flex items-center gap-2">
+                                  <div className="p-1 bg-purple-100 rounded">
+                                    <Award className="h-3 w-3 text-purple-600" />
+                                  </div>
+                                  <span className="text-sm text-slate-700 font-medium">
+                                    {mentee.profile.education}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Interests/Skills */}
+                              {mentee.profile?.interests && mentee.profile.interests.length > 0 && (
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Target className="h-4 w-4 text-slate-400" />
+                                    <span className="text-sm font-medium text-slate-700">Interests</span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {mentee.profile.interests.slice(0, 4).map((interest, idx) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="secondary"
+                                        className="text-xs bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200"
+                                      >
+                                        {interest}
+                                      </Badge>
+                                    ))}
+                                    {mentee.profile.interests.length > 4 && (
+                                      <Badge variant="outline" className="text-xs text-slate-500">
+                                        +{mentee.profile.interests.length - 4} more
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Purpose */}
+                              {mentee.profile?.purposeOfRegistration && (
+                                <div className="bg-slate-50 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Star className="h-4 w-4 text-amber-500" />
+                                    <span className="text-sm font-medium text-slate-700">Goal</span>
+                                  </div>
+                                  <p className="text-sm text-slate-600 line-clamp-2">
+                                    {mentee.profile.purposeOfRegistration}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Action Bar */}
+                            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/80 border-t border-slate-200/60 flex items-center justify-between">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <Button
+                                  size="sm"
+                                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewMenteeProfile(mentee);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Profile
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-slate-200 hover:bg-slate-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleContactMentee(mentee);
+                                  }}
+                                >
+                                  <Send className="h-4 w-4 mr-1" />
+                                  Contact
+                                </Button>
+                              </div>
+                              
+                              <div className="text-xs text-slate-400">
+                                #{String(index + 1).padStart(2, '0')}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Pagination for large results */}
+                    {pagination && pagination.pages > 1 && (
+                      <div className="flex justify-center mt-8">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => changePage(pagination.page - 1)}
+                            disabled={!pagination.hasPrev}
+                          >
+                            <ArrowLeft className="h-4 w-4 mr-1" />
+                            Previous
+                          </Button>
+                          
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                              let pageNum = pagination.page - 2 + i;
+                              if (pageNum < 1) pageNum = i + 1;
+                              if (pageNum > pagination.pages) pageNum = pagination.pages - 4 + i;
+                              
+                              return (
+                                <Button
+                                  key={pageNum}
+                                  variant={pagination.page === pageNum ? "default" : "outline"}
+                                  size="sm"
+                                  className="w-8 h-8 p-0"
+                                  onClick={() => changePage(pageNum)}
+                                >
+                                  {pageNum}
+                                </Button>
+                              );
+                            })}
                           </div>
-                        )}
-
-                        <div className="text-xs text-slate-400">
-                          Joined:{" "}
-                          {new Date(mentee.createdAt).toLocaleDateString()}
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => changePage(pagination.page + 1)}
+                            disabled={!pagination.hasNext}
+                          >
+                            Next
+                            <ArrowRight className="h-4 w-4 ml-1" />
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -2577,116 +3031,270 @@ export default function MentorDashboardPage() {
         </div>
       </div>
 
-      {/* View Opportunity Modal */}
+      {/* Enhanced View Opportunity Modal */}
       {showViewModal && selectedOpportunity && (
         <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900">
-                {selectedOpportunity.title}
-              </DialogTitle>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary">
-                  {selectedOpportunity.opportunityType?.name || "Type"}
-                </Badge>
-                {getStatusBadge(selectedOpportunity.status)}
+          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{maxWidth: 'min(90vw, 1400px)'}}>
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                      <Briefcase className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                    <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight break-words">
+                        {selectedOpportunity.title}
+                      </DialogTitle>
+                      <p className="text-sm text-slate-600 mt-1 break-words">
+                        Posted on {new Date(selectedOpportunity.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-2">
+                    {getTypeBadge(selectedOpportunity.opportunityType?.name || '') && (
+                      <Badge className={cn(
+                        "text-xs font-medium",
+                        getTypeBadge(selectedOpportunity.opportunityType?.name || '')?.colorClass
+                      )}>
+                        <Target className="h-3 w-3 mr-1" />
+                        {selectedOpportunity.opportunityType?.name || "Type"}
+                      </Badge>
+                    )}
+                    <Badge className={cn(
+                      "text-xs font-medium",
+                      selectedOpportunity.status === "APPROVED" && "bg-green-100 text-green-800 border-green-200",
+                      selectedOpportunity.status === "PENDING" && "bg-amber-100 text-amber-800 border-amber-200",
+                      selectedOpportunity.status === "REJECTED" && "bg-red-100 text-red-800 border-red-200"
+                    )}>
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      {selectedOpportunity.status}
+                    </Badge>
+                    {selectedOpportunity.id.startsWith('temp-') || 
+                      (new Date().getTime() - new Date(selectedOpportunity.createdAt).getTime()) < 30 * 60 * 1000 && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs animate-pulse">
+                          ✨ New
+                        </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowViewModal(false);
+                      handleEditOpportunity(selectedOpportunity);
+                    }}
+                    className="bg-white/80 hover:bg-white border-slate-300 shadow-sm"
+                  >
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowViewModal(false)}
+                    className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </DialogHeader>
+            </div>
 
-            <div className="space-y-6">
-              {/* Basic Information */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+            {/* Modal Body */}
+            <div className="p-6 space-y-8">
+              {/* Quick Info Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {selectedOpportunity.location && (
-                  <div>
-                    <span className="font-medium text-slate-700">Location</span>
-                    <p className="text-slate-900">
-                      {selectedOpportunity.location}
-                    </p>
-                  </div>
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                    <CardContent className="p-4 flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-lg bg-blue-100">
+                        <MapPin className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Location</p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.location}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
+                
                 {selectedOpportunity.experienceLevel && (
-                  <div>
-                    <span className="font-medium text-slate-700">
-                      Experience Level
-                    </span>
-                    <p className="text-slate-900">
-                      {selectedOpportunity.experienceLevel}
-                    </p>
-                  </div>
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                    <CardContent className="p-4 flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-lg bg-purple-100">
+                        <User className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Experience</p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.experienceLevel}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
+                
                 {selectedOpportunity.duration && (
-                  <div>
-                    <span className="font-medium text-slate-700">Duration</span>
-                    <p className="text-slate-900">
-                      {selectedOpportunity.duration}
-                    </p>
-                  </div>
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                    <CardContent className="p-4 flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-lg bg-emerald-100">
+                        <Clock className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Duration</p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.duration}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
+                
                 {selectedOpportunity.compensation && (
-                  <div>
-                    <span className="font-medium text-slate-700">
-                      Compensation
-                    </span>
-                    <p className="text-slate-900">
-                      {selectedOpportunity.compensation}
-                    </p>
-                  </div>
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                    <CardContent className="p-4 flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-lg bg-amber-100">
+                        <Award className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Compensation</p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.compensation}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
+                
                 {selectedOpportunity.applicationDeadline && (
-                  <div>
-                    <span className="font-medium text-slate-700">
-                      Application Deadline
-                    </span>
-                    <p className="text-slate-900">
-                      {new Date(
-                        selectedOpportunity.applicationDeadline
-                      ).toLocaleDateString()}
-                    </p>
-                  </div>
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                    <CardContent className="p-4 flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-lg bg-red-100">
+                        <Calendar className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Deadline</p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">
+                          {new Date(selectedOpportunity.applicationDeadline).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
-                <div>
-                  <span className="font-medium text-slate-700">Posted</span>
-                  <p className="text-slate-900">
-                    {new Date(
-                      selectedOpportunity.createdAt
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
               </div>
 
-              {/* Description */}
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">
-                  Description
-                </h3>
-                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                  {selectedOpportunity.description}
-                </p>
+              {/* Main Content Sections */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Description */}
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        Description
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="min-w-0">
+                      <div className="prose max-w-none">
+                        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap break-words word-break-all overflow-wrap-anywhere">
+                          {selectedOpportunity.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Requirements */}
+                  {selectedOpportunity.requirements && (
+                    <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-amber-600" />
+                          Requirements
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="min-w-0">
+                        <div className="prose max-w-none">
+                          <p className="text-slate-700 leading-relaxed whitespace-pre-wrap break-words word-break-all overflow-wrap-anywhere">
+                            {selectedOpportunity.requirements}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Benefits */}
+                  {selectedOpportunity.benefits && (
+                    <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <Star className="h-5 w-5 text-emerald-600" />
+                          Benefits
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="min-w-0">
+                        <div className="prose max-w-none">
+                          <p className="text-slate-700 leading-relaxed whitespace-pre-wrap break-words word-break-all overflow-wrap-anywhere">
+                            {selectedOpportunity.benefits}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Quick Actions */}
+                  <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/60 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-blue-900 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        Quick Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Button
+                        onClick={() => {
+                          setShowViewModal(false);
+                          handleEditOpportunity(selectedOpportunity);
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit Opportunity
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowViewModal(false);
+                          requestDeleteOpportunity(selectedOpportunity);
+                        }}
+                        className="w-full bg-white/80 hover:bg-white border-red-200 text-red-600 hover:text-red-700"
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Delete Opportunity
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(`/opportunities/${selectedOpportunity.id}`, '_blank')}
+                        className="w-full bg-white/80 hover:bg-white border-slate-200"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Public Page
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-
-              {/* Requirements */}
-              {selectedOpportunity.requirements && (
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">
-                    Requirements
-                  </h3>
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedOpportunity.requirements}
-                  </p>
-                </div>
-              )}
-
-              {/* Benefits */}
-              {selectedOpportunity.benefits && (
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">
-                    Benefits
-                  </h3>
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedOpportunity.benefits}
-                  </p>
-                </div>
-              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -2723,209 +3331,319 @@ export default function MentorDashboardPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Opportunity Modal */}
+      {/* Enhanced Edit Opportunity Modal */}
       {showEditModal && selectedOpportunity && (
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <Edit3 className="h-5 w-5" />
-                Edit Opportunity
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-title">Title</Label>
-                  <Input
-                    id="edit-title"
-                    value={editingOpportunity.title || ""}
-                    onChange={(e) =>
-                      setEditingOpportunity((prev) => ({
-                        ...prev,
-                        title: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter opportunity title"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-location">Location</Label>
-                  <Input
-                    id="edit-location"
-                    value={editingOpportunity.location || ""}
-                    onChange={(e) =>
-                      setEditingOpportunity((prev) => ({
-                        ...prev,
-                        location: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter location"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  value={editingOpportunity.description || ""}
-                  onChange={(e) =>
-                    setEditingOpportunity((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter detailed description"
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-experienceLevel">Experience Level</Label>
-                  <Select
-                    value={editingOpportunity.experienceLevel || ""}
-                    onValueChange={(value) =>
-                      setEditingOpportunity((prev) => ({
-                        ...prev,
-                        experienceLevel: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ENTRY">Entry Level</SelectItem>
-                      <SelectItem value="MID">Mid Level</SelectItem>
-                      <SelectItem value="SENIOR">Senior Level</SelectItem>
-                      <SelectItem value="EXPERT">Expert Level</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-duration">Duration</Label>
-                  <Select
-                    value={editingOpportunity.duration || ""}
-                    onValueChange={(value) =>
-                      setEditingOpportunity((prev) => ({
-                        ...prev,
-                        duration: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select duration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1-3 months">1-3 months</SelectItem>
-                      <SelectItem value="3-6 months">3-6 months</SelectItem>
-                      <SelectItem value="6 months">6 months</SelectItem>
-                      <SelectItem value="1 year">1 year</SelectItem>
-                      <SelectItem value="2 years">2 years</SelectItem>
-                      <SelectItem value="Permanent">Permanent</SelectItem>
-                      <SelectItem value="Part-time">Part-time</SelectItem>
-                      <SelectItem value="Full-time">Full-time</SelectItem>
-                      <SelectItem value="Flexible">Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-compensation">Compensation</Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">₹</span>
+          <DialogContent className="max-w-[85vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{maxWidth: 'min(85vw, 1200px)'}}>
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                    <Edit3 className="h-6 w-6 text-white" />
                   </div>
-                  <Input
-                    id="edit-compensation"
-                    value={editingOpportunity.compensation || ""}
-                    onChange={(e) =>
-                      setEditingOpportunity((prev) => ({
-                        ...prev,
-                        compensation: e.target.value,
-                      }))
-                    }
-                    className="pl-8"
-                    placeholder="50,000/year, Stipend provided, Free"
-                  />
+                  <div className="min-w-0 flex-1">
+                    <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight break-words">
+                      Edit Opportunity
+                    </DialogTitle>
+                    <p className="text-sm text-slate-600 mt-1 break-words">
+                      Update your opportunity details and settings
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowEditModal(false)}
+                    disabled={savingOpportunity}
+                    className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-requirements">Requirements</Label>
-                <Textarea
-                  id="edit-requirements"
-                  value={editingOpportunity.requirements || ""}
-                  onChange={(e) =>
-                    setEditingOpportunity((prev) => ({
-                      ...prev,
-                      requirements: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter requirements and qualifications"
-                  rows={3}
-                />
-              </div>
+            {/* Modal Body */}
+            <div className="p-6">
+              <form onSubmit={(e) => { e.preventDefault(); handleSaveOpportunity(); }} className="space-y-8">
+                {/* Basic Information Section */}
+                <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      Basic Information
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Essential details about your opportunity</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-title" className="text-sm font-medium text-slate-700">
+                          Title <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="edit-title"
+                          value={editingOpportunity.title || ""}
+                          onChange={(e) =>
+                            setEditingOpportunity((prev) => ({
+                              ...prev,
+                              title: e.target.value,
+                            }))
+                          }
+                          placeholder="Enter opportunity title"
+                          className="bg-white/80 border-slate-200 focus:border-blue-400 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-location" className="text-sm font-medium text-slate-700">
+                          Location
+                        </Label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <Input
+                            id="edit-location"
+                            value={editingOpportunity.location || ""}
+                            onChange={(e) =>
+                              setEditingOpportunity((prev) => ({
+                                ...prev,
+                                location: e.target.value,
+                              }))
+                            }
+                            placeholder="e.g., New York, NY"
+                            className="pl-10 bg-white/80 border-slate-200 focus:border-blue-400 focus:ring-blue-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-benefits">Benefits</Label>
-                <Textarea
-                  id="edit-benefits"
-                  value={editingOpportunity.benefits || ""}
-                  onChange={(e) =>
-                    setEditingOpportunity((prev) => ({
-                      ...prev,
-                      benefits: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter benefits and perks"
-                  rows={3}
-                />
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-description" className="text-sm font-medium text-slate-700">
+                        Description <span className="text-red-500">*</span>
+                      </Label>
+                      <Textarea
+                        id="edit-description"
+                        value={editingOpportunity.description || ""}
+                        onChange={(e) =>
+                          setEditingOpportunity((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
+                        placeholder="Provide a detailed description of the opportunity, responsibilities, and what mentees will learn..."
+                        rows={4}
+                        className="bg-white/80 border-slate-200 focus:border-blue-400 focus:ring-blue-400 resize-none break-words"
+                        required
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        {editingOpportunity.description?.length || 0} characters
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-applicationDeadline">
-                  Application Deadline
-                </Label>
-                <Input
-                  id="edit-applicationDeadline"
-                  type="date"
-                  value={editingOpportunity.applicationDeadline || ""}
-                  onChange={(e) =>
-                    setEditingOpportunity((prev) => ({
-                      ...prev,
-                      applicationDeadline: e.target.value,
-                    }))
-                  }
-                />
-              </div>
+                {/* Position Details Section */}
+                <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <User className="h-5 w-5 text-purple-600" />
+                      Position Details
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Specify the role requirements and duration</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-experienceLevel" className="text-sm font-medium text-slate-700">
+                          Experience Level
+                        </Label>
+                        <Select
+                          value={editingOpportunity.experienceLevel || ""}
+                          onValueChange={(value) =>
+                            setEditingOpportunity((prev) => ({
+                              ...prev,
+                              experienceLevel: value,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="bg-white/80 border-slate-200 focus:border-purple-400">
+                            <SelectValue placeholder="Select experience level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ENTRY">🎯 Entry Level</SelectItem>
+                            <SelectItem value="MID">📈 Mid Level</SelectItem>
+                            <SelectItem value="SENIOR">🚀 Senior Level</SelectItem>
+                            <SelectItem value="EXPERT">⭐ Expert Level</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-duration" className="text-sm font-medium text-slate-700">
+                          Duration
+                        </Label>
+                        <Select
+                          value={editingOpportunity.duration || ""}
+                          onValueChange={(value) =>
+                            setEditingOpportunity((prev) => ({
+                              ...prev,
+                              duration: value,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="bg-white/80 border-slate-200 focus:border-purple-400">
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1-3 months">⏱️ 1-3 months</SelectItem>
+                            <SelectItem value="3-6 months">📅 3-6 months</SelectItem>
+                            <SelectItem value="6 months">📆 6 months</SelectItem>
+                            <SelectItem value="1 year">🗓️ 1 year</SelectItem>
+                            <SelectItem value="2 years">📊 2 years</SelectItem>
+                            <SelectItem value="Permanent">🏢 Permanent</SelectItem>
+                            <SelectItem value="Part-time">⏰ Part-time</SelectItem>
+                            <SelectItem value="Full-time">🕘 Full-time</SelectItem>
+                            <SelectItem value="Flexible">🔄 Flexible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-              <div className="flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowEditModal(false)}
-                  disabled={savingOpportunity}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveOpportunity}
-                  disabled={savingOpportunity}
-                >
-                  {savingOpportunity ? (
-                    <span className="inline-flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Saving...</span>
-                    </span>
-                  ) : (
-                    <span>Save Changes</span>
-                  )}
-                </Button>
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-compensation" className="text-sm font-medium text-slate-700">
+                        Compensation
+                      </Label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Award className="h-4 w-4 text-amber-500" />
+                        </div>
+                        <Input
+                          id="edit-compensation"
+                          value={editingOpportunity.compensation || ""}
+                          onChange={(e) =>
+                            setEditingOpportunity((prev) => ({
+                              ...prev,
+                              compensation: e.target.value,
+                            }))
+                          }
+                          className="pl-10 bg-white/80 border-slate-200 focus:border-purple-400 focus:ring-purple-400"
+                          placeholder="e.g., ₹50,000/year, Stipend provided, Unpaid"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-applicationDeadline" className="text-sm font-medium text-slate-700">
+                        Application Deadline
+                      </Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          id="edit-applicationDeadline"
+                          type="date"
+                          value={editingOpportunity.applicationDeadline || ""}
+                          onChange={(e) =>
+                            setEditingOpportunity((prev) => ({
+                              ...prev,
+                              applicationDeadline: e.target.value,
+                            }))
+                          }
+                          className="pl-10 bg-white/80 border-slate-200 focus:border-purple-400 focus:ring-purple-400"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Detailed Information Section */}
+                <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-emerald-600" />
+                      Additional Details
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Requirements, benefits, and other important information</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-requirements" className="text-sm font-medium text-slate-700">
+                        Requirements & Qualifications
+                      </Label>
+                      <Textarea
+                        id="edit-requirements"
+                        value={editingOpportunity.requirements || ""}
+                        onChange={(e) =>
+                          setEditingOpportunity((prev) => ({
+                            ...prev,
+                            requirements: e.target.value,
+                          }))
+                        }
+                        placeholder="List the requirements, qualifications, skills, or experience needed for this opportunity..."
+                        rows={3}
+                        className="bg-white/80 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 resize-none break-words overflow-wrap-anywhere"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-benefits" className="text-sm font-medium text-slate-700">
+                        Benefits & Perks
+                      </Label>
+                      <Textarea
+                        id="edit-benefits"
+                        value={editingOpportunity.benefits || ""}
+                        onChange={(e) =>
+                          setEditingOpportunity((prev) => ({
+                            ...prev,
+                            benefits: e.target.value,
+                          }))
+                        }
+                        placeholder="Describe the benefits, learning opportunities, networking, or other perks..."
+                        rows={3}
+                        className="bg-white/80 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 resize-none break-words overflow-wrap-anywhere"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end items-center pt-6">
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowEditModal(false)}
+                      disabled={savingOpportunity}
+                      className="min-w-[100px] bg-white hover:bg-slate-50 border-slate-300"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={savingOpportunity || !editingOpportunity.title || !editingOpportunity.description}
+                      className="min-w-[140px] bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg"
+                    >
+                      {savingOpportunity ? (
+                        <span className="inline-flex items-center gap-2">
+                          <LoadingSpinner
+                            size="sm"
+                            variant="minimal"
+                            color="white"
+                            showText={false}
+                          />
+                          <span>Saving...</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4" />
+                          <span>Save Changes</span>
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </form>
             </div>
           </DialogContent>
         </Dialog>
@@ -3079,6 +3797,444 @@ export default function MentorDashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Comprehensive Mentee Profile Modal */}
+      {showMenteeProfileModal && selectedMentee && (
+        <Dialog open={showMenteeProfileModal} onOpenChange={setShowMenteeProfileModal}>
+          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{maxWidth: 'min(90vw, 1200px)'}}>
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="h-16 w-16 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                      {selectedMentee.profile?.avatar ? (
+                        <img
+                          src={selectedMentee.profile.avatar}
+                          alt={`${selectedMentee.firstName} ${selectedMentee.lastName}`}
+                          className="h-16 w-16 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <span className="text-white font-bold text-2xl">
+                          {selectedMentee.firstName?.[0]?.toUpperCase()}{selectedMentee.lastName?.[0]?.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 h-6 w-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                      <div className="h-2 w-2 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight">
+                      {selectedMentee.firstName} {selectedMentee.lastName}
+                    </DialogTitle>
+                    <p className="text-slate-600 text-sm mt-1">{selectedMentee.email}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                        <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
+                        Available for Mentorship
+                      </Badge>
+                      {selectedMentee.profile?.location && (
+                        <div className="flex items-center gap-1 text-xs text-slate-600">
+                          <MapPin className="h-3 w-3" />
+                          {selectedMentee.profile.location}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMenteeProfileModal(false)}
+                  className="text-slate-500 hover:text-slate-700"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                {/* Main Profile Column */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* About Section */}
+                  {selectedMentee.profile?.bio && (
+                    <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <User className="h-5 w-5 text-blue-600" />
+                          About
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-slate-700 leading-relaxed">
+                          {selectedMentee.profile.bio}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Education & Experience */}
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <Award className="h-5 w-5 text-purple-600" />
+                        Education & Experience
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {selectedMentee.profile?.education && (
+                        <div>
+                          <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                            <div className="p-1 bg-purple-100 rounded">
+                              <Award className="h-3 w-3 text-purple-600" />
+                            </div>
+                            Education
+                          </h4>
+                          <p className="text-slate-700 ml-6">{selectedMentee.profile.education}</p>
+                        </div>
+                      )}
+                      
+                      {selectedMentee.profile?.experience && (
+                        <div>
+                          <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                            <div className="p-1 bg-emerald-100 rounded">
+                              <Briefcase className="h-3 w-3 text-emerald-600" />
+                            </div>
+                            Experience
+                          </h4>
+                          <p className="text-slate-700 ml-6">{selectedMentee.profile.experience}</p>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2 ml-6">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm text-slate-600">
+                          Joined {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            year: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Interests & Specialties */}
+                  {selectedMentee.profile?.interests && selectedMentee.profile.interests.length > 0 && (
+                    <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <Target className="h-5 w-5 text-teal-600" />
+                          Interests & Specialties
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedMentee.profile.interests.map((interest: string, idx: number) => (
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className="bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 border-teal-200"
+                            >
+                              {interest}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Goals & Aspirations */}
+                  {selectedMentee.profile?.purposeOfRegistration && (
+                    <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <Star className="h-5 w-5 text-amber-600" />
+                          Goals & Aspirations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-slate-700 leading-relaxed">
+                          {selectedMentee.profile.purposeOfRegistration}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Sidebar - Quick Info & Actions */}
+                <div className="space-y-6">
+                  {/* Quick Actions */}
+                  <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-blue-900 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        Quick Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Button
+                        onClick={() => {
+                          setShowMenteeProfileModal(false);
+                          handleContactMentee(selectedMentee);
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Profile Stats */}
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <LayoutDashboard className="h-5 w-5 text-slate-600" />
+                        Profile Stats
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Member since</span>
+                        <span className="font-medium text-slate-900">
+                          {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Profile completion</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
+                              style={{ 
+                                width: `${Math.min(100, 
+                                  (selectedMentee.profile?.bio ? 25 : 0) +
+                                  (selectedMentee.profile?.education ? 25 : 0) +
+                                  (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
+                                  (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
+                                )}%` 
+                              }}
+                            ></div>
+                          </div>
+                          <span className="font-medium text-slate-900">
+                            {Math.min(100, 
+                              (selectedMentee.profile?.bio ? 25 : 0) +
+                              (selectedMentee.profile?.education ? 25 : 0) +
+                              (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
+                              (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
+                            )}%
+                          </span>
+                        </div>
+                      </div>
+                      
+                    </CardContent>
+                  </Card>
+
+                  {/* Contact Information */}
+                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5 text-slate-600" />
+                        Contact Info
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-slate-400" />
+                        <span className="text-slate-700">{selectedMentee.email}</span>
+                      </div>
+                      
+                      {selectedMentee.profile?.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-slate-400" />
+                          <span className="text-slate-700">{selectedMentee.profile.phone}</span>
+                        </div>
+                      )}
+                      
+                      {selectedMentee.profile?.location && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="h-4 w-4 text-slate-400" />
+                          <span className="text-slate-700">{selectedMentee.profile.location}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Contact Modal */}
+      {showContactModal && selectedMentee && (
+        <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
+          <DialogContent className="max-w-[90vw] sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Send className="h-5 w-5 text-blue-600" />
+                Contact {selectedMentee.firstName}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Mentee Info Header */}
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                <div className="h-12 w-12 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
+                  <span className="text-white font-bold">
+                    {selectedMentee.firstName?.[0]?.toUpperCase()}{selectedMentee.lastName?.[0]?.toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    {selectedMentee.firstName} {selectedMentee.lastName}
+                  </h3>
+                  <p className="text-sm text-slate-600">{selectedMentee.email}</p>
+                </div>
+              </div>
+
+              {/* Message Template Selector */}
+              <div>
+                <Label className="text-sm font-medium text-slate-700 mb-2">Message Template</Label>
+                <Select
+                  value={contactForm.template}
+                  disabled={sendingMessage}
+                  onValueChange={(value) => {
+                    setContactForm(prev => ({ ...prev, template: value }));
+                    // Update message based on template
+                    if (value === "general") {
+                      setContactForm(prev => ({
+                        ...prev,
+                        subject: `Mentorship Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
+                        message: `Hi ${selectedMentee.firstName},\n\nI hope this message finds you well. I came across your profile on UroCareerz and I'm impressed by your background and interests.\n\nAs a mentor in the field, I'd love to discuss potential mentorship opportunities with you. I believe my experience could be valuable for your career development.\n\nWould you be interested in having a conversation about this?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`
+                      }));
+                    } else if (value === "research") {
+                      setContactForm(prev => ({
+                        ...prev,
+                        subject: `Research Collaboration Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
+                        message: `Dear ${selectedMentee.firstName},\n\nI noticed your interest in research from your profile. I'm currently working on several research projects and I think you might be interested in collaborating.\n\nI'd be happy to discuss potential research opportunities that align with your interests and career goals.\n\nWould you be available for a brief call to discuss this further?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`
+                      }));
+                    } else if (value === "clinical") {
+                      setContactForm(prev => ({
+                        ...prev,
+                        subject: `Clinical Learning Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
+                        message: `Hi ${selectedMentee.firstName},\n\nI see that you're interested in clinical experience. I have opportunities for clinical observation and hands-on learning that might interest you.\n\nThese opportunities would provide valuable exposure to real-world medical practice and could significantly benefit your career development.\n\nWould you like to learn more about these opportunities?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`
+                      }));
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General Mentorship</SelectItem>
+                    <SelectItem value="research">Research Collaboration</SelectItem>
+                    <SelectItem value="clinical">Clinical Opportunities</SelectItem>
+                    <SelectItem value="custom">Custom Message</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Subject Field */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium text-slate-700">Subject</Label>
+                  <span className={`text-xs ${
+                    contactForm.subject.length > 200 ? 'text-red-500' : 'text-slate-400'
+                  }`}>
+                    {contactForm.subject.length}/200
+                  </span>
+                </div>
+                <Input
+                  value={contactForm.subject}
+                  onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
+                  placeholder="Enter message subject"
+                  className={`w-full ${
+                    contactForm.subject.length > 200 ? 'border-red-300 focus:border-red-500' : ''
+                  }`}
+                  maxLength={250}
+                  disabled={sendingMessage}
+                />
+                {contactForm.subject.length > 200 && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Subject is too long. Maximum 200 characters allowed.
+                  </p>
+                )}
+              </div>
+
+              {/* Message Field */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium text-slate-700">Message</Label>
+                  <span className={`text-xs ${
+                    contactForm.message.length > 5000 ? 'text-red-500' : 'text-slate-400'
+                  }`}>
+                    {contactForm.message.length}/5000
+                  </span>
+                </div>
+                <Textarea
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Write your message here..."
+                  className={`w-full min-h-[200px] resize-none ${
+                    contactForm.message.length > 5000 ? 'border-red-300 focus:border-red-500' : ''
+                  }`}
+                  maxLength={5100}
+                  disabled={sendingMessage}
+                />
+                {contactForm.message.length > 5000 && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Message is too long. Maximum 5000 characters allowed.
+                  </p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowContactModal(false);
+                    // Reset form when canceling
+                    setContactForm({
+                      subject: "",
+                      message: "",
+                      template: "general",
+                    });
+                  }}
+                  disabled={sendingMessage}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={sendingMessage || !contactForm.subject.trim() || !contactForm.message.trim() || contactForm.subject.length > 200 || contactForm.message.length > 5000}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingMessage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Message
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

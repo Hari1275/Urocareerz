@@ -9,7 +9,7 @@ interface LoadingSpinnerProps {
   variant?: "default" | "dots" | "pulse" | "gradient" | "elegant" | "minimal";
   text?: string;
   showText?: boolean;
-  color?: "blue" | "purple" | "indigo" | "emerald" | "slate";
+  color?: "blue" | "purple" | "indigo" | "emerald" | "slate" | "white";
 }
 
 const sizeConfigs = {
@@ -83,6 +83,14 @@ const colorSchemes = {
     text: "text-slate-700",
     dots: "bg-slate-600",
     glow: "shadow-slate-500/25"
+  },
+  white: {
+    primary: "from-white to-gray-100",
+    secondary: "from-gray-100 to-white",
+    border: "border-white",
+    text: "text-white",
+    dots: "bg-white",
+    glow: "shadow-white/25"
   }
 };
 
@@ -227,7 +235,7 @@ interface LoadingPageProps {
   description?: string;
   size?: "sm" | "md" | "lg" | "xl";
   variant?: "default" | "dots" | "pulse" | "gradient" | "elegant" | "minimal";
-  color?: "blue" | "purple" | "indigo" | "emerald" | "slate";
+  color?: "blue" | "purple" | "indigo" | "emerald" | "slate" | "white";
 }
 
 export function LoadingPage({ 
@@ -323,7 +331,7 @@ interface LoadingCardProps {
   className?: string;
   size?: "sm" | "md" | "lg" | "xl";
   variant?: "default" | "dots" | "pulse" | "gradient" | "elegant" | "minimal";
-  color?: "blue" | "purple" | "indigo" | "emerald" | "slate";
+  color?: "blue" | "purple" | "indigo" | "emerald" | "slate" | "white";
 }
 
 export function LoadingCard({ 
@@ -373,7 +381,7 @@ export function LoadingCard({
 interface LoadingButtonProps {
   size?: "sm" | "md" | "lg";
   variant?: "default" | "minimal";
-  color?: "blue" | "purple" | "indigo" | "emerald" | "slate";
+  color?: "blue" | "purple" | "indigo" | "emerald" | "slate" | "white";
   className?: string;
 }
 

@@ -119,7 +119,7 @@ export function useMenteeSearch() {
     const clearedFilters = {
       query: "",
       location: "",
-      experienceLevel: "",
+      experienceLevel: "all",
       interests: "",
     };
     setFilters(clearedFilters);

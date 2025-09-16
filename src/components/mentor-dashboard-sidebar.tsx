@@ -174,42 +174,7 @@ export default function MentorDashboardSidebar({
                         <div className="font-medium leading-tight">
                           {item.label}
                         </div>
-                        {item.description && !isActive && (
-                          <div className="text-xs text-slate-500 mt-0.5 leading-tight">
-                            {item.description}
-                          </div>
-                        )}
                       </div>
-                      {item.id === "applications" &&
-                        stats.pendingApplications &&
-                        stats.pendingApplications > 0 && (
-                          <Badge
-                            variant={isActive ? "secondary" : "outline"}
-                            className={cn(
-                              "ml-auto h-5 min-w-[20px] text-xs font-semibold",
-                              isActive
-                                ? "bg-white/20 text-white border-white/30"
-                                : "bg-orange-50 text-orange-600 border-orange-200"
-                            )}
-                          >
-                            {stats.pendingApplications}
-                          </Badge>
-                        )}
-                      {item.id === "opportunities" &&
-                        stats.totalOpportunities &&
-                        stats.totalOpportunities > 0 && (
-                          <Badge
-                            variant={isActive ? "secondary" : "outline"}
-                            className={cn(
-                              "ml-auto h-5 min-w-[20px] text-xs font-semibold",
-                              isActive
-                                ? "bg-white/20 text-white border-white/30"
-                                : "bg-green-50 text-green-600 border-green-200"
-                            )}
-                          >
-                            {stats.totalOpportunities}
-                          </Badge>
-                        )}
                     </button>
                   );
                 })}
@@ -252,11 +217,6 @@ export default function MentorDashboardSidebar({
                         <div className="font-medium leading-tight">
                           {item.label}
                         </div>
-                        {item.description && !isActive && (
-                          <div className="text-xs text-slate-500 mt-0.5 leading-tight">
-                            {item.description}
-                          </div>
-                        )}
                       </div>
                     </button>
                   );
