@@ -74,6 +74,33 @@ export function useOpportunityTypes() {
     }
   };
 
+  const deleteOpportunityType = async (id: string) => {
+    try {
+      const response = await fetch("/api/admin/opportunity-types", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete opportunity type");
+      }
+
+      // Remove from local state
+      setOpportunityTypes((prev) => prev.filter((type) => type.id !== id));
+      return true;
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   const getTypeBadge = (typeName: string) => {
     const type = opportunityTypes.find((t) => t.name === typeName);
     if (!type) return null;
@@ -113,6 +140,7 @@ export function useOpportunityTypes() {
     error,
     fetchOpportunityTypes,
     createOpportunityType,
+    deleteOpportunityType,
     getTypeBadge,
   };
 }

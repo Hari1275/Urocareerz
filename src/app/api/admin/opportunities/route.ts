@@ -79,9 +79,14 @@ async function handler(req: NextRequest) {
         duration,
         compensation,
         applicationDeadline,
+        mentorId, // Form sends mentorId
         creatorId,
         creatorRole,
       } = body;
+
+      // Use mentorId if provided, otherwise use creatorId
+      const finalCreatorId = mentorId || creatorId;
+      const finalCreatorRole = mentorId ? "MENTOR" : (creatorRole || "MENTOR");
 
       // Validate required fields
       if (!title || !description || !opportunityTypeId || !status) {
@@ -91,21 +96,27 @@ async function handler(req: NextRequest) {
         );
       }
 
-      // Check if creator exists and has the correct role
-      if (creatorId) {
-        const creator = await prisma.user.findUnique({
-          where: {
-            id: creatorId,
-            role: creatorRole || "MENTOR",
-          },
-        });
+      // For admin-created opportunities, creatorId is required
+      if (!finalCreatorId) {
+        return NextResponse.json(
+          { error: "Creator (mentor) must be selected" },
+          { status: 400 }
+        );
+      }
 
-        if (!creator) {
-          return NextResponse.json(
-            { error: "Invalid creator selected" },
-            { status: 400 }
-          );
-        }
+      // Check if creator exists and has the correct role
+      const creator = await prisma.user.findUnique({
+        where: {
+          id: finalCreatorId,
+          role: finalCreatorRole,
+        },
+      });
+
+      if (!creator) {
+        return NextResponse.json(
+          { error: "Invalid creator selected" },
+          { status: 400 }
+        );
       }
 
       // Create new opportunity
@@ -124,8 +135,8 @@ async function handler(req: NextRequest) {
           applicationDeadline: applicationDeadline
             ? new Date(applicationDeadline)
             : null,
-          creatorId: creatorId || null,
-          creatorRole: creatorRole || "MENTOR",
+          creatorId: finalCreatorId,
+          creatorRole: finalCreatorRole,
         } as any,
         include: {
           creator: {

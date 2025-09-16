@@ -49,7 +49,7 @@ interface OpportunityTypeFormData {
 
 export default function OpportunityTypeManagement() {
   const { toast } = useToast();
-  const { opportunityTypes, fetchOpportunityTypes, createOpportunityType } =
+  const { opportunityTypes, fetchOpportunityTypes, createOpportunityType, deleteOpportunityType } =
     useOpportunityTypes();
   const [showForm, setShowForm] = useState(false);
   const [editingType, setEditingType] = useState<any>(null);
@@ -59,6 +59,9 @@ export default function OpportunityTypeManagement() {
     color: "blue",
   });
   const [loading, setLoading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [typeToDelete, setTypeToDelete] = useState<any>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const pagination = usePagination({ initialPageSize: 10 });
   useEffect(() => {
@@ -166,6 +169,40 @@ export default function OpportunityTypeManagement() {
     setShowForm(true);
   };
 
+  const openDeleteDialog = (type: any) => {
+    setTypeToDelete(type);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!typeToDelete) return;
+
+    setDeleteLoading(true);
+
+    try {
+      await deleteOpportunityType(typeToDelete.id);
+      toast({
+        title: "Success",
+        description: "Opportunity type deleted successfully",
+      });
+      setShowDeleteDialog(false);
+      setTypeToDelete(null);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete opportunity type",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteDialog(false);
+    setTypeToDelete(null);
+  };
+
   return (
     <>
       <Card className="shadow-sm">
@@ -243,6 +280,7 @@ export default function OpportunityTypeManagement() {
                             size="sm"
                             variant="outline"
                             className="text-red-600 hover:text-red-700"
+                            onClick={() => openDeleteDialog(type)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -364,6 +402,48 @@ export default function OpportunityTypeManagement() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Opportunity Type
+            </DialogTitle>
+            <DialogDescription>
+              Do you want to delete the opportunity type "{typeToDelete?.name}"?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-gray-600">
+              This action cannot be undone. This will permanently delete the opportunity type
+              and it will no longer be available for new opportunities.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={cancelDelete}
+              disabled={deleteLoading}
+            >
+              No, Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteLoading ? "Deleting..." : "Yes, Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

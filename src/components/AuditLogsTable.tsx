@@ -64,8 +64,8 @@ export default function AuditLogsTable() {
         limit: pagination.state.pageSize.toString(),
         ...(filters.action && filters.action !== "all" && { action: filters.action }),
         ...(filters.entityType && filters.entityType !== "all" && { entityType: filters.entityType }),
-        ...(filters.startDate && { startDate: filters.startDate.toISOString().split('T')[0] }),
-        ...(filters.endDate && { endDate: filters.endDate.toISOString().split('T')[0] }),
+        ...(filters.startDate && { startDate: formatDateForAPI(filters.startDate) }),
+        ...(filters.endDate && { endDate: formatDateForAPI(filters.endDate) }),
       });
 
       const response = await fetch(`/api/admin/audit-logs?${params}`);
@@ -124,6 +124,15 @@ export default function AuditLogsTable() {
     // Use consistent date formatting to avoid hydration mismatches
     const date = new Date(dateString);
     return date.toISOString().replace('T', ' ').substring(0, 19);
+  };
+
+  const formatDateForAPI = (date: Date) => {
+    // Format date in local timezone to avoid UTC conversion issues
+    // This ensures that when user selects "Aug 1" they get data from Aug 1, not July 31
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const getEntityTypeIcon = (entityType: string) => {
