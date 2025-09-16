@@ -23,6 +23,7 @@ import {
   Calendar,
   Target,
   Award,
+  FileText,
 } from "lucide-react";
 
 interface ProfileFormProps {
@@ -475,35 +476,34 @@ export default function ProfileForm({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Basic Information Section */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200/60 px-6 py-4">
+      <Card className="border-slate-200/60">
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-500 shadow-md">
-              <User className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-lg bg-blue-100">
+              <User className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">
+              <CardTitle className="text-lg font-semibold text-slate-900">
                 Basic Information
-              </h3>
-              <p className="text-sm text-slate-600">
+              </CardTitle>
+              <p className="text-sm text-slate-600 mt-1">
                 Your personal details and bio
               </p>
             </div>
           </div>
-        </div>
-
-        <div className="p-6 space-y-6">
+        </CardHeader>
+        <CardContent className="space-y-4">
           {/* Name Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label
                 htmlFor="firstName"
-                className="text-sm font-semibold text-slate-700 flex items-center gap-2"
+                className="text-sm font-medium text-slate-700 flex items-center gap-2"
               >
                 First Name
-                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                   Read-only
                 </span>
               </Label>
@@ -511,16 +511,16 @@ export default function ProfileForm({
                 id="firstName"
                 value={profile?.user?.firstName || ""}
                 disabled
-                className="h-12 bg-slate-50 border-slate-200 text-slate-600 font-medium"
+                className="h-10 bg-slate-50 border-slate-200 text-slate-600"
               />
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label
                 htmlFor="lastName"
-                className="text-sm font-semibold text-slate-700 flex items-center gap-2"
+                className="text-sm font-medium text-slate-700 flex items-center gap-2"
               >
                 Last Name
-                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                   Read-only
                 </span>
               </Label>
@@ -528,78 +528,71 @@ export default function ProfileForm({
                 id="lastName"
                 value={profile?.user?.lastName || ""}
                 disabled
-                className="h-12 bg-slate-50 border-slate-200 text-slate-600 font-medium"
+                className="h-10 bg-slate-50 border-slate-200 text-slate-600"
               />
             </div>
           </div>
 
           {/* Bio */}
-          <div className="space-y-3">
-            <Label htmlFor="bio" className="text-sm font-semibold text-slate-700">
+          <div className="space-y-2">
+            <Label htmlFor="bio" className="text-sm font-medium text-slate-700">
               Professional Bio
             </Label>
             <Textarea
               id="bio"
               value={formData.bio}
               onChange={(e) => handleInputChange("bio", e.target.value)}
-              placeholder="Write a brief professional bio that describes your background, expertise, and what you're passionate about..."
-              className="min-h-[120px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-base"
+              placeholder="Write a brief professional bio..."
+              className="min-h-[100px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400"
               maxLength={500}
             />
-            <div className="flex justify-between items-center text-xs text-slate-500">
-              <span>This will be visible to other users on your profile</span>
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>Visible to other users</span>
               <span>{formData.bio.length}/500</span>
             </div>
           </div>
 
           {/* Location */}
-          <div className="space-y-3">
-            <Label
-              htmlFor="location"
-              className="text-sm font-semibold text-slate-700"
-            >
+          <div className="space-y-2">
+            <Label htmlFor="location" className="text-sm font-medium text-slate-700">
               Location
             </Label>
             <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="location"
                 value={formData.location}
                 onChange={(e) => handleInputChange("location", e.target.value)}
                 placeholder="e.g., New York, NY, USA"
-                className="h-12 pl-12 border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-base"
+                className="h-10 pl-10 border-slate-200 focus:border-blue-400 focus:ring-blue-400"
               />
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Role-specific Information */}
       {profile?.user?.role === "MENTEE" ? (
-        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-slate-200/60 px-6 py-4">
+        <Card className="border-slate-200/60">
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-emerald-500 shadow-md">
-                <GraduationCap className="w-5 h-5 text-white" />
+              <div className="p-2 rounded-lg bg-emerald-100">
+                <GraduationCap className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <CardTitle className="text-lg font-semibold text-slate-900">
                   Education & Interests
-                </h3>
-                <p className="text-sm text-slate-600">
+                </CardTitle>
+                <p className="text-sm text-slate-600 mt-1">
                   Your academic background and areas of interest
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="p-6 space-y-6">
+          </CardHeader>
+          <CardContent className="space-y-4">
             {/* Education */}
-            <div className="space-y-3">
-              <Label
-                htmlFor="education"
-                className="text-sm font-semibold text-slate-700"
-              >
+            <div className="space-y-2">
+              <Label htmlFor="education" className="text-sm font-medium text-slate-700">
                 Educational Background
               </Label>
               <Input
@@ -607,46 +600,41 @@ export default function ProfileForm({
                 value={formData.education}
                 onChange={(e) => handleInputChange("education", e.target.value)}
                 placeholder="e.g., MD from Harvard Medical School, BS in Biology from MIT"
-                className="h-12 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 text-base"
+                className="h-10 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400"
               />
             </div>
 
             {/* Purpose */}
-            <div className="space-y-3">
-              <Label
-                htmlFor="purposeOfRegistration"
-                className="text-sm font-semibold text-slate-700"
-              >
+            <div className="space-y-2">
+              <Label htmlFor="purposeOfRegistration" className="text-sm font-medium text-slate-700">
                 Goals & Aspirations
               </Label>
               <Textarea
                 id="purposeOfRegistration"
                 value={formData.purposeOfRegistration}
-                onChange={(e) =>
-                  handleInputChange("purposeOfRegistration", e.target.value)
-                }
-                placeholder="What are your career goals? What kind of mentorship are you seeking? What do you hope to achieve?"
-                className="min-h-[120px] resize-none border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 text-base"
+                onChange={(e) => handleInputChange("purposeOfRegistration", e.target.value)}
+                placeholder="What are your career goals? What kind of mentorship are you seeking?"
+                className="min-h-[80px] resize-none border-slate-200 focus:border-emerald-400 focus:ring-emerald-400"
                 maxLength={300}
               />
-              <div className="flex justify-between items-center text-xs text-slate-500">
-                <span>Help mentors understand how they can best support you</span>
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>Help mentors understand your goals</span>
                 <span>{formData.purposeOfRegistration.length}/300</span>
               </div>
             </div>
 
             {/* Interests */}
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-slate-700">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-slate-700">
                 Areas of Interest
               </Label>
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-3">
+              <div className="space-y-3">
+                <div className="flex gap-2">
                   <Input
                     value={newInterest}
                     onChange={(e) => setNewInterest(e.target.value)}
                     placeholder="e.g., Cardiology, Research, Surgery"
-                    className="h-12 flex-1 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 text-base"
+                    className="h-10 flex-1 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -658,19 +646,20 @@ export default function ProfileForm({
                     type="button"
                     onClick={handleInterestAdd}
                     disabled={!newInterest.trim() || formData.interests.length >= 10}
-                    className="bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold shadow-md hover:from-emerald-600 hover:to-green-600 h-12 px-6 whitespace-nowrap"
+                    size="sm"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 h-10"
                   >
-                    Add Interest
+                    Add
                   </Button>
                 </div>
                 {formData.interests.length > 0 && (
-                  <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="bg-slate-50 rounded-lg p-3">
                     <div className="flex flex-wrap gap-2">
                       {formData.interests.map((interest, index) => (
                         <Badge
                           key={index}
                           variant="secondary"
-                          className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 px-3 py-1 text-sm"
+                          className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200"
                         >
                           {interest}
                           <button
@@ -684,96 +673,79 @@ export default function ProfileForm({
                       ))}
                     </div>
                     <p className="text-xs text-slate-500 mt-2">
-                      {formData.interests.length}/10 interests added
+                      {formData.interests.length}/10 interests
                     </p>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-slate-200/60 px-6 py-4">
+        <Card className="border-slate-200/60">
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-purple-500 shadow-md">
-                <Award className="w-5 h-5 text-white" />
+              <div className="p-2 rounded-lg bg-purple-100">
+                <Award className="w-4 h-4 text-purple-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <CardTitle className="text-lg font-semibold text-slate-900">
                   Professional Information
-                </h3>
-                <p className="text-sm text-slate-600">
+                </CardTitle>
+                <p className="text-sm text-slate-600 mt-1">
                   Your medical expertise and practice details
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="p-6 space-y-6">
+          </CardHeader>
+          <CardContent className="space-y-4">
             {/* Specialty Fields */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <Label
-                  htmlFor="specialty"
-                  className="text-sm font-semibold text-slate-700"
-                >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="specialty" className="text-sm font-medium text-slate-700">
                   Primary Specialty
                 </Label>
                 <Input
                   id="specialty"
                   value={formData.specialty}
                   onChange={(e) => handleInputChange("specialty", e.target.value)}
-                  placeholder="e.g., Urology, Internal Medicine, Surgery"
-                  className="h-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
+                  placeholder="e.g., Urology, Internal Medicine"
+                  className="h-10 border-slate-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
-              <div className="space-y-3">
-                <Label
-                  htmlFor="subSpecialty"
-                  className="text-sm font-semibold text-slate-700"
-                >
+              <div className="space-y-2">
+                <Label htmlFor="subSpecialty" className="text-sm font-medium text-slate-700">
                   Sub-specialty
                 </Label>
                 <Input
                   id="subSpecialty"
                   value={formData.subSpecialty}
-                  onChange={(e) =>
-                    handleInputChange("subSpecialty", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("subSpecialty", e.target.value)}
                   placeholder="e.g., Pediatric Urology, Oncology"
-                  className="h-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
+                  className="h-10 border-slate-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
             </div>
 
             {/* Workplace and Experience */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <Label
-                  htmlFor="workplace"
-                  className="text-sm font-semibold text-slate-700"
-                >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="workplace" className="text-sm font-medium text-slate-700">
                   Current Workplace
                 </Label>
                 <div className="relative">
-                  <Briefcase className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     id="workplace"
                     value={formData.workplace}
-                    onChange={(e) =>
-                      handleInputChange("workplace", e.target.value)
-                    }
-                    placeholder="e.g., Mayo Clinic, Johns Hopkins Hospital"
-                    className="h-12 pl-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
+                    onChange={(e) => handleInputChange("workplace", e.target.value)}
+                    placeholder="e.g., Mayo Clinic, Johns Hopkins"
+                    className="h-10 pl-10 border-slate-200 focus:border-purple-400 focus:ring-purple-400"
                   />
                 </div>
               </div>
-              <div className="space-y-3">
-                <Label
-                  htmlFor="yearsOfExperience"
-                  className="text-sm font-semibold text-slate-700"
-                >
+              <div className="space-y-2">
+                <Label htmlFor="yearsOfExperience" className="text-sm font-medium text-slate-700">
                   Years of Experience
                 </Label>
                 <Input
@@ -782,31 +754,24 @@ export default function ProfileForm({
                   min="0"
                   max="50"
                   value={formData.yearsOfExperience}
-                  onChange={(e) =>
-                    handleInputChange("yearsOfExperience", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("yearsOfExperience", e.target.value)}
                   placeholder="e.g., 10"
-                  className="h-12 border-slate-200 focus:border-purple-400 focus:ring-purple-400 text-base"
+                  className="h-10 border-slate-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
             </div>
 
             {/* Availability Status */}
-            <div className="space-y-3">
-              <Label
-                htmlFor="availabilityStatus"
-                className="text-sm font-semibold text-slate-700"
-              >
+            <div className="space-y-2">
+              <Label htmlFor="availabilityStatus" className="text-sm font-medium text-slate-700">
                 Mentorship Availability
               </Label>
               <Select
                 value={formData.availabilityStatus}
-                onValueChange={(value) =>
-                  handleInputChange("availabilityStatus", value)
-                }
+                onValueChange={(value) => handleInputChange("availabilityStatus", value)}
               >
-                <SelectTrigger className="h-12 border-slate-200 focus:border-purple-400 text-base">
-                  <SelectValue placeholder="Select your availability" />
+                <SelectTrigger className="h-10 border-slate-200 focus:border-purple-400">
+                  <SelectValue placeholder="Select availability" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Available">
@@ -824,31 +789,31 @@ export default function ProfileForm({
                   <SelectItem value="Unavailable">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      Unavailable - Not mentoring currently
+                      Unavailable - Not mentoring
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-slate-500">
-                This helps mentees understand your current availability for new mentoring relationships
+                Helps mentees understand your availability
               </p>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* File Upload Section */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg shadow-slate-900/5 overflow-hidden">
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-slate-200/60 px-6 py-4">
+      <Card className="border-slate-200/60">
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-orange-500 shadow-md">
-              <Target className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-lg bg-orange-100">
+              <Target className="w-4 h-4 text-orange-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">
+              <CardTitle className="text-lg font-semibold text-slate-900">
                 Files & Documents
-              </h3>
-              <p className="text-sm text-slate-600">
+              </CardTitle>
+              <p className="text-sm text-slate-600 mt-1">
                 {profile?.user?.role === "MENTEE" 
                   ? "Upload your profile picture and resume"
                   : "Upload your professional profile picture"
@@ -856,232 +821,198 @@ export default function ProfileForm({
               </p>
             </div>
           </div>
-        </div>
-
-        <div className="p-6">
-          <div className="space-y-8">
-            {/* Avatar Upload - Full Width */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded-lg bg-blue-100">
-                  <User className="w-4 h-4 text-blue-600" />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Avatar Upload */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded bg-blue-100">
+                <User className="w-3 h-3 text-blue-600" />
+              </div>
+              <Label className="text-sm font-medium text-slate-700">
+                Profile Picture
+              </Label>
+            </div>
+            
+            {getAvatarUrl() && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <p className="text-sm font-medium text-green-800">Profile Picture Uploaded</p>
+                    </div>
+                    {formData.avatarFileName && (
+                      <p className="text-xs text-green-600 truncate" title={formData.avatarFileName}>
+                        {formData.avatarFileName}
+                      </p>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const avatarUrl = getAvatarUrl();
+                          if (avatarUrl) {
+                            window.open(avatarUrl, '_blank');
+                          }
+                        }}
+                        className="text-green-700 border-green-300 hover:bg-green-100 text-xs h-7 px-2"
+                      >
+                        Preview
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAvatarDelete}
+                        disabled={isDeletingAvatar}
+                        className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 text-xs h-7 px-2"
+                      >
+                        {isDeletingAvatar ? "Removing..." : "Remove"}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <Label className="text-base font-semibold text-slate-700">
-                  Profile Picture
+              </div>
+            )}
+            <FileUpload
+              key={`avatar-${formData.avatar || 'empty'}`}
+              onFileSelect={setSelectedAvatarFile}
+              onFileUpload={handleAvatarUpload}
+              selectedFile={selectedAvatarFile}
+              uploadedFileUrl={getAvatarUrl()}
+              uploadedFileName={formData.avatarFileName}
+              isUploading={isUploadingAvatar}
+              isDeleting={isDeletingAvatar}
+              accept="image/*"
+              maxSize={5}
+              type="avatar"
+            />
+          </div>
+
+          {/* Resume Upload (Mentee only) */}
+          {profile?.user?.role === "MENTEE" && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded bg-purple-100">
+                  <FileText className="w-3 h-3 text-purple-600" />
+                </div>
+                <Label className="text-sm font-medium text-slate-700">
+                  Resume/CV
                 </Label>
               </div>
               
-              <div className="max-w-2xl mx-auto space-y-4">
-                {getAvatarUrl() && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-green-500 flex items-center justify-center shadow-lg flex-shrink-0">
-                        <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              {getResumeUrl() && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <p className="text-sm font-medium text-blue-800">Resume Uploaded</p>
                       </div>
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                          <p className="text-sm font-semibold text-green-800 truncate">
-                            Profile Picture Uploaded
-                          </p>
-                        </div>
-                        {formData.avatarFileName && (
-                          <p className="text-xs text-green-600 mb-2 truncate" title={formData.avatarFileName}>
-                            {formData.avatarFileName}
-                          </p>
-                        )}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              const avatarUrl = getAvatarUrl();
-                              if (avatarUrl) {
-                                try {
-                                  // If it's already a direct URL, open it
-                                  if (avatarUrl.startsWith('http') && !avatarUrl.includes('/api/download')) {
-                                    window.open(avatarUrl, '_blank');
-                                    return;
-                                  }
-                                  
-                                  // Otherwise, fetch the download URL from our API
-                                  const response = await fetch(avatarUrl, {
-                                    credentials: 'include',
-                                  });
-                                  
-                                  if (response.ok) {
-                                    const data = await response.json();
-                                    if (data.downloadUrl) {
-                                      window.open(data.downloadUrl, '_blank');
-                                    } else {
-                                      alert('Could not get download URL for preview');
-                                    }
-                                  } else {
-                                    const errorData = await response.json();
-                                    alert(`Preview failed: ${errorData.error || 'Unknown error'}`);
-                                  }
-                                } catch (error) {
-                                  console.error('Preview error:', error);
-                                  alert('Failed to open preview. Please check your internet connection.');
-                                }
-                              }
-                            }}
-                            className="text-green-700 border-green-300 hover:bg-green-100 text-xs flex-shrink-0"
-                          >
-                            Preview
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAvatarDelete}
-                            disabled={isDeletingAvatar}
-                            className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 text-xs flex-shrink-0"
-                          >
-                            {isDeletingAvatar ? "Removing..." : "Remove"}
-                          </Button>
-                        </div>
+                      {formData.resumeFileName && (
+                        <p className="text-xs text-blue-600 truncate" title={formData.resumeFileName}>
+                          {formData.resumeFileName}
+                        </p>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const resumeUrl = getResumeUrl();
+                            if (resumeUrl) {
+                              window.open(resumeUrl, '_blank');
+                            }
+                          }}
+                          className="text-blue-700 border-blue-300 hover:bg-blue-100 text-xs h-7 px-2"
+                        >
+                          Preview
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResumeDelete}
+                          disabled={isDeletingResume}
+                          className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 text-xs h-7 px-2"
+                        >
+                          {isDeletingResume ? "Removing..." : "Remove"}
+                        </Button>
                       </div>
                     </div>
                   </div>
-                )}
-                <FileUpload
-                  key={`avatar-${formData.avatar || 'empty'}`}
-                  onFileSelect={setSelectedAvatarFile}
-                  onFileUpload={handleAvatarUpload}
-                  selectedFile={selectedAvatarFile}
-                  uploadedFileUrl={getAvatarUrl()}
-                  uploadedFileName={formData.avatarFileName}
-                  isUploading={isUploadingAvatar}
-                  isDeleting={isDeletingAvatar}
-                  accept="image/*"
-                  maxSize={5}
-                  type="avatar"
-                />
-              </div>
+                </div>
+              )}
+              <FileUpload
+                key={`resume-${formData.resume || 'empty'}`}
+                onFileSelect={setSelectedResumeFile}
+                onFileUpload={handleResumeUpload}
+                selectedFile={selectedResumeFile}
+                uploadedFileUrl={getResumeUrl()}
+                uploadedFileName={formData.resumeFileName}
+                isUploading={isUploadingResume}
+                isDeleting={isDeletingResume}
+                accept=".pdf,.doc,.docx"
+                maxSize={10}
+                type="resume"
+              />
             </div>
+          )}
+        </CardContent>
+      </Card>
 
-            {/* Resume Upload (Mentee only) - Full Width */}
-            {profile?.user?.role === "MENTEE" && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-purple-100">
-                    <FileText className="w-4 h-4 text-purple-600" />
-                  </div>
-                  <Label className="text-base font-semibold text-slate-700">
-                    Resume/CV
-                  </Label>
-                </div>
-                
-                <div className="max-w-2xl mx-auto space-y-4">
-                  {getResumeUrl() && (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
-                      <div className="flex items-start gap-3 sm:gap-4">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg flex-shrink-0">
-                          <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                            <p className="text-sm font-semibold text-blue-800 truncate">
-                              Resume Uploaded
-                            </p>
-                          </div>
-                          {formData.resumeFileName && (
-                            <p className="text-xs text-blue-600 mb-2 truncate" title={formData.resumeFileName}>
-                              {formData.resumeFileName}
-                            </p>
-                          )}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => getResumeUrl() && window.open(getResumeUrl(), '_blank')}
-                              className="text-blue-700 border-blue-300 hover:bg-blue-100 text-xs flex-shrink-0"
-                            >
-                              Preview
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleResumeDelete}
-                              disabled={isDeletingResume}
-                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 text-xs flex-shrink-0"
-                            >
-                              {isDeletingResume ? "Removing..." : "Remove"}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <FileUpload
-                    key={`resume-${formData.resume || 'empty'}`}
-                    onFileSelect={setSelectedResumeFile}
-                    onFileUpload={handleResumeUpload}
-                    selectedFile={selectedResumeFile}
-                    uploadedFileUrl={getResumeUrl()}
-                    uploadedFileName={formData.resumeFileName}
-                    isUploading={isUploadingResume}
-                    isDeleting={isDeletingResume}
-                    accept=".pdf,.doc,.docx"
-                    maxSize={10}
-                    type="resume"
-                  />
-                </div>
-              </div>
-            )}
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="flex-1 h-10 border-slate-300 text-slate-700 hover:bg-slate-50"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          onClick={handleSubmit}
+          disabled={isSubmitting || isUploadingAvatar || isUploadingResume}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10 disabled:opacity-50"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+              Saving...
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Save Profile
+            </div>
+          )}
+        </Button>
+      </div>
+      
+      {/* Progress indicator */}
+      {(isUploadingAvatar || isUploadingResume || isSubmitting) && (
+        <div className="text-center pt-3">
+          <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
+            <div className="w-3 h-3 border border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+            {isUploadingAvatar && "Uploading profile picture..."}
+            {isUploadingResume && "Uploading resume..."}
+            {isSubmitting && "Saving profile changes..."}
           </div>
         </div>
-      </div>
-
-      {/* Action Buttons - Sticky Footer */}
-      <div className="bg-white border-t border-slate-200/60 p-6 rounded-2xl mt-2">
-        <div className="flex flex-col sm:flex-row gap-4 max-w-md ml-auto">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="flex-1 h-12 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold transition-all duration-200"
-          >
-            Cancel Changes
-          </Button>
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isSubmitting || isUploadingAvatar || isUploadingResume}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-indigo-700 h-12 transition-all duration-200 disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                Saving Profile...
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2">
-                <User className="w-4 h-4" />
-                Save Profile
-              </div>
-            )}
-          </Button>
-        </div>
-        
-        {/* Progress indicator */}
-        {(isUploadingAvatar || isUploadingResume || isSubmitting) && (
-          <div className="mt-4 text-center">
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
-              <div className="w-3 h-3 border border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-              {isUploadingAvatar && "Uploading profile picture..."}
-              {isUploadingResume && "Uploading resume..."}
-              {isSubmitting && "Saving your profile changes..."}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

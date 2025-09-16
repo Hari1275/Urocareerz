@@ -1617,6 +1617,18 @@ export default function MenteeDashboardPage() {
       <SharedHeader
         onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         isMobileMenuOpen={isMobileSidebarOpen}
+        onEditProfile={async () => {
+          setShowProfileModal(true);
+          try {
+            const res = await fetch("/api/profile", { credentials: "include" });
+            if (res.ok) {
+              const data = await res.json();
+              setProfile(data.profile || null);
+            }
+          } catch (e) {
+            console.error("Failed to load profile", e);
+          }
+        }}
       />
 
       <div className="max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -3066,60 +3078,76 @@ export default function MenteeDashboardPage() {
 
       {/* Apply Modal */}
       <Dialog open={showApplyModal} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-lg lg:max-w-xl">
-          <DialogHeader className="text-center space-y-2">
-            <div className="mx-auto w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <FileText className="h-6 w-6 text-white" />
-            </div>
-            <div className="space-y-1">
-              <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">
-                Apply for Position
-              </DialogTitle>
-              <DialogDescription className="text-slate-600 font-medium text-sm">
-                {selectedOpportunityForApply?.title}
-              </DialogDescription>
+        <DialogContent className="sm:max-w-lg max-w-[95vw] max-h-[90vh] overflow-y-auto border-slate-200/60">
+          <DialogHeader className="space-y-3 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FileText className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DialogTitle className="text-lg font-semibold text-slate-900 leading-tight">
+                  Apply for Position
+                </DialogTitle>
+                <DialogDescription className="text-sm text-slate-600 truncate" title={selectedOpportunityForApply?.title}>
+                  {selectedOpportunityForApply?.title}
+                </DialogDescription>
+              </div>
             </div>
           </DialogHeader>
 
-          <form onSubmit={handleApplySubmit} className="space-y-5 mt-4">
+          <form onSubmit={handleApplySubmit} className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label
                 htmlFor="coverLetter"
-                className="text-sm font-semibold text-slate-800 flex items-center gap-2"
+                className="text-sm font-medium text-slate-700 flex items-center gap-2"
               >
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 Cover Letter
-                <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">Optional</span>
+                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Optional</span>
               </Label>
               <Textarea
                 id="coverLetter"
                 placeholder="Share your motivation, relevant experience, and why you're interested in this opportunity..."
                 value={coverLetter}
                 onChange={(e) => setCoverLetter(e.target.value)}
-                className="min-h-[100px] max-h-[120px] resize-none border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-slate-50/50 placeholder:text-slate-400"
+                className="min-h-[80px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400 placeholder:text-slate-400"
               />
             </div>
 
             <div className="space-y-2">
               <Label
                 htmlFor="cvFile"
-                className="text-sm font-semibold text-slate-800 flex items-center gap-2"
+                className="text-sm font-medium text-slate-700 flex items-center gap-2"
               >
-                <div className="w-2 h-2 rounded-full bg-red-500"></div>
                 CV/Resume
-                <span className="text-xs font-normal text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Required</span>
+                <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">Required</span>
               </Label>
-              <div className="relative">
-                <div className="w-full h-12 border border-slate-200 rounded-lg bg-slate-50/50 flex items-center overflow-hidden">
-                  <label
-                    htmlFor="cvFile"
-                    className="inline-flex items-center justify-center h-full px-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-sm rounded-none rounded-l-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 cursor-pointer border-0"
-                  >
-                    Choose File
-                  </label>
-                  <div className="flex-1 px-4 h-full flex items-center text-sm text-slate-700">
-                    {cvFile ? cvFile.name : "No file chosen"}
+              
+              {/* Compact File Upload */}
+              <div className="relative border-2 border-dashed border-slate-300 rounded-lg p-4 hover:border-slate-400 transition-colors cursor-pointer" onClick={() => document.getElementById('cvFile')?.click()}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-5 w-5 text-slate-600" />
                   </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-700">
+                      {cvFile ? cvFile.name : "Upload CV/Resume"}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {cvFile ? `${(cvFile.size / 1024 / 1024).toFixed(2)} MB` : "Click to select file (Max 10MB)"}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      document.getElementById('cvFile')?.click();
+                    }}
+                  >
+                    Browse
+                  </Button>
                 </div>
                 <Input
                   id="cvFile"
@@ -3130,37 +3158,37 @@ export default function MenteeDashboardPage() {
                   required
                 />
               </div>
-              <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-slate-400"></span>
+              
+              <p className="text-xs text-slate-500">
                 PDF, DOC, DOCX (Max 10MB)
               </p>
             </div>
 
-            <div className="flex gap-3 pt-4 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleCloseModal}
-                className="flex-1 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg font-medium"
+                className="flex-1 h-10 border-slate-300 text-slate-700 hover:bg-slate-50"
                 disabled={applyLoading}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg font-medium"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10 disabled:opacity-50"
                 disabled={applyLoading || !cvFile}
               >
                 {applyLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                     Submitting...
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
+                  <div className="flex items-center gap-2">
+                    <Send className="h-4 w-4" />
                     Submit Application
-                  </>
+                  </div>
                 )}
               </Button>
             </div>
@@ -3986,7 +4014,7 @@ export default function MenteeDashboardPage() {
 
       {/* Profile Editing Modal */}
       <Dialog open={showProfileModal} onOpenChange={handleCloseProfileModal}>
-        <DialogContent className="sm:max-w-4xl w-[95vw] max-w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl w-[95vw] max-w-[95vw] lg:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
               <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500">

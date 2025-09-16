@@ -207,51 +207,50 @@ export default function FileUpload({
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* File Upload Area */}
+    <div className={`space-y-3 ${className}`}>
+      {/* Compact File Upload Area */}
       <Card
-        className={`p-8 sm:p-12 border-2 border-dashed transition-colors ${
+        className={`p-4 border-2 border-dashed transition-colors cursor-pointer ${
           dragActive
             ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 hover:border-gray-400"
+            : "border-slate-300 hover:border-slate-400 hover:bg-slate-50"
         }`}
+        onClick={() => fileInputRef.current?.click()}
       >
         <div
-          className="flex flex-col items-center justify-center space-y-6 min-h-[200px]"
+          className="flex items-center justify-center space-x-4 min-h-[80px]"
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-100 to-indigo-100 flex items-center justify-center">
-              <Upload className="h-8 w-8 text-blue-600" />
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+              <Upload className="h-5 w-5 text-slate-600" />
             </div>
-            <div className="text-center max-w-md">
-              <p className="text-lg font-semibold text-gray-700 mb-2">
+            <div className="text-left">
+              <p className="text-sm font-medium text-slate-700">
                 {isImage ? "Upload Profile Picture" : "Upload Resume"}
               </p>
-              <p className="text-sm text-gray-500 mb-1">
+              <p className="text-xs text-slate-500">
                 {isImage
-                  ? "Drag and drop an image here, or click to select"
-                  : "Drag and drop a file here, or click to select"}
-              </p>
-              <p className="text-xs text-gray-400">
-                {isImage
-                  ? `Max size: ${maxSize}MB (JPEG, PNG, GIF)`
-                  : `Max size: ${maxSize}MB (${accept})`}
+                  ? `Click to select image (Max ${maxSize}MB)`
+                  : `Click to select file (Max ${maxSize}MB)`}
               </p>
             </div>
           </div>
-
           <Button
             type="button"
             variant="outline"
-            onClick={() => fileInputRef.current?.click()}
+            size="sm"
             disabled={isUploading}
-            className="px-8 py-3 text-base font-semibold"
+            className="h-8 px-3 text-xs font-medium whitespace-nowrap"
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
           >
-            Select {fileTypeText}
+            Browse
           </Button>
 
           <input
@@ -264,79 +263,63 @@ export default function FileUpload({
         </div>
       </Card>
 
-      {/* Selected File Display */}
+      {/* Compact Selected File Display */}
       {selectedFile && (
-        <Card className="p-4 border-2 border-blue-200 bg-blue-50">
-          <div className="flex items-start gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+        <Card className="p-3 border border-emerald-200 bg-emerald-50">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               {isImage && previewUrl ? (
                 <div className="flex-shrink-0">
                   <img
                     src={previewUrl}
                     alt="Preview"
-                    className="h-12 w-12 sm:h-16 sm:w-16 object-cover rounded-lg border"
+                    className="h-8 w-8 object-cover rounded border"
                   />
                 </div>
               ) : (
-                <FileText className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                <FileText className="h-5 w-5 text-emerald-600 flex-shrink-0" />
               )}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-medium text-gray-900 truncate" title={selectedFile.name}>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-emerald-900 truncate" title={selectedFile.name}>
                   {selectedFile.name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-emerald-600">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  {!autoUpload && " • Ready to upload"}
                 </p>
-                {!autoUpload && (
-                  <p className="text-xs text-blue-600 font-medium mt-1">
-                    ⚠️ File selected but not uploaded yet
-                  </p>
-                )}
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
-              {/* Show Upload button again since auto-upload is removed */}
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={onFileUpload}
-                disabled={isUploading}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 text-xs whitespace-nowrap"
-                style={{ display: autoUpload ? 'none' : 'inline-flex' }}
-              >
-                {isUploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    📤 Upload {isImage ? 'Image' : 'Resume'}
-                  </>
-                )}
-              </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {!autoUpload && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={onFileUpload}
+                  disabled={isUploading}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-3 text-xs font-medium"
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    "Upload"
+                  )}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleRemoveFile}
                 disabled={isUploading}
-                className="px-2 py-2"
+                className="h-7 w-7 p-0 border-emerald-300 hover:bg-emerald-100"
               >
                 <X className="h-3 w-3" />
               </Button>
             </div>
           </div>
-          
-          {/* Additional call-to-action */}
-          {!isUploading && !autoUpload && (
-            <div className="mt-3 p-2 bg-blue-100 rounded-md">
-              <p className="text-xs text-blue-800 font-medium">
-                💡 Click "Upload Resume" to upload your file before submitting the application
-              </p>
-            </div>
-          )}
         </Card>
       )}
 

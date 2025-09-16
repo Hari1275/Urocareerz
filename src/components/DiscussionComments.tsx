@@ -123,21 +123,21 @@ export default function DiscussionComments({
   const tree = useMemo(() => buildCommentTree(comments), [comments]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {tree.length === 0 ? (
-        <div className="text-center py-12 bg-gradient-to-b from-gray-50 to-white rounded-lg border border-gray-100">
-          <div className="flex flex-col items-center space-y-3">
-            <div className="p-3 bg-blue-50 rounded-full">
-              <MessageCircle className="h-8 w-8 text-blue-500" />
+        <div className="text-center py-8 bg-gradient-to-br from-slate-50/50 to-white rounded-xl border border-slate-200/60 shadow-sm">
+          <div className="flex flex-col items-center space-y-2.5">
+            <div className="p-2.5 bg-blue-50 rounded-full">
+              <MessageCircle className="h-6 w-6 text-blue-500" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">No comments yet</h3>
-              <p className="text-gray-600 mt-1">Be the first to share your thoughts!</p>
+              <h3 className="text-base font-semibold text-slate-900">No comments yet</h3>
+              <p className="text-sm text-slate-600 mt-0.5">Be the first to share your thoughts!</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {tree.map((c) => (
             <CommentNode
               key={c.id}
@@ -206,24 +206,25 @@ const CommentNode = memo(function CommentNode({
   return (
     <div className={cn(
       "relative",
-      depth > 0 && "ml-2 pl-3 border-l-2 border-gray-100 sm:ml-4 sm:pl-4 md:ml-6 md:pl-6"
+      depth > 0 && "ml-2 pl-3 border-l-2 border-slate-200 sm:ml-3 sm:pl-3 md:ml-4 md:pl-4"
     )}>
       <div className={cn(
-        "group relative transition-all duration-300 rounded-lg",
+        "group relative transition-all duration-200 rounded-xl",
         depth === 0 
-          ? "bg-white shadow-sm hover:shadow-md p-2 sm:p-3"
-          : "hover:bg-gray-50/50 p-1"
+          ? "bg-white/80 backdrop-blur-sm border border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300/70 p-3 sm:p-4"
+          : "hover:bg-slate-50/40 p-2 rounded-lg"
       )}>
-        <div className="flex space-x-2 sm:space-x-3">
+        <div className="flex space-x-3 sm:space-x-3.5">
           {/* Avatar Section */}
           <div className="flex-shrink-0">
             <div className="relative">
               <Avatar className={cn(
-                "h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-white shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:shadow-md",
-                depth > 0 && "h-6 w-6 sm:h-8 sm:w-8"
+                "ring-2 ring-white shadow-sm transition-all duration-200 group-hover:ring-slate-200",
+                depth === 0 ? "h-9 w-9 sm:h-10 sm:w-10" : "h-7 w-7 sm:h-8 sm:w-8"
               )}>
                 <AvatarFallback className={cn(
-                  "font-medium text-xs sm:text-sm",
+                  "font-semibold transition-colors duration-200",
+                  depth === 0 ? "text-sm" : "text-xs sm:text-sm",
                   avatarColors.background,
                   avatarColors.foreground
                 )}>
@@ -231,8 +232,8 @@ const CommentNode = memo(function CommentNode({
                 </AvatarFallback>
               </Avatar>
               {depth === 0 && node.replies.length > 0 && (
-                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
-                  {node.replies.length}
+                <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center border-2 border-white font-medium">
+                  {node.replies.length > 99 ? '99+' : node.replies.length}
                 </div>
               )}
             </div>
@@ -241,18 +242,23 @@ const CommentNode = memo(function CommentNode({
           {/* Content Section */}
           <div className="flex-1 min-w-0">
             {/* Header */}
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex flex-wrap items-center space-x-2">
-                <span className="font-semibold text-gray-900 text-sm sm:text-base">
-                  {node.author.firstName} {node.author.lastName}
-                </span>
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
-                >
-                  {node.author.role}
-                </Badge>
-                <span className="text-xs text-gray-500 flex items-center space-x-1 mt-0.5 sm:mt-0">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "font-semibold text-slate-900 tracking-tight",
+                    depth === 0 ? "text-sm sm:text-base" : "text-sm"
+                  )}>
+                    {node.author.firstName} {node.author.lastName}
+                  </span>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs px-2 py-0.5 bg-blue-50/80 text-blue-700 border-blue-200/60 font-medium"
+                  >
+                    {node.author.role}
+                  </Badge>
+                </div>
+                <span className="text-xs text-slate-500 flex items-center gap-1.5">
                   <Clock className="h-3 w-3" />
                   <span title={new Date(node.createdAt).toLocaleString()}>
                     {formatRelativeTime(node.createdAt)}
@@ -260,11 +266,14 @@ const CommentNode = memo(function CommentNode({
                 </span>
               </div>
               
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full font-semibold"
+                  className={cn(
+                    "h-7 px-2.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-all duration-200",
+                    isReplying && "text-blue-600 bg-blue-50"
+                  )}
                   onClick={() => setIsReplying(!isReplying)}
                 >
                   <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
@@ -273,7 +282,7 @@ const CommentNode = memo(function CommentNode({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-7 px-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200"
                   aria-label="More options"
                 >
                   <MoreVertical className="h-3.5 w-3.5" />
@@ -282,51 +291,59 @@ const CommentNode = memo(function CommentNode({
             </div>
 
             {/* Content */}
-            <div className="text-gray-700 leading-relaxed prose prose-sm max-w-none">
+            <div className={cn(
+              "text-slate-700 leading-relaxed prose prose-sm max-w-none",
+              depth === 0 ? "text-sm sm:text-base" : "text-sm"
+            )}>
               {node.content}
             </div>
 
             {/* Reply Form */}
             {isReplying && canReply && (
-              <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-500">
-                <div className="flex space-x-3">
-                  <div className="flex-shrink-0">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className={cn(currentUserAvatarColors ? [currentUserAvatarColors.background, currentUserAvatarColors.foreground] : "bg-gray-400")}>
-                        {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <Textarea
-                      value={reply}
-                      onChange={(e) => setReply(e.target.value)}
-                      placeholder={`Reply to ${node.author.firstName}...`}
-                      className="min-h-[80px] resize-none border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 text-sm"
-                      autoFocus
-                    />
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setIsReplying(false);
-                          setReply("");
-                        }}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        <X className="h-3.5 w-3.5 mr-1" />
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleReply}
-                        disabled={!reply.trim() || isSubmitting}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        <Send className="h-3.5 w-3.5 mr-1" />
-                        {isSubmitting ? "Posting..." : "Reply"}
-                      </Button>
+              <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="bg-slate-50/40 rounded-lg p-3 border border-slate-200/50">
+                  <div className="flex space-x-3">
+                    <div className="flex-shrink-0">
+                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-1 ring-slate-200">
+                        <AvatarFallback className={cn(
+                          "text-xs font-medium",
+                          currentUserAvatarColors ? [currentUserAvatarColors.background, currentUserAvatarColors.foreground] : "bg-slate-400 text-white"
+                        )}>
+                          {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="flex-1 space-y-2.5">
+                      <Textarea
+                        value={reply}
+                        onChange={(e) => setReply(e.target.value)}
+                        placeholder={`Reply to ${node.author.firstName}...`}
+                        className="min-h-[70px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 text-sm bg-white/80 backdrop-blur-sm"
+                        autoFocus
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setIsReplying(false);
+                            setReply("");
+                          }}
+                          className="h-8 text-slate-600 hover:text-slate-800 hover:bg-white/60"
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" />
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleReply}
+                          disabled={!reply.trim() || isSubmitting}
+                          className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                        >
+                          <Send className="h-3.5 w-3.5 mr-1" />
+                          {isSubmitting ? "Posting..." : "Reply"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -335,13 +352,13 @@ const CommentNode = memo(function CommentNode({
 
             {/* Replies */}
             {node.replies.length > 0 && (
-              <div className="mt-3 space-y-2">
+              <div className="mt-3 space-y-2.5">
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium transition-all duration-200 hover:bg-blue-50 px-2 py-1 rounded-md -ml-2"
                 >
                   <div className={cn(
-                    "w-2 h-2 border-r border-b border-current transform transition-transform",
+                    "w-2 h-2 border-r-2 border-b-2 border-current transform transition-transform duration-200",
                     isExpanded ? "rotate-45" : "-rotate-45"
                   )} />
                   <span>
@@ -350,7 +367,7 @@ const CommentNode = memo(function CommentNode({
                 </button>
                 
                 {isExpanded && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
                     {node.replies.map((r) => (
                       <CommentNode
                         key={r.id}

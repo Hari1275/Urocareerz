@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyEdgeToken } from "@/lib/edge-auth";
+import { 
+  sendMenteeOpportunitySubmissionConfirmationEmail,
+  sendAdminOpportunitySubmissionNotificationEmail 
+} from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -109,6 +113,58 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Send email notifications to both mentee and admin
+    try {
+      const menteeName = 
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email;
+      const opportunityTypeName = opportunity.opportunityType?.name || "Unknown";
+
+      // Send confirmation email to mentee
+      const menteeEmailResult = await sendMenteeOpportunitySubmissionConfirmationEmail({
+        menteeEmail: user.email,
+        menteeName: menteeName,
+        opportunityTitle: opportunity.title,
+        opportunityType: opportunityTypeName,
+      });
+
+      if (!menteeEmailResult.success) {
+        console.error(
+          "Failed to send mentee opportunity submission confirmation email:",
+          menteeEmailResult.error
+        );
+      } else {
+        console.log(
+          "Mentee opportunity submission confirmation email sent successfully to:",
+          user.email
+        );
+      }
+
+      // Send notification email to admin
+      const adminEmailResult = await sendAdminOpportunitySubmissionNotificationEmail({
+        adminEmail: "urocareerz@gmail.com",
+        menteeName: menteeName,
+        menteeEmail: user.email,
+        opportunityTitle: opportunity.title,
+        opportunityType: opportunityTypeName,
+        description: opportunity.description,
+        location: opportunity.location || undefined,
+      });
+
+      if (!adminEmailResult.success) {
+        console.error(
+          "Failed to send admin opportunity submission notification email:",
+          adminEmailResult.error
+        );
+      } else {
+        console.log(
+          "Admin opportunity submission notification email sent successfully to: urocareerz@gmail.com"
+        );
+      }
+    } catch (emailError) {
+      console.error("Error sending opportunity submission email notifications:", emailError);
+      // Don't fail the request if email fails, just log it
+    }
 
     return NextResponse.json({
       message: "Opportunity submitted successfully",

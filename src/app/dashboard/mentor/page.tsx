@@ -3902,7 +3902,7 @@ export default function MentorDashboardPage() {
 
       {/* Enhanced Profile Editing Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className="max-w-6xl w-[98vw] sm:w-[95vw] max-h-[98vh] overflow-hidden p-0 bg-gradient-to-br from-slate-50 to-white">
+        <DialogContent className="max-w-3xl w-[95vw] sm:w-[90vw] max-h-[95vh] overflow-hidden p-0 bg-gradient-to-br from-slate-50 to-white">
           {/* Modal Header - Sticky */}
           <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 px-6 py-4">
             <div className="flex items-center justify-between">
@@ -3932,7 +3932,7 @@ export default function MentorDashboardPage() {
           </div>
           
           {/* Modal Body - Scrollable */}
-          <div className="overflow-y-auto max-h-[calc(98vh-120px)] px-6 py-6">
+          <div className="overflow-y-auto max-h-[calc(95vh-120px)] px-6 py-6">
             <ProfileForm
               profile={profile ? { ...profile, user } : { user }}
               onSubmit={async (profileData: any) => {

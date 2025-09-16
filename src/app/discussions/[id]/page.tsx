@@ -261,21 +261,19 @@ export default function DiscussionThreadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-slate-100/50">
       <SharedHeader />
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 lg:gap-6">
           {/* Left Sidebar - Navigation */}
           <div className="lg:col-span-3">
-            <div className="sticky top-24 space-y-6">
-              {/* Removed back navigation for consistency */}
-
+            <div className="sticky top-20 space-y-4 sm:space-y-5">
               {/* Discussion Info */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardHeader>
+              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl">
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold text-slate-900">
+                    <CardTitle className="text-base font-semibold text-slate-900 tracking-tight">
                       Discussion Info
                     </CardTitle>
                     {canManageStatus && (
@@ -285,10 +283,10 @@ export default function DiscussionThreadPage() {
                             variant="ghost"
                             size="sm"
                             onClick={openStatusDialog}
-                            className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                            className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                             title="Manage Status"
                           >
-                            <Settings className="h-4 w-4" />
+                            <Settings className="h-3.5 w-3.5" />
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-md">
@@ -357,21 +355,21 @@ export default function DiscussionThreadPage() {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="bg-white/50">
+                <CardContent className="space-y-3.5">
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className="bg-slate-50/80 border-slate-200 text-slate-700 font-medium text-xs">
                       {categoryLabels[thread.category] || thread.category}
                     </Badge>
                     <Badge
                       variant="outline"
                       className={
                         thread.status === "ACTIVE"
-                          ? "bg-green-100 text-green-800 border-green-200"
+                          ? "bg-emerald-50/80 text-emerald-700 border-emerald-200 font-medium text-xs"
                           : thread.status === "CLOSED"
-                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          ? "bg-amber-50/80 text-amber-700 border-amber-200 font-medium text-xs"
                           : thread.status === "ARCHIVED"
-                          ? "bg-gray-100 text-gray-800 border-gray-200"
-                          : "bg-white/50"
+                          ? "bg-slate-50/80 text-slate-700 border-slate-200 font-medium text-xs"
+                          : "bg-slate-50/80 border-slate-200 text-slate-700 font-medium text-xs"
                       }
                     >
                       {thread.status === "ACTIVE" && "🟢 Active"}
@@ -381,15 +379,15 @@ export default function DiscussionThreadPage() {
                     </Badge>
                   </div>
 
-                  <div className="space-y-2 text-sm text-slate-600">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>
+                  <div className="space-y-2.5 text-sm text-slate-600">
+                    <div className="flex items-center gap-2.5">
+                      <User className="h-3.5 w-3.5 text-slate-500" />
+                      <span className="font-medium">
                         {thread.author.firstName} {thread.author.lastName}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
+                    <div className="flex items-center gap-2.5">
+                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
                       <span suppressHydrationWarning>
                         {new Date(thread.createdAt).toLocaleDateString(
                           "en-US",
@@ -401,12 +399,12 @@ export default function DiscussionThreadPage() {
                         )}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
+                    <div className="flex items-center gap-2.5">
+                      <Eye className="h-3.5 w-3.5 text-slate-500" />
                       <span>{thread.viewCount ?? 0} views</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <MessageCircle className="h-4 w-4" />
+                    <div className="flex items-center gap-2.5">
+                      <MessageCircle className="h-3.5 w-3.5 text-slate-500" />
                       <span>
                         {thread.comments ? thread.comments.length : 0} comments
                       </span>
@@ -419,28 +417,28 @@ export default function DiscussionThreadPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-6">
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-5">
               {/* Thread Content */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">
                     {thread.title}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="prose max-w-none">
-                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                <CardContent className="space-y-4">
+                  <div className="prose prose-slate max-w-none">
+                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
                       {thread.content}
                     </p>
                   </div>
 
                   {thread.tags && thread.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-slate-200">
+                    <div className="flex flex-wrap gap-1.5 pt-4 border-t border-slate-200/60">
                       {thread.tags.map((tag, index) => (
                         <Badge
                           key={index}
                           variant="outline"
-                          className="text-xs bg-blue-50 border-blue-200 text-blue-700"
+                          className="text-xs bg-blue-50/80 border-blue-200/60 text-blue-700 font-medium"
                         >
                           #{tag}
                         </Badge>
@@ -476,28 +474,26 @@ export default function DiscussionThreadPage() {
 
           {/* Right Sidebar - Additional Info */}
           <div className="lg:col-span-3">
-            <div className="sticky top-24 space-y-6">
-              {/* Removed quick actions for consistency */}
-
+            <div className="sticky top-20 space-y-4 sm:space-y-5">
               {/* Author Info */}
-              <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                <CardHeader className="pb-0 pt-3">
-                  <CardTitle className="text-base font-semibold text-slate-900 pb-0">
+              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-slate-900 tracking-tight">
                     Author
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-sm">
                       <span className="text-white font-semibold text-sm">
                         {thread.author.firstName?.[0] || "U"}
                       </span>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-900">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-900 text-sm truncate">
                         {thread.author.firstName} {thread.author.lastName}
                       </p>
-                      <Badge variant="outline" className="text-xs bg-white/50">
+                      <Badge variant="outline" className="text-xs bg-slate-50/80 border-slate-200 text-slate-700 font-medium mt-1">
                         {thread.author.role}
                       </Badge>
                     </div>

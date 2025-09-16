@@ -66,9 +66,9 @@ export async function PATCH(
       where: { id: application.opportunityId },
     }) as any;
 
-    if (!application) {
+    if (!opportunity) {
       return NextResponse.json(
-        { error: "Application not found" },
+        { error: "Opportunity not found" },
         { status: 404 }
       );
     }

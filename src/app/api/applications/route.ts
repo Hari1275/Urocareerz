@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyEdgeToken } from "@/lib/edge-auth";
-import { sendApplicationSubmissionEmail } from "@/lib/email";
+import { sendApplicationSubmissionEmail, sendMenteeApplicationConfirmationEmail } from "@/lib/email";
 
 export async function GET(request: NextRequest) {
   try {
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Send email notification to mentor
+    // Send email notifications to both mentee and mentor
     try {
       // Get opportunity and creator details for email
       const opportunityWithCreator = await (prisma.opportunity.findUnique({
@@ -267,7 +267,28 @@ export async function POST(request: NextRequest) {
             mentee.lastName || ""
           }`.trim() || mentee.email;
 
-        const emailResult = await sendApplicationSubmissionEmail({
+        // Send confirmation email to mentee
+        const menteeEmailResult = await sendMenteeApplicationConfirmationEmail({
+          menteeEmail: mentee.email,
+          menteeName: menteeName,
+          opportunityTitle: opportunityWithCreator.title,
+          mentorName: mentorName,
+        });
+
+        if (!menteeEmailResult.success) {
+          console.error(
+            "Failed to send mentee confirmation email:",
+            menteeEmailResult.error
+          );
+        } else {
+          console.log(
+            "Mentee confirmation email sent successfully to:",
+            mentee.email
+          );
+        }
+
+        // Send notification email to mentor
+        const mentorEmailResult = await sendApplicationSubmissionEmail({
           email: (opportunityWithCreator as any).creator.email,
           mentorName: mentorName,
           menteeName: menteeName,
@@ -275,21 +296,20 @@ export async function POST(request: NextRequest) {
           menteeEmail: mentee.email,
         });
 
-        if (!emailResult.success) {
+        if (!mentorEmailResult.success) {
           console.error(
-            "Failed to send application submission email:",
-            emailResult.error
+            "Failed to send mentor notification email:",
+            mentorEmailResult.error
           );
-          // Don't fail the request if email fails, just log it
         } else {
           console.log(
-            "Application submission email sent successfully to:",
+            "Mentor notification email sent successfully to:",
             (opportunityWithCreator as any).creator.email
           );
         }
       }
     } catch (emailError) {
-      console.error("Error sending application submission email:", emailError);
+      console.error("Error sending email notifications:", emailError);
       // Don't fail the request if email fails, just log it
     }
 
