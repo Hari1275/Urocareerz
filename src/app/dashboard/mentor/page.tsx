@@ -65,6 +65,8 @@ import {
 import SharedHeader from "@/components/shared-header";
 import ProfileForm from "@/components/ProfileForm";
 import MentorDashboardSidebar from "@/components/mentor-dashboard-sidebar";
+import DiscussionThreadsList from "@/components/DiscussionThreadsList";
+import DiscussionThreadForm from "@/components/DiscussionThreadForm";
 import { useOpportunityTypes } from "@/hooks/use-opportunity-types";
 import { useMenteeSearch } from "@/hooks/use-mentee-search";
 import { cn } from "@/lib/utils";
@@ -201,6 +203,7 @@ export default function MentorDashboardPage() {
     | "post-opportunity"
     | "find-mentees"
     | "discussions"
+    | "new-discussion"
   >("main");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -282,6 +285,22 @@ export default function MentorDashboardPage() {
     rejectedOpportunities: 0,
   });
 
+  // Discussion state
+  const [discussions, setDiscussions] = useState([]);
+  const [discussionsLoading, setDiscussionsLoading] = useState(false);
+  const [discussionPagination, setDiscussionPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0,
+    loading: false,
+  });
+  const [currentDiscussionCategory, setCurrentDiscussionCategory] = useState("all");
+  const [currentDiscussionStatus, setCurrentDiscussionStatus] = useState("all");
+  const [showMyDiscussions, setShowMyDiscussions] = useState(false);
+  const [selectedDiscussion, setSelectedDiscussion] = useState<any>(null);
+  const [showDiscussionModal, setShowDiscussionModal] = useState(false);
+
   // Pagination state
   const [opportunityPage, setOpportunityPage] = useState(1);
   const [applicationPage, setApplicationPage] = useState(1);
@@ -291,6 +310,7 @@ export default function MentorDashboardPage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
 
   // Optimized data fetching - fetch all data in parallel
   useEffect(() => {
@@ -437,6 +457,30 @@ export default function MentorDashboardPage() {
     }
   }, [activeSection]);
 
+  // Handle section changes for data fetching
+  useEffect(() => {
+    if (!isClient) return;
+
+    if (activeSection === "discussions") {
+      // Always fetch all discussions when switching to discussions section
+      console.log("Fetching discussions for mentor dashboard");
+      fetchDiscussions(undefined, undefined, 1, true, true, false);
+    }
+  }, [activeSection, isClient]);
+
+  // Handle discussion filter changes
+  useEffect(() => {
+    if (!isClient || activeSection !== "discussions") return;
+    fetchDiscussions(
+      currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+      currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
+      1,
+      true,
+      true,
+      showMyDiscussions
+    );
+  }, [currentDiscussionCategory, currentDiscussionStatus, showMyDiscussions, isClient]);
+
   // Optimized individual fetch functions for manual refresh
   const fetchOpportunities = async () => {
     setLoadingOpportunities(true);
@@ -478,9 +522,96 @@ export default function MentorDashboardPage() {
     }
   };
 
+  const fetchDiscussions = async (
+    category?: string,
+    status?: string,
+    page = 1,
+    reset = false,
+    setLoadingFlag = true,
+    myDiscussions = false
+  ) => {
+    if (setLoadingFlag) {
+      setDiscussionsLoading(true);
+    } else {
+      setDiscussionPagination((prev) => ({ ...prev, loading: true }));
+    }
+
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: discussionPagination.limit.toString(),
+      });
+
+      if (category && category !== "all") {
+        params.append("category", category);
+      }
+      if (status && status !== "all") {
+        params.append("status", status);
+      }
+      if (myDiscussions) {
+        params.append("author", "me");
+      }
+
+      const response = await fetch(
+        `/api/discussions?${params.toString()}`,
+        { credentials: "include" }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const newDiscussions = data.threads || []; // API returns 'threads' not 'discussions'
+
+        setDiscussions((prev: any) => 
+          reset ? newDiscussions : [...prev, ...newDiscussions]
+        );
+        setDiscussionPagination({
+          page: data.pagination?.page || page,
+          limit: data.pagination?.limit || discussionPagination.limit,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
+          loading: false,
+        });
+      } else {
+        console.error("Failed to fetch discussions");
+        setDiscussionPagination((prev) => ({ ...prev, loading: false }));
+      }
+    } catch (error) {
+      console.error("Error fetching discussions:", error);
+      setDiscussionPagination((prev) => ({ ...prev, loading: false }));
+    } finally {
+      if (setLoadingFlag) {
+        setDiscussionsLoading(false);
+      }
+    }
+  };
+
+  const handleViewDiscussion = (discussion: any) => {
+    setSelectedDiscussion(discussion);
+    setShowDiscussionModal(true);
+  };
+
+  const handleCloseDiscussionModal = () => {
+    setShowDiscussionModal(false);
+    setSelectedDiscussion(null);
+  };
+
+  const loadMoreDiscussions = () => {
+    if (
+      discussionPagination.page < discussionPagination.pages &&
+      !discussionsLoading
+    ) {
+      fetchDiscussions(
+        currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+        currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
+        discussionPagination.page + 1,
+        false,
+        false,
+        showMyDiscussions
+      );
+    }
+  };
+
   const handleReviewApplication = (application: Application) => {
-    console.log('Application data for review:', application);
-    console.log('Resume URL:', application.resumeUrl);
     setSelectedApplication(application);
     setShowReviewModal(true);
   };
@@ -1379,7 +1510,7 @@ export default function MentorDashboardPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                       <Button
                         onClick={() => setActiveSection("post-opportunity")}
                         className="h-auto p-3 sm:p-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg flex flex-col items-center gap-1 sm:gap-2"
@@ -1432,6 +1563,20 @@ export default function MentorDashboardPage() {
                         </span>
                         <span className="text-xs text-cyan-600 hidden sm:block">
                           Search candidates
+                        </span>
+                      </Button>
+
+                      <Button
+                        onClick={() => setActiveSection("discussions")}
+                        variant="outline"
+                        className="h-auto p-3 sm:p-4 border-pink-200 hover:bg-pink-50 flex flex-col items-center gap-1 sm:gap-2"
+                      >
+                        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
+                        <span className="text-xs sm:text-sm font-medium text-pink-700">
+                          Discussions
+                        </span>
+                        <span className="text-xs text-pink-600 hidden sm:block">
+                          Community forum
                         </span>
                       </Button>
                     </div>
@@ -2992,56 +3137,105 @@ export default function MentorDashboardPage() {
             {activeSection === "discussions" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div>
+                <div className="text-center">
                   <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
-                    Discussions
+                    Community{" "}
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      Discussions
+                    </span>
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600">
-                    Engage with the community through discussions and forums.
+                  <p className="text-sm sm:text-base text-slate-600 mb-6">
+                    Connect with mentees and other mentors in our growing
+                    community.
+                  </p>
+                </div>
+                
+                {/* Start New Discussion Button */}
+                <div className="flex justify-center">
+                  <Button
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                    onClick={() => setActiveSection("new-discussion")}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Start New Discussion
+                  </Button>
+                </div>
+
+                {/* Discussions List */}
+                {discussionsLoading ? (
+                  <LoadingCard
+                    title="Loading discussions..."
+                    description="Connecting you with community conversations and expert insights"
+                    className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
+                    size="lg"
+                    variant="default"
+                    color="purple"
+                  />
+                ) : (
+                  <DiscussionThreadsList
+                    threads={discussions}
+                    pagination={discussionPagination}
+                    onRefresh={(category, status, page, reset, force, myDiscussions) => {
+                      setCurrentDiscussionCategory(category || "all");
+                      setCurrentDiscussionStatus(status || "all");
+                      setShowMyDiscussions(myDiscussions || false);
+                      fetchDiscussions(category, status, page, reset, force, myDiscussions);
+                    }}
+                    onNewDiscussion={() => setActiveSection("new-discussion")}
+                    currentCategory={currentDiscussionCategory}
+                    currentStatus={currentDiscussionStatus}
+                    onLoadMore={loadMoreDiscussions}
+                    loading={discussionsLoading}
+                    currentUser={user}
+                    onViewDiscussion={handleViewDiscussion}
+                    currentMyDiscussions={showMyDiscussions}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* New Discussion Section */}
+            {activeSection === "new-discussion" && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
+                    Start a{" "}
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      Discussion
+                    </span>
+                  </h1>
+                  <p className="text-slate-600 mb-6">
+                    Share your thoughts, questions, or case details with the
+                    community.
                   </p>
                 </div>
 
-                {/* Discussions Overview */}
-                <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                  <CardContent className="p-6">
-                    <div className="text-center py-8">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 shadow-lg flex items-center justify-center">
-                        <MessageSquare className="h-8 w-8 text-white" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                        Community Discussions
-                      </h3>
-                      <p className="text-slate-600 mb-4">
-                        Join conversations with mentees and other mentors to
-                        share knowledge and insights.
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Button
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
-                          disabled
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          View Discussions
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="border-purple-200 hover:bg-purple-50 text-purple-700"
-                          disabled
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Start Discussion
-                        </Button>
-                        <Button
-                          onClick={() => setActiveSection("main")}
-                          variant="outline"
-                        >
-                          <ArrowLeft className="h-4 w-4 mr-2" />
-                          Back to Dashboard
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Back Button */}
+                <div className="flex justify-start">
+                  <Button
+                    variant="outline"
+                    className="bg-white/80 border-slate-200 hover:bg-white"
+                    onClick={() => setActiveSection("discussions")}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Discussions
+                  </Button>
+                </div>
+
+                {/* Discussion Form */}
+                <DiscussionThreadForm
+                  onSuccess={() => {
+                    // Switch back to discussions tab and refresh the discussions
+                    setActiveSection("discussions");
+                    // Use setTimeout to ensure state update has completed
+                    setTimeout(() => {
+                      fetchDiscussions(undefined, undefined, 1, true, true);
+                      // Scroll to top of the page
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 0);
+                  }}
+                  onCancel={() => setActiveSection("discussions")}
+                />
               </div>
             )}
           </div>
@@ -4410,6 +4604,137 @@ export default function MentorDashboardPage() {
                       Send Message
                     </>
                   )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Discussion View Modal */}
+      {showDiscussionModal && selectedDiscussion && (
+        <Dialog open={showDiscussionModal} onOpenChange={handleCloseDiscussionModal}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-500">
+                    <MessageSquare className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">
+                      {selectedDiscussion.title}
+                    </DialogTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge
+                        className={`text-xs font-medium ${
+                          selectedDiscussion.status === "ACTIVE"
+                            ? "bg-green-100 text-green-800 border-green-200"
+                            : selectedDiscussion.status === "CLOSED"
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            : "bg-gray-100 text-gray-800 border-gray-200"
+                        }`}
+                      >
+                        {selectedDiscussion.status === "ACTIVE" && "🟢 Active"}
+                        {selectedDiscussion.status === "CLOSED" && "🔒 Closed"}
+                        {selectedDiscussion.status === "ARCHIVED" && "📁 Archived"}
+                      </Badge>
+                      
+                      {user && selectedDiscussion.author.id === user.id && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs bg-purple-50 text-purple-700 border-purple-200"
+                        >
+                          👤 My Post
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                  }}
+                  className="text-slate-600 hover:text-blue-600"
+                >
+                  Open Full View
+                </Button>
+              </div>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Author and Date */}
+              <div className="flex items-center gap-4 text-sm text-slate-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
+                    <span className="text-white font-semibold text-xs">
+                      {selectedDiscussion.author.firstName?.[0] || "U"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">
+                      {selectedDiscussion.author.firstName} {selectedDiscussion.author.lastName}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {selectedDiscussion.author.role} • {new Date(selectedDiscussion.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 ml-auto">
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-4 w-4" />
+                    <span>{selectedDiscussion.viewCount || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare className="h-4 w-4" />
+                    <span>{selectedDiscussion._count?.comments || 0}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Tags */}
+              {selectedDiscussion.tags && selectedDiscussion.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedDiscussion.tags.map((tag: string, index: number) => (
+                    <Badge
+                      key={index}
+                      variant="outline"
+                      className="text-xs bg-white/50"
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              
+              {/* Content */}
+              <div className="prose prose-slate max-w-none">
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    {selectedDiscussion.content}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={handleCloseDiscussionModal}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                  }}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                >
+                  Join Full Discussion
                 </Button>
               </div>
             </div>

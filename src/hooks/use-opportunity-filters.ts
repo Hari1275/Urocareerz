@@ -28,8 +28,8 @@ export function useOpportunityFilters() {
       description: "Rejected by admin",
     },
     {
-      value: "CLOSED",
-      label: "Closed",
+      value: "EXPIRED",
+      label: "Expired",
       color: "bg-gray-100 text-gray-800",
       description: "No longer accepting applications",
     },

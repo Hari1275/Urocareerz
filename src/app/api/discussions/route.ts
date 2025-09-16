@@ -9,13 +9,14 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const status = searchParams.get("status");
     const myDiscussions = searchParams.get("myDiscussions") === "true";
+    const author = searchParams.get("author"); // Handle author=me parameter
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
     // Get current user for filtering own discussions
     let currentUserId: string | null = null;
-    if (myDiscussions) {
+    if (myDiscussions || author === "me") {
       const token = req.cookies.get("token")?.value;
       console.log("Token found for myDiscussions filter:", !!token);
       if (token) {
@@ -51,11 +52,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter by user's own discussions if requested
-    if (myDiscussions && currentUserId) {
+    if ((myDiscussions || author === "me") && currentUserId) {
       where.authorId = currentUserId;
-      console.log("✅ Applied myDiscussions filter with authorId:", currentUserId);
-    } else if (myDiscussions && !currentUserId) {
-      console.log("⚠️ WARNING: myDiscussions requested but no valid user ID found");
+      console.log("✅ Applied myDiscussions/author=me filter with authorId:", currentUserId);
+    } else if ((myDiscussions || author === "me") && !currentUserId) {
+      console.log("⚠️ WARNING: myDiscussions/author=me requested but no valid user ID found");
       // Return empty result when myDiscussions is requested but no user is authenticated
       return NextResponse.json({
         threads: [],
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
     }
 
     console.log("🔍 Discussion list query where clause:", where);
-    console.log("📨 Request parameters:", { category, status, myDiscussions, page, limit, currentUserId });
+    console.log("📨 Request parameters:", { category, status, myDiscussions, author, page, limit, currentUserId });
 
     // Get discussion threads with pagination
     const [threads, total] = await Promise.all([
@@ -98,7 +99,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     console.log("✅ Found threads:", threads.length, "Total:", total);
-    if (threads.length > 0 && myDiscussions) {
+    if (threads.length > 0 && (myDiscussions || author === "me")) {
       console.log("👤 Sample thread author IDs:", threads.slice(0, 3).map(t => t.author.id));
       console.log("🔎 Expected author ID:", currentUserId);
       console.log("✅ All threads match current user:", threads.every(t => t.author.id === currentUserId));

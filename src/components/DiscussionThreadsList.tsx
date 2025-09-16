@@ -139,18 +139,14 @@ export default function DiscussionThreadsList({
   };
 
   const handleMyDiscussionsChange = (myDiscussions: boolean) => {
-    console.log("🔄 My Discussions button clicked. New state:", myDiscussions);
-    console.log("👤 Current user:", currentUser?.id);
-    
     if (myDiscussions && !currentUser?.id) {
-      console.error("❌ Cannot filter by 'My Discussions' - no current user ID");
+      console.error("Cannot filter by 'My Discussions' - no current user ID");
       return;
     }
     
     setShowMyDiscussions(myDiscussions);
     const categoryParam = selectedCategory === "ALL" ? "all" : selectedCategory;
     const statusParam = selectedStatus === "ALL" ? "all" : selectedStatus;
-    console.log("📤 Calling onRefresh with:", { categoryParam, statusParam, myDiscussions, currentUserId: currentUser?.id });
     onRefresh(categoryParam, statusParam, 1, true, true, myDiscussions);
   };
 

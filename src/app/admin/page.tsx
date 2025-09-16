@@ -762,9 +762,9 @@ export default function AdminDashboardPage() {
                                         ? `${activity.user.firstName} ${activity.user.lastName}`
                                         : activity.user.email}
                                     </p>
-                                    <p className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500">
                                       {activity.entityType} • <Badge className={getRoleColor(activity.user.role)} variant="outline">{activity.user.role}</Badge>
-                                    </p>
+                                    </div>
                                   </div>
                                 </div>
                                 <span className="text-xs text-gray-500 flex-shrink-0 self-start sm:self-center">

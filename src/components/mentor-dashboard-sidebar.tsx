@@ -12,7 +12,7 @@ import {
   Users,
   Plus,
   Search,
-  // MessageSquare,
+  MessageSquare,
   X,
   FileText,
   UserCheck,
@@ -24,7 +24,8 @@ type ActiveSection =
   | "applications"
   | "post-opportunity"
   | "find-mentees"
-  | "discussions";
+  | "discussions"
+  | "new-discussion";
 
 interface MenuItem {
   id: ActiveSection;
@@ -87,6 +88,12 @@ const quickActions: MenuItem[] = [
     label: "Post Opportunity",
     icon: Plus,
     description: "Share new opportunities",
+  },
+  {
+    id: "discussions",
+    label: "Discussions",
+    icon: MessageSquare,
+    description: "Community forum",
   },
 ];
 
