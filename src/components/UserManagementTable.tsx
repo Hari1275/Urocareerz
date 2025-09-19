@@ -440,7 +440,7 @@ export default function UserManagementTable() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl text-gray-900">User Management</h2>
+              <h2 className="text-xl text-gray-900 mb-2">User Management</h2>
               {/* <CardTitle>User Management</CardTitle> */}
               <div className="text-sm text-muted-foreground">
                 Total users:{" "}

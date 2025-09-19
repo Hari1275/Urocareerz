@@ -510,7 +510,7 @@ export default function ContentModerationTable() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl text-gray-900">Opportunities</h2>
+              <h2 className="text-xl text-gray-900 mb-2">Opportunities</h2>
               {/* <CardTitle>Content Moderation</CardTitle> */}
               <div className="text-sm text-muted-foreground">
 
