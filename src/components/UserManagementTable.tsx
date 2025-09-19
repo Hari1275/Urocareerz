@@ -535,8 +535,8 @@ export default function UserManagementTable() {
                   <TableHead className="font-bold text-base">Name</TableHead>
                   <TableHead className="font-bold text-base">Email</TableHead>
                   <TableHead className="font-bold text-base">Role</TableHead>
-                  <TableHead className="font-bold text-base">Status</TableHead>
                   <TableHead className="font-bold text-base">Created</TableHead>
+                  <TableHead className="font-bold text-base w-32">Status</TableHead>
                   <TableHead className="text-right font-bold text-base">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -564,46 +564,53 @@ export default function UserManagementTable() {
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell>
-                        {(() => {
-                          const statusInfo = getStatusBadge(user.status);
-                          return (
-                            <Badge className={statusInfo.color}>
-                              {statusInfo.label}
-                            </Badge>
-                          );
-                        })()}
-                      </TableCell>
                       <TableCell suppressHydrationWarning>
                         {formatDate(user.createdAt)}
                       </TableCell>
+                      <TableCell className="w-32">
+                        {/* Status */}
+                        {user.status === "pending" ? (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApproveUser(user.id)}
+                              disabled={actionLoading === user.id}
+                              className="h-8 px-2 text-green-600 hover:text-green-700"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openRejectDialog(user)}
+                              disabled={actionLoading === user.id}
+                              className="h-8 px-2 text-red-600 hover:text-red-700"
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        ) : (
+                          (() => {
+                            const statusInfo = getStatusBadge(user.status);
+                            return (
+                              <Badge className={statusInfo.color}>
+                                {user.status === "verified" && (
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                )}
+                                {user.status === "rejected" && (
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                )}
+                                {statusInfo.label}
+                              </Badge>
+                            );
+                          })()
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          {user.status === "pending" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleApproveUser(user.id)}
-                                disabled={actionLoading === user.id}
-                                className="h-8 px-2"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openRejectDialog(user)}
-                                disabled={actionLoading === user.id}
-                                className="h-8 px-2 text-red-600 hover:text-red-700"
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            </>
-                          )}
-
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -717,14 +724,46 @@ export default function UserManagementTable() {
                       </div>
                       <div className="flex space-x-2">
                         {getRoleBadge(user.role)}
-                        {(() => {
-                          const statusInfo = getStatusBadge(user.status);
-                          return (
-                            <Badge className={statusInfo.color}>
-                              {statusInfo.label}
-                            </Badge>
-                          );
-                        })()}
+                        {/* Status */}
+                        {user.status === "pending" ? (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApproveUser(user.id)}
+                              disabled={actionLoading === user.id}
+                              className="h-8 px-2 text-green-600 hover:text-green-700"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openRejectDialog(user)}
+                              disabled={actionLoading === user.id}
+                              className="h-8 px-2 text-red-600 hover:text-red-700"
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        ) : (
+                          (() => {
+                            const statusInfo = getStatusBadge(user.status);
+                            return (
+                              <Badge className={statusInfo.color}>
+                                {user.status === "verified" && (
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                )}
+                                {user.status === "rejected" && (
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                )}
+                                {statusInfo.label}
+                              </Badge>
+                            );
+                          })()
+                        )}
                       </div>
                     </div>
 
@@ -733,31 +772,6 @@ export default function UserManagementTable() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      {user.status === "pending" && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleApproveUser(user.id)}
-                            disabled={actionLoading === user.id}
-                            className="flex-1"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openRejectDialog(user)}
-                            disabled={actionLoading === user.id}
-                            className="flex-1 text-red-600 hover:text-red-700"
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button

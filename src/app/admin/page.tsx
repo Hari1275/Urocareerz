@@ -656,7 +656,7 @@ export default function AdminDashboardPage() {
                           <div className="space-y-2">
                             {analyticsData.trends.userRegistrationsByDate.slice(-7).map((item) => (
                               <div key={item.date} className="flex items-center justify-between">
-                                <span className="text-sm">{item.date}</span>
+                                <span className="text-sm">{new Date(item.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                 <span className="font-semibold">{item.count}</span>
                               </div>
                             ))}
@@ -676,7 +676,7 @@ export default function AdminDashboardPage() {
                           <div className="space-y-2">
                             {analyticsData.trends.opportunitySubmissionsByDate.slice(-7).map((item) => (
                               <div key={item.date} className="flex items-center justify-between">
-                                <span className="text-sm">{item.date}</span>
+                                <span className="text-sm">{new Date(item.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                 <span className="font-semibold">{item.count}</span>
                               </div>
                             ))}

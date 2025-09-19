@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Filter, RefreshCw, Calendar } from "lucide-react";
+import { Filter, RefreshCw, Calendar, User, FileText, GraduationCap, MessageSquare, File } from "lucide-react";
 import { usePagination } from "@/hooks/use-pagination";
 import { TablePagination } from "./TablePagination";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -123,7 +123,15 @@ export default function AuditLogsTable() {
   const formatDate = (dateString: string) => {
     // Use consistent date formatting to avoid hydration mismatches
     const date = new Date(dateString);
-    return date.toISOString().replace('T', ' ').substring(0, 19);
+    const year = date.getFullYear();
+    const month = date.toLocaleDateString('en-GB', { month: 'short' });
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+
+    return `${day} ${month} ${year} ${displayHours}:${minutes} ${ampm}`;
   };
 
   const formatDateForAPI = (date: Date) => {
@@ -138,16 +146,34 @@ export default function AuditLogsTable() {
   const getEntityTypeIcon = (entityType: string) => {
     switch (entityType) {
       case "User":
-        return "👤";
+        return <User className="h-4 w-4" />;
       case "Opportunity":
-        return "📋";
+        return <FileText className="h-4 w-4" />;
       case "MenteeOpportunity":
-        return "🎓";
+        return <GraduationCap className="h-4 w-4" />;
       case "Discussion":
-        return "💬";
+        return <MessageSquare className="h-4 w-4" />;
       default:
-        return "📄";
+        return <File className="h-4 w-4" />;
     }
+  };
+
+  const getRoleBadge = (role: string) => {
+    const colorMap = {
+      ADMIN: "bg-red-100 text-red-800",
+      MENTOR: "bg-blue-100 text-blue-800",
+      MENTEE: "bg-green-100 text-green-800",
+    };
+    return (
+      <Badge
+        className={
+          colorMap[role as keyof typeof colorMap] ||
+          "bg-gray-100 text-gray-800"
+        }
+      >
+        {role}
+      </Badge>
+    );
   };
 
   if (loading && auditLogs.length === 0) {
@@ -311,6 +337,7 @@ export default function AuditLogsTable() {
                 <TableHead className="font-bold text-base">Action</TableHead>
                 <TableHead className="font-bold text-base">Entity</TableHead>
                 <TableHead className="font-bold text-base">User</TableHead>
+                <TableHead className="font-bold text-base">Role</TableHead>
                 <TableHead className="font-bold text-base">IP Address</TableHead>
                 <TableHead className="font-bold text-base">Date</TableHead>
               </TableRow>
@@ -318,7 +345,7 @@ export default function AuditLogsTable() {
             <TableBody>
               {auditLogs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                     No audit logs found
                   </TableCell>
                 </TableRow>
@@ -338,16 +365,14 @@ export default function AuditLogsTable() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {log.user.firstName && log.user.lastName
-                            ? `${log.user.firstName} ${log.user.lastName}`
-                            : log.user.email}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {log.user.role}
-                        </div>
+                      <div className="font-medium">
+                        {log.user.firstName && log.user.lastName
+                          ? `${log.user.firstName} ${log.user.lastName}`
+                          : log.user.email}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {getRoleBadge(log.user.role)}
                     </TableCell>
                     <TableCell>
                       {log.ipAddress ? (
