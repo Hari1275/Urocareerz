@@ -108,12 +108,7 @@ export default function AdminDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [, setUsers] = useState<User[]>([]);
   const [, setOpportunities] = useState<Opportunity[]>([]);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    pendingUsers: 0,
-    totalOpportunities: 0,
-    pendingOpportunities: 0,
-  });
+  // Removed stats state - using analyticsData instead
 
   // Add analytics state and fetch logic
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -182,7 +177,7 @@ export default function AdminDashboardPage() {
           return;
         }
 
-        await fetchStats();
+        // Removed fetchStats() call - using analytics data instead
       } catch (err: unknown) {
         console.error("Admin: Error in fetchUserData:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -194,39 +189,7 @@ export default function AdminDashboardPage() {
     fetchUserData();
   }, [router]);
 
-  const fetchStats = async () => {
-    try {
-      const [usersResponse, opportunitiesResponse] = await Promise.all([
-        fetch("/api/admin/users"),
-        fetch("/api/admin/opportunities"),
-      ]);
-
-      if (usersResponse.ok && opportunitiesResponse.ok) {
-        const usersData = await usersResponse.json();
-        const opportunitiesData = await opportunitiesResponse.json();
-
-        const pendingUsers = usersData.users.filter(
-          (u: User) => u.status === "pending"
-        ).length;
-        const pendingOpportunities = opportunitiesData.opportunities.filter(
-          (o: Opportunity) => o.status === "PENDING"
-        ).length;
-
-        const newStats = {
-          totalUsers: usersData.users.length,
-          pendingUsers,
-          totalOpportunities: opportunitiesData.opportunities.length,
-          pendingOpportunities,
-        };
-
-        setStats(newStats);
-        setUsers(usersData.users);
-        setOpportunities(opportunitiesData.opportunities);
-      }
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
-  };
+  // Removed fetchStats function - using analytics data instead
 
   const handleLogout = async () => {
     try {
@@ -420,7 +383,6 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h2 className="text-xl text-gray-900">Dashboard Overview</h2>
-                  <p className="text-gray-600">All platform metrics, trends, and recent activity</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <div className="flex gap-2">
@@ -685,7 +647,7 @@ export default function AdminDashboardPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
-                        <h2 className="text-xl text-gray-900">User Registration Trends (Last 7 Days)</h2>
+                        <h2 className="text-xl text-gray-900">User Registration (Last 7 Days)</h2>
                         {/* <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />User Registration Trends (Last 7 Days)</CardTitle> */}
                       </CardHeader>
                       <CardContent>
@@ -705,7 +667,7 @@ export default function AdminDashboardPage() {
                     </Card>
                     <Card>
                       <CardHeader>
-                        <h2 className="text-xl text-gray-900">Opportunity Submission Trends (Last 7 Days)</h2>
+                        <h2 className="text-xl text-gray-900">Opportunity Submission (Last 7 Days)</h2>
                         {/* <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5" />Opportunity Submission Trends (Last 7 Days)</CardTitle> */}
                       </CardHeader>
                       <CardContent>
@@ -725,12 +687,11 @@ export default function AdminDashboardPage() {
                     </Card>
                   </div>
                   {/* Recent Activity */}
-                  <Card className="hover:shadow-md transition-shadow">
+                  {/* <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="min-w-0">
                           <h2 className="text-xl text-gray-900">Recent Activity</h2>
-                          {/* <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle> */}
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             Platform actions and events from the last 7 days
                           </p>
@@ -787,36 +748,38 @@ export default function AdminDashboardPage() {
                         )}
                       </div>
                     </CardContent>
-                  </Card>
+                  </Card> */}
                 </>
               )}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
                   <CardHeader>
-                    <h2 className="text-xl text-gray-900">Quick Actions</h2>
+                    <h2 className="text-xl text-gray-900">Announcements</h2>
                     {/* <CardTitle>Quick Actions</CardTitle> */}
-                    <div className="text-sm text-muted-foreground">
-                      Common administrative tasks
-                    </div>
+
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => setActiveTab("users")}
-                    >
-                      <UserCheck className="h-4 w-4 mr-2" />
-                      Review Pending Users ({stats.pendingUsers})
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => setActiveTab("content")}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Moderate Content ({stats.pendingOpportunities})
-                    </Button>
+                    {analyticsData && (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => setActiveTab("users")}
+                        >
+                          <UserCheck className="h-4 w-4 mr-2" />
+                          Review Pending Users ({analyticsData.overview.pendingUsers})
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => setActiveTab("content")}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Moderate Content ({analyticsData.overview.pendingOpportunities})
+                        </Button>
+                      </>
+                    )}
                     <div className="pt-2">
                       <AnnouncementForm />
                     </div>

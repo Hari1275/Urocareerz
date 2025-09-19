@@ -44,18 +44,23 @@ async function getAnalytics(request: NextRequest) {
       opportunityTypeDistribution,
       recentActivity,
     ] = await Promise.all([
-      // Total users (exclude admins)
-      prisma.user.count({
+      // Total users (exclude admins and recently deleted users)
+      prisma.user.findMany({
         where: {
           role: { in: ["MENTOR", "MENTEE"] },
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
         },
+        select: {
+          id: true,
+          otpSecret: true,
+          deletedAt: true,
+        },
       }),
 
-      // Pending users (users with OTP secret - not yet verified, exclude admins)
-      prisma.user.count({
+      // Pending users (users with OTP secret - not yet verified, exclude admins and recently deleted)
+      prisma.user.findMany({
         where: {
           role: { in: ["MENTOR", "MENTEE"] },
           otpSecret: { not: null },
@@ -64,12 +69,16 @@ async function getAnalytics(request: NextRequest) {
             createdAt: dateFilter,
           }),
         },
+        select: {
+          id: true,
+          otpSecret: true,
+          deletedAt: true,
+        },
       }),
 
-      // Total opportunities (approved/active only, excluding pending)
+      // Total opportunities (all opportunities, including pending)
       prisma.opportunity.count({
         where: {
-          status: { not: "PENDING" },
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
@@ -235,10 +244,26 @@ async function getAnalytics(request: NextRequest) {
     const userRegistrationsTrend = fillTrendDataFromCounts(userRegistrationsCounts);
     const opportunitySubmissionsTrend = fillTrendDataFromCounts(opportunitySubmissionsCounts);
 
+    // Apply the same filtering logic as the users API (exclude recently deleted users)
+    const filterRecentlyDeleted = (users: any[]) => {
+      return users.filter((user) => {
+        if (user.deletedAt) {
+          const deletedTime = new Date(user.deletedAt).getTime();
+          const currentTime = Date.now();
+          const hoursSinceDeleted = (currentTime - deletedTime) / (1000 * 60 * 60);
+          return hoursSinceDeleted >= 24; // Only include if deleted more than 24 hours ago
+        }
+        return true; // Include users that were never deleted
+      });
+    };
+
+    const filteredTotalUsers = filterRecentlyDeleted(totalUsers);
+    const filteredPendingUsers = filterRecentlyDeleted(pendingUsers);
+
     return NextResponse.json({
       overview: {
-        totalUsers,
-        pendingUsers,
+        totalUsers: filteredTotalUsers.length,
+        pendingUsers: filteredPendingUsers.length,
         totalOpportunities,
         pendingOpportunities,
         totalMenteeOpportunities,
