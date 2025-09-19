@@ -44,6 +44,9 @@ model User {
   // Discussion comments (created by user)
   discussionComments DiscussionComment[]
   
+  // Discussion views (tracked by user)
+  discussionViews DiscussionView[]
+  
   // Audit logs (actions performed by user)
   auditLogs AuditLog[]
 }
@@ -198,6 +201,7 @@ model DiscussionThread {
   // Relationships
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments    DiscussionComment[]
+  views       DiscussionView[]
 }
 
 enum DiscussionCategory {
@@ -231,6 +235,19 @@ model DiscussionComment {
   thread    DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   parent    DiscussionComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies   DiscussionComment[] @relation("CommentReplies")
+}
+
+model DiscussionView {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  threadId  String   @db.ObjectId
+  createdAt DateTime @default(now())
+  
+  // Relationships
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread    DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, threadId]) // Prevent duplicate views from same user
 }
 
 model AuditLog {

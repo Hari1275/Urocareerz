@@ -1302,9 +1302,19 @@ export default function MenteeDashboardPage() {
   };
 
   // Discussion handlers
-  const handleViewDiscussion = (thread: DiscussionThread) => {
+  const handleViewDiscussion = async (thread: DiscussionThread) => {
     setSelectedDiscussion(thread);
     setShowDiscussionModal(true);
+
+    // Track the view (silently, no UI updates)
+    try {
+      await fetch(`/api/discussions/${thread.id}/view`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Error tracking discussion view:', error);
+    }
   };
 
   const handleCloseDiscussionModal = () => {
@@ -4165,7 +4175,18 @@ export default function MenteeDashboardPage() {
                     Close
                   </Button>
                   <Button
-                    onClick={() => {
+                    onClick={async () => {
+                      // Track the view when joining discussion (silently)
+                      try {
+                        await fetch(`/api/discussions/${selectedDiscussion.id}/view`, {
+                          method: 'POST',
+                          credentials: 'include'
+                        });
+                      } catch (error) {
+                        console.error('Error tracking discussion view:', error);
+                      }
+
+                      // Open the discussion page
                       window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
                     }}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
