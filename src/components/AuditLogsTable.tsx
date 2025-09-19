@@ -39,7 +39,7 @@ export default function AuditLogsTable() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     action: "all",
@@ -47,7 +47,7 @@ export default function AuditLogsTable() {
     startDate: null as Date | null,
     endDate: null as Date | null,
   });
-  
+
   // Use the proper pagination hook
   const pagination = usePagination({
     initialPage: 1,
@@ -57,7 +57,7 @@ export default function AuditLogsTable() {
   const fetchAuditLogs = async (page: number = 1) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -69,7 +69,7 @@ export default function AuditLogsTable() {
       });
 
       const response = await fetch(`/api/admin/audit-logs?${params}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch audit logs");
       }
@@ -154,7 +154,7 @@ export default function AuditLogsTable() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Audit Logs</CardTitle>
+          <CardTitle>Audit Logss</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
@@ -248,7 +248,7 @@ export default function AuditLogsTable() {
                 <SelectItem value="Discussion">Discussion</SelectItem>
               </SelectContent>
             </Select>
-            
+
             {/* Start Date Picker */}
             <Popover>
               <PopoverTrigger asChild>
@@ -308,12 +308,12 @@ export default function AuditLogsTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead>Entity</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="font-bold text-base">Action</TableHead>
+                <TableHead className="font-bold text-base">Entity</TableHead>
+                <TableHead className="font-bold text-base">User</TableHead>
+                <TableHead className="font-bold text-base">Details</TableHead>
+                <TableHead className="font-bold text-base">IP Address</TableHead>
+                <TableHead className="font-bold text-base">Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -346,7 +346,7 @@ export default function AuditLogsTable() {
                             : log.user.email}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {log.user.role} 
+                          {log.user.role}
                         </div>
                       </div>
                     </TableCell>
@@ -379,7 +379,7 @@ export default function AuditLogsTable() {
         </div>
 
         {/* Pagination */}
-        <TablePagination 
+        <TablePagination
           pagination={pagination}
           pageSizeOptions={[10, 25, 50, 100]}
           showPageSizeSelector={true}

@@ -761,26 +761,7 @@ export default function AdminDashboardPage() {
 
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {analyticsData && (
-                      <>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => setActiveTab("users")}
-                        >
-                          <UserCheck className="h-4 w-4 mr-2" />
-                          Review Pending Users ({analyticsData.overview.pendingUsers})
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => setActiveTab("content")}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Moderate Content ({analyticsData.overview.pendingOpportunities})
-                        </Button>
-                      </>
-                    )}
+
                     <div className="pt-2">
                       <AnnouncementForm />
                     </div>

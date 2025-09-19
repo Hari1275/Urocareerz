@@ -116,7 +116,7 @@ async function getAnalytics(request: NextRequest) {
         },
       }),
 
-      // Total discussions (fetch all, filter manually due to MongoDB/Prisma null handling issue)
+      // Total discussions (fetch all, filter by status like Discussion Management table)
       prisma.discussionThread.findMany({
         where: {
           ...(Object.keys(dateFilter).length > 0 && {
@@ -125,7 +125,7 @@ async function getAnalytics(request: NextRequest) {
         },
         select: {
           id: true,
-          deletedAt: true,
+          status: true,
         },
       }),
 
@@ -263,9 +263,13 @@ async function getAnalytics(request: NextRequest) {
     const filteredTotalUsers = filterRecentlyDeleted(totalUsers);
     const filteredPendingUsers = filterRecentlyDeleted(pendingUsers);
 
-    // Filter discussions to exclude deleted ones (due to MongoDB/Prisma null handling issue)
-    const filteredDiscussions = totalDiscussions.filter((discussion: any) => discussion.deletedAt === null);
-    const deletedDiscussions = totalDiscussions.filter((discussion: any) => discussion.deletedAt !== null);
+    // Filter discussions by status (matching Discussion Management table logic)
+    const activeDiscussions = totalDiscussions.filter((discussion: any) => discussion.status === 'ACTIVE');
+    const closedDiscussions = totalDiscussions.filter((discussion: any) => discussion.status === 'CLOSED');
+    const archivedDiscussions = totalDiscussions.filter((discussion: any) => discussion.status === 'ARCHIVED');
+
+    // Total discussions = ACTIVE + CLOSED (exclude only ARCHIVED)
+    const totalActiveAndClosedDiscussions = activeDiscussions.length + closedDiscussions.length;
 
     return NextResponse.json({
       overview: {
@@ -275,8 +279,8 @@ async function getAnalytics(request: NextRequest) {
         pendingOpportunities,
         totalMenteeOpportunities,
         pendingMenteeOpportunities,
-        totalDiscussions: filteredDiscussions.length,
-        deletedDiscussions: deletedDiscussions.length,
+        totalDiscussions: totalActiveAndClosedDiscussions,
+        deletedDiscussions: archivedDiscussions.length,
         totalApplications,
       },
       trends: {

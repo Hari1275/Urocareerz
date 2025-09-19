@@ -122,7 +122,7 @@ export default function DiscussionManagementTable() {
       const data = await response.json();
       setDiscussions(data.discussions);
       setStats(data.stats);
-      
+
       // Update pagination info from API response
       if (data.pagination) {
         setPagination(prev => ({
@@ -269,9 +269,6 @@ export default function DiscussionManagementTable() {
       <CardHeader>
         <h2 className="text-xl text-gray-900">Discussion Management</h2>
         {/* <CardTitle>Discussion Management</CardTitle> */}
-        <div className="text-sm text-muted-foreground  pb-3">
-          Manage discussion threads and their status
-        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4 pb-3">
@@ -341,13 +338,13 @@ export default function DiscussionManagementTable() {
           <Table className="w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[160px]">Title</TableHead>
-                <TableHead className="min-w-[100px]">Author</TableHead>
-                <TableHead className="min-w-[90px]">Category</TableHead>
-                <TableHead className="min-w-[70px]">Status</TableHead>
-                <TableHead className="min-w-[70px]">Comments</TableHead>
-                <TableHead className="min-w-[90px]">Created</TableHead>
-                <TableHead className="min-w-[50px]">Actions</TableHead>
+                <TableHead className="min-w-[160px] font-bold text-base">Title</TableHead>
+                <TableHead className="min-w-[100px] font-bold text-base">Author</TableHead>
+                <TableHead className="min-w-[90px] font-bold text-base">Category</TableHead>
+                <TableHead className="min-w-[70px] font-bold text-base">Status</TableHead>
+                <TableHead className="min-w-[70px] font-bold text-base">Comments</TableHead>
+                <TableHead className="min-w-[90px] font-bold text-base">Created</TableHead>
+                <TableHead className="min-w-[50px] font-bold text-base">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

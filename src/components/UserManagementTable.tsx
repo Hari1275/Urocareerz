@@ -443,7 +443,7 @@ export default function UserManagementTable() {
               <h2 className="text-xl text-gray-900">User Management</h2>
               {/* <CardTitle>User Management</CardTitle> */}
               <div className="text-sm text-muted-foreground">
-                Manage user accounts, roles, and approvals. Total users:{" "}
+                Total users:{" "}
                 {users.length}
               </div>
             </div>
@@ -532,12 +532,12 @@ export default function UserManagementTable() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="font-bold text-base">Name</TableHead>
+                  <TableHead className="font-bold text-base">Email</TableHead>
+                  <TableHead className="font-bold text-base">Role</TableHead>
+                  <TableHead className="font-bold text-base">Status</TableHead>
+                  <TableHead className="font-bold text-base">Created</TableHead>
+                  <TableHead className="text-right font-bold text-base">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

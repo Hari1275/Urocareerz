@@ -213,9 +213,7 @@ export default function OpportunityTypeManagement() {
               {/* <CardTitle className="text-xl font-semibold text-gray-900">
                 Opportunity Types
               </CardTitle> */}
-              <CardDescription>
-                Manage different types of opportunities available in the system
-              </CardDescription>
+
             </div>
             <Button onClick={openCreateForm} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
@@ -228,11 +226,11 @@ export default function OpportunityTypeManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Color</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="font-bold text-base">Type Name</TableHead>
+                  <TableHead className="font-bold text-base">Description</TableHead>
+                  <TableHead className="font-bold text-base">Color</TableHead>
+                  <TableHead className="font-bold text-base">Status</TableHead>
+                  <TableHead className="text-right font-bold text-base">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -294,7 +292,7 @@ export default function OpportunityTypeManagement() {
           </div>
           {/* Pagination Controls */}
           <div className="flex items-center justify-between space-x-6 py-4">
-            <TablePagination 
+            <TablePagination
               pagination={pagination}
               showPageSizeSelector={true}
               showPageInfo={true}

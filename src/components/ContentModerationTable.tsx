@@ -513,7 +513,6 @@ export default function ContentModerationTable() {
               <h2 className="text-xl text-gray-900">Opportunities</h2>
               {/* <CardTitle>Content Moderation</CardTitle> */}
               <div className="text-sm text-muted-foreground">
-                Review, moderate, and manage all opportunities with comprehensive engagement metrics.
 
                 Total opportunities: {opportunities.length}
               </div>
@@ -579,14 +578,14 @@ export default function ContentModerationTable() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Creator</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Posted</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="font-bold text-base">Title</TableHead>
+                  <TableHead className="font-bold text-base">Creator</TableHead>
+                  <TableHead className="font-bold text-base">Role</TableHead>
+                  <TableHead className="font-bold text-base">Email</TableHead>
+                  <TableHead className="font-bold text-base">Type</TableHead>
+                  <TableHead className="font-bold text-base">Posted</TableHead>
+                  <TableHead className="font-bold text-base">Status</TableHead>
+                  <TableHead className="text-right font-bold text-base">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1071,12 +1070,12 @@ export default function ContentModerationTable() {
                 <Table>
                   <TableHeader className="bg-gray-50">
                     <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      <TableHead>Applicant</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="w-24">Role</TableHead>
-                      <TableHead className="w-32">Applied</TableHead>
-                      <TableHead className="w-24">Status</TableHead>
+                      <TableHead className="w-12 font-bold text-base">#</TableHead>
+                      <TableHead className="font-bold text-base">Applicant</TableHead>
+                      <TableHead className="font-bold text-base">Email</TableHead>
+                      <TableHead className="w-24 font-bold text-base">Role</TableHead>
+                      <TableHead className="w-32 font-bold text-base">Applied</TableHead>
+                      <TableHead className="w-24 font-bold text-base">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1195,12 +1194,12 @@ export default function ContentModerationTable() {
                 <Table>
                   <TableHeader className="bg-gray-50">
                     <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="w-24">Role</TableHead>
-                      <TableHead className="w-32">Saved</TableHead>
-                      <TableHead className="w-24">Interest</TableHead>
+                      <TableHead className="w-12 font-bold text-base">#</TableHead>
+                      <TableHead className="font-bold text-base">User</TableHead>
+                      <TableHead className="font-bold text-base">Email</TableHead>
+                      <TableHead className="w-24 font-bold text-base">Role</TableHead>
+                      <TableHead className="w-32 font-bold text-base">Saved</TableHead>
+                      <TableHead className="w-24 font-bold text-base">Interest</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
