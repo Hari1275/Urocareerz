@@ -209,12 +209,12 @@ export default function AuditLogsTable() {
             <Filter className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">Filters</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Select
               value={filters.action}
               onValueChange={(value) => handleFilterChange("action", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full sm:w-auto sm:min-w-[140px]">
                 <SelectValue placeholder="Action" defaultValue="all" />
               </SelectTrigger>
               <SelectContent className="max-h-[50vh] overflow-auto mt-2">
@@ -237,7 +237,7 @@ export default function AuditLogsTable() {
               value={filters.entityType}
               onValueChange={(value) => handleFilterChange("entityType", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full sm:w-auto sm:min-w-[140px]">
                 <SelectValue placeholder="Entity Type" defaultValue="all" />
               </SelectTrigger>
               <SelectContent className="max-h-[50vh] overflow-auto mt-2">
@@ -255,7 +255,7 @@ export default function AuditLogsTable() {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full sm:w-auto sm:min-w-[140px] justify-start text-left font-normal",
                     !filters.startDate && "text-muted-foreground"
                   )}
                 >
@@ -277,7 +277,7 @@ export default function AuditLogsTable() {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full sm:w-auto sm:min-w-[140px] justify-start text-left font-normal",
                     !filters.endDate && "text-muted-foreground"
                   )}
                 >
@@ -296,7 +296,7 @@ export default function AuditLogsTable() {
             <Button
               variant="outline"
               onClick={clearFilters}
-              className="w-full"
+              className="w-full sm:w-auto sm:min-w-[120px]"
             >
               Clear Filters
             </Button>
