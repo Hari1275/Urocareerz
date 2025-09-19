@@ -102,6 +102,7 @@ import {
   Loader2,
   Mail,
   Phone,
+  X,
 } from "lucide-react";
 
 // Utility to read a cookie value by name (client-side only)
@@ -265,9 +266,9 @@ export default function MentorDashboardPage() {
   const [applicationStatusFilter, setApplicationStatusFilter] = useState("all");
   const [applicationOpportunityFilter, setApplicationOpportunityFilter] =
     useState("all");
-  
+
   // Using single card view - simpler and more user-friendly
-  
+
   const [findMenteesForm, setFindMenteesForm] = useState({
     search: "",
     location: "",
@@ -561,7 +562,7 @@ export default function MentorDashboardPage() {
         const data = await response.json();
         const newDiscussions = data.threads || []; // API returns 'threads' not 'discussions'
 
-        setDiscussions((prev: any) => 
+        setDiscussions((prev: any) =>
           reset ? newDiscussions : [...prev, ...newDiscussions]
         );
         setDiscussionPagination({
@@ -675,7 +676,7 @@ export default function MentorDashboardPage() {
           setOpportunities(data.opportunities || []);
         }
       } catch { }
-      
+
       // Show success toast
       toast({
         title: "✅ Deleted Successfully",
@@ -762,7 +763,7 @@ export default function MentorDashboardPage() {
         );
         setShowReviewModal(false);
         setSelectedApplication(null);
-        
+
         // Show success toast
         toast({
           title: `✅ Application ${status === 'ACCEPTED' ? 'Accepted' : 'Rejected'}`,
@@ -816,12 +817,12 @@ export default function MentorDashboardPage() {
     }
 
     setPostingOpportunity(true);
-    
+
     // Get the opportunity type for optimistic update
     const selectedOpportunityType = opportunityTypes.find(
       (type) => type.id === postOpportunityForm.opportunityTypeId
     );
-    
+
     // Create optimistic opportunity object
     const optimisticOpportunity: Opportunity = {
       id: `temp-${Date.now()}`, // Temporary ID
@@ -843,10 +844,10 @@ export default function MentorDashboardPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     // Optimistically add to opportunities list
     setOpportunities((prev) => [optimisticOpportunity, ...prev]);
-    
+
     try {
       const response = await fetch("/api/opportunities", {
         method: "POST",
@@ -863,21 +864,21 @@ export default function MentorDashboardPage() {
       if (response.ok) {
         const responseData = await response.json();
         const newOpportunity = responseData.opportunity;
-        
+
         // Replace optimistic opportunity with real one
-        setOpportunities((prev) => 
-          prev.map((opp) => 
+        setOpportunities((prev) =>
+          prev.map((opp) =>
             opp.id === optimisticOpportunity.id ? newOpportunity : opp
           )
         );
-        
+
         // Show success toast
         toast({
           title: "✅ Success!",
           description: "Opportunity posted successfully and is now live!",
           duration: 4000,
         });
-        
+
         // Clear any form errors
         setFormError(null);
         // Reset form
@@ -893,7 +894,7 @@ export default function MentorDashboardPage() {
           compensation: "",
           applicationDeadline: "",
         });
-        
+
         // Auto-switch to opportunities tab to show the new opportunity
         setTimeout(() => {
           setActiveSection("opportunities");
@@ -905,21 +906,21 @@ export default function MentorDashboardPage() {
         }, 1500);
       } else {
         // Remove optimistic opportunity on failure
-        setOpportunities((prev) => 
+        setOpportunities((prev) =>
           prev.filter((opp) => opp.id !== optimisticOpportunity.id)
         );
-        
+
         const errorData = await response.json();
         setFormError(errorData.error || "Failed to post opportunity");
       }
     } catch (error) {
       console.error("Error posting opportunity:", error);
-      
+
       // Remove optimistic opportunity on error
-      setOpportunities((prev) => 
+      setOpportunities((prev) =>
         prev.filter((opp) => opp.id !== optimisticOpportunity.id)
       );
-      
+
       setFormError("Failed to post opportunity. Please try again.");
     } finally {
       setPostingOpportunity(false);
@@ -982,7 +983,7 @@ export default function MentorDashboardPage() {
     }
 
     setSendingMessage(true);
-    
+
     try {
       const response = await fetch('/api/messages/send', {
         method: 'POST',
@@ -1005,7 +1006,7 @@ export default function MentorDashboardPage() {
           description: `Your message has been sent to ${selectedMentee.firstName}. They'll receive it in their email inbox.`,
           duration: 5000,
         });
-        
+
         // Reset form and close modal
         setContactForm({
           subject: "",
@@ -1035,7 +1036,7 @@ export default function MentorDashboardPage() {
       setSendingMessage(false);
     }
   };
-  
+
   // Using single card view for simplified UX
 
   // Filter opportunities based on search and filters
@@ -1424,7 +1425,7 @@ export default function MentorDashboardPage() {
 
                 {/* Essential Stats - Streamlined */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  <Card 
+                  <Card
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-blue-300/60 transition-all duration-200 cursor-pointer group"
                     onClick={() => setActiveSection("opportunities")}
                   >
@@ -1448,7 +1449,7 @@ export default function MentorDashboardPage() {
                     </CardContent>
                   </Card>
 
-                  <Card 
+                  <Card
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-emerald-300/60 transition-all duration-200 cursor-pointer group"
                     onClick={() => setActiveSection("applications")}
                   >
@@ -1472,7 +1473,7 @@ export default function MentorDashboardPage() {
                     </CardContent>
                   </Card>
 
-                  <Card 
+                  <Card
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-amber-300/60 transition-all duration-200 cursor-pointer group"
                     onClick={() => setActiveSection("applications")}
                   >
@@ -1734,161 +1735,161 @@ export default function MentorDashboardPage() {
                           </Button>
                         )}
                     </div>
-                    
+
                     {/* Enhanced Card Layout */}
                     <div className="space-y-4">
-                    {paginatedOpportunities.map((opportunity) => {
-                      // Check if opportunity is newly created (within last 30 minutes)
-                      const isNewlyCreated = opportunity.id.startsWith('temp-') || 
-                        (new Date().getTime() - new Date(opportunity.createdAt).getTime()) < 30 * 60 * 1000;
-                      
-                      return (
-                        <Card
-                          key={opportunity.id}
-                          className={cn(
-                            "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-blue-300/60 transition-all duration-300 cursor-pointer group",
-                            isNewlyCreated && "ring-2 ring-green-500/30 border-green-200 bg-green-50/50"
-                          )}
-                          onClick={() => handleViewOpportunity(opportunity)}
-                        >
-                          <CardContent className="p-4 sm:p-6">
-                            {/* Header Section */}
-                            <div className="flex items-start justify-between mb-3 sm:mb-4">
-                              <div className="flex items-start gap-3">
-                                <div className={cn(
-                                  "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0",
-                                  isNewlyCreated 
-                                    ? "bg-gradient-to-tr from-green-500 to-emerald-500" 
-                                    : "bg-gradient-to-tr from-blue-500 to-indigo-500"
-                                )}>
-                                  <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-start gap-3 mb-2">
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="font-semibold text-base sm:text-lg text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors duration-200 mb-1">
-                                        {opportunity.title}
-                                      </h3>
-                                      <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                                        {opportunity.description?.replace(/\s+/g, ' ').trim() || ''}
-                                      </p>
+                      {paginatedOpportunities.map((opportunity) => {
+                        // Check if opportunity is newly created (within last 30 minutes)
+                        const isNewlyCreated = opportunity.id.startsWith('temp-') ||
+                          (new Date().getTime() - new Date(opportunity.createdAt).getTime()) < 30 * 60 * 1000;
+
+                        return (
+                          <Card
+                            key={opportunity.id}
+                            className={cn(
+                              "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-blue-300/60 transition-all duration-300 cursor-pointer group",
+                              isNewlyCreated && "ring-2 ring-green-500/30 border-green-200 bg-green-50/50"
+                            )}
+                            onClick={() => handleViewOpportunity(opportunity)}
+                          >
+                            <CardContent className="p-4 sm:p-6">
+                              {/* Header Section */}
+                              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                                <div className="flex items-start gap-3">
+                                  <div className={cn(
+                                    "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0",
+                                    isNewlyCreated
+                                      ? "bg-gradient-to-tr from-green-500 to-emerald-500"
+                                      : "bg-gradient-to-tr from-blue-500 to-indigo-500"
+                                  )}>
+                                    <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-start gap-3 mb-2">
+                                      <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold text-base sm:text-lg text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors duration-200 mb-1">
+                                          {opportunity.title}
+                                        </h3>
+                                        <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                                          {opportunity.description?.replace(/\s+/g, ' ').trim() || ''}
+                                        </p>
+                                      </div>
+                                      {isNewlyCreated && (
+                                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs animate-pulse flex-shrink-0">
+                                          ✨ New
+                                        </Badge>
+                                      )}
                                     </div>
-                                    {isNewlyCreated && (
-                                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs animate-pulse flex-shrink-0">
-                                        ✨ New
-                                      </Badge>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Information Grid - Redesigned with better alignment */}
+                              <div className="space-y-3 sm:space-y-4 mb-4">
+                                {/* Primary Info Row */}
+                                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-xs font-medium",
+                                      opportunity.status === "APPROVED" &&
+                                      "bg-green-50 text-green-700 border-green-200",
+                                      opportunity.status === "PENDING" &&
+                                      "bg-yellow-50 text-yellow-700 border-yellow-200",
+                                      opportunity.status === "REJECTED" &&
+                                      "bg-red-50 text-red-700 border-red-200"
                                     )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Information Grid - Redesigned with better alignment */}
-                            <div className="space-y-3 sm:space-y-4 mb-4">
-                              {/* Primary Info Row */}
-                              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "text-xs font-medium",
-                                    opportunity.status === "APPROVED" &&
-                                    "bg-green-50 text-green-700 border-green-200",
-                                    opportunity.status === "PENDING" &&
-                                    "bg-yellow-50 text-yellow-700 border-yellow-200",
-                                    opportunity.status === "REJECTED" &&
-                                    "bg-red-50 text-red-700 border-red-200"
+                                  >
+                                    {opportunity.status}
+                                  </Badge>
+
+                                  <Badge variant="secondary" className="text-xs font-medium">
+                                    {opportunity.opportunityType?.name || "No Type"}
+                                  </Badge>
+
+                                  {opportunity.location && (
+                                    <div className="flex items-center gap-1 text-xs text-slate-600">
+                                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                                      <span className="font-medium">{opportunity.location}</span>
+                                    </div>
                                   )}
-                                >
-                                  {opportunity.status}
-                                </Badge>
-                                
-                                <Badge variant="secondary" className="text-xs font-medium">
-                                  {opportunity.opportunityType?.name || "No Type"}
-                                </Badge>
-                                
-                                {opportunity.location && (
-                                  <div className="flex items-center gap-1 text-xs text-slate-600">
-                                    <MapPin className="h-3 w-3 flex-shrink-0" />
-                                    <span className="font-medium">{opportunity.location}</span>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Secondary Info Row */}
-                              <div className="flex items-center justify-between text-xs text-slate-500">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  <span>Posted {new Date(opportunity.createdAt).toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric',
-                                    year: new Date(opportunity.createdAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-                                  })}</span>
                                 </div>
-                                
-                                {opportunity.applicationDeadline && (
-                                  <div className="flex items-center gap-1 text-orange-600">
-                                    <Clock className="h-3 w-3" />
-                                    <span className="font-medium">
-                                      Deadline: {new Date(opportunity.applicationDeadline).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric'
-                                      })}
-                                    </span>
+
+                                {/* Secondary Info Row */}
+                                <div className="flex items-center justify-between text-xs text-slate-500">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>Posted {new Date(opportunity.createdAt).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: new Date(opportunity.createdAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                                    })}</span>
                                   </div>
-                                )}
+
+                                  {opportunity.applicationDeadline && (
+                                    <div className="flex items-center gap-1 text-orange-600">
+                                      <Clock className="h-3 w-3" />
+                                      <span className="font-medium">
+                                        Deadline: {new Date(opportunity.applicationDeadline).toLocaleDateString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric'
+                                        })}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            
-                            {/* Action Buttons */}
-                            <div className="flex items-center justify-end pt-3 border-t border-slate-100">
-                              <div 
-                                className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200" 
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewOpportunity(opportunity);
-                                  }}
-                                  className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-2 sm:px-3"
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                                <div
+                                  className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
-                                  <Eye className="h-4 w-4 sm:mr-1" />
-                                  <span className="text-xs hidden sm:inline">View</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditOpportunity(opportunity);
-                                  }}
-                                  className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 px-2 sm:px-3"
-                                >
-                                  <Edit3 className="h-4 w-4 sm:mr-1" />
-                                  <span className="text-xs hidden sm:inline">Edit</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    requestDeleteOpportunity(opportunity);
-                                  }}
-                                  className="text-slate-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3"
-                                >
-                                  <XCircle className="h-4 w-4 sm:mr-1" />
-                                  <span className="text-xs hidden sm:inline">Delete</span>
-                                </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewOpportunity(opportunity);
+                                    }}
+                                    className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-2 sm:px-3"
+                                  >
+                                    <Eye className="h-4 w-4 sm:mr-1" />
+                                    <span className="text-xs hidden sm:inline">View</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditOpportunity(opportunity);
+                                    }}
+                                    className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 px-2 sm:px-3"
+                                  >
+                                    <Edit3 className="h-4 w-4 sm:mr-1" />
+                                    <span className="text-xs hidden sm:inline">Edit</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      requestDeleteOpportunity(opportunity);
+                                    }}
+                                    className="text-slate-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3"
+                                  >
+                                    <XCircle className="h-4 w-4 sm:mr-1" />
+                                    <span className="text-xs hidden sm:inline">Delete</span>
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
-                    
+
                     {/* Pagination Controls */}
                     {totalOpportunityPages > 1 && (
                       <div className="flex justify-center mt-6">
@@ -2108,287 +2109,287 @@ export default function MentorDashboardPage() {
 
                 {/* Applications Display */}
                 <div className="space-y-4">
-                    {loadingApplications ? (
-                      <div className="space-y-4">
-                        {[1, 2, 3, 4].map((i) => (
-                          <LoadingCard
-                            key={i}
-                            title="Loading applications..."
-                            description="Fetching mentee applications for review"
-                            size="sm"
-                            variant="dots"
-                            color="purple"
-                            className="text-left h-24"
-                          />
-                        ))}
+                  {loadingApplications ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3, 4].map((i) => (
+                        <LoadingCard
+                          key={i}
+                          title="Loading applications..."
+                          description="Fetching mentee applications for review"
+                          size="sm"
+                          variant="dots"
+                          color="purple"
+                          className="text-left h-24"
+                        />
+                      ))}
+                    </div>
+                  ) : filteredApplications.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
+                        <FileText className="h-10 w-10 text-slate-400" />
                       </div>
-                    ) : filteredApplications.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
-                          <FileText className="h-10 w-10 text-slate-400" />
-                        </div>
-                        <h3 className="text-xl font-semibold text-slate-900 mb-3">
-                          {applications.length === 0
-                            ? "No applications yet"
-                            : "No applications match your filters"}
-                        </h3>
-                        <p className="text-slate-600 max-w-sm mx-auto mb-6">
-                          {applications.length === 0
-                            ? "Applications will appear here when mentees apply to your opportunities. Make sure you have posted some opportunities to receive applications."
-                            : "Try adjusting your search criteria or filters to find applications."}
+                      <h3 className="text-xl font-semibold text-slate-900 mb-3">
+                        {applications.length === 0
+                          ? "No applications yet"
+                          : "No applications match your filters"}
+                      </h3>
+                      <p className="text-slate-600 max-w-sm mx-auto mb-6">
+                        {applications.length === 0
+                          ? "Applications will appear here when mentees apply to your opportunities. Make sure you have posted some opportunities to receive applications."
+                          : "Try adjusting your search criteria or filters to find applications."}
+                      </p>
+                      {applications.length === 0 && (
+                        <Button
+                          onClick={() => setActiveSection("post-opportunity")}
+                          className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Post an Opportunity
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Results count */}
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-slate-600">
+                          Showing {startApplicationIndex + 1}-
+                          {Math.min(
+                            endApplicationIndex,
+                            filteredApplications.length
+                          )}{" "}
+                          of {filteredApplications.length} applications
                         </p>
-                        {applications.length === 0 && (
-                          <Button
-                            onClick={() => setActiveSection("post-opportunity")}
-                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Post an Opportunity
-                          </Button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {/* Results count */}
-                        <div className="flex justify-between items-center">
-                          <p className="text-sm text-slate-600">
-                            Showing {startApplicationIndex + 1}-
-                            {Math.min(
-                              endApplicationIndex,
-                              filteredApplications.length
-                            )}{" "}
-                            of {filteredApplications.length} applications
-                          </p>
-                          {(applicationSearchTerm ||
-                            applicationOpportunityFilter !== "all" ||
-                            applicationStatusFilter !== "all") && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setApplicationSearchTerm("");
-                                  setApplicationStatusFilter("all");
-                                  setApplicationOpportunityFilter("all");
-                                  setApplicationPage(1);
-                                }}
-                              >
-                                Clear Filters
-                              </Button>
-                            )}
-                        </div>
-                        {paginatedApplications.map((application) => {
-                          const opportunity = opportunities.find(
-                            (opp) => opp.id === application.opportunityId
-                          );
-                          const isPending = application.status === "PENDING";
-                          
-                          return (
-                            <Card
-                              key={application.id}
-                              className={cn(
-                                "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-purple-300/60 transition-all duration-300 cursor-pointer group",
-                                isPending && "ring-1 ring-amber-200 border-amber-200 bg-amber-50/30"
-                              )}
-                              onClick={() => handleReviewApplication(application)}
+                        {(applicationSearchTerm ||
+                          applicationOpportunityFilter !== "all" ||
+                          applicationStatusFilter !== "all") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setApplicationSearchTerm("");
+                                setApplicationStatusFilter("all");
+                                setApplicationOpportunityFilter("all");
+                                setApplicationPage(1);
+                              }}
                             >
-                              <CardContent className="p-4 sm:p-6">
-                                {/* Header Section */}
-                                <div className="flex items-start justify-between mb-3 sm:mb-4">
-                                  <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
-                                      {application.menteeName?.[0]?.toUpperCase() || "M"}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-bold text-lg sm:text-xl text-slate-900 line-clamp-1 group-hover:text-purple-600 transition-colors duration-200">
-                                          {application.menteeName}
-                                        </h3>
-                                        {isPending && (
-                                          <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs animate-pulse flex-shrink-0">
-                                            ⏳ New
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <p className="text-base font-medium text-slate-600 line-clamp-1 mb-2">
-                                        {application.menteeEmail}
-                                      </p>
-                                    </div>
+                              Clear Filters
+                            </Button>
+                          )}
+                      </div>
+                      {paginatedApplications.map((application) => {
+                        const opportunity = opportunities.find(
+                          (opp) => opp.id === application.opportunityId
+                        );
+                        const isPending = application.status === "PENDING";
+
+                        return (
+                          <Card
+                            key={application.id}
+                            className={cn(
+                              "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-purple-300/60 transition-all duration-300 cursor-pointer group",
+                              isPending && "ring-1 ring-amber-200 border-amber-200 bg-amber-50/30"
+                            )}
+                            onClick={() => handleReviewApplication(application)}
+                          >
+                            <CardContent className="p-4 sm:p-6">
+                              {/* Header Section */}
+                              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
+                                    {application.menteeName?.[0]?.toUpperCase() || "M"}
                                   </div>
-                                  
-                                  {/* Click hint - visible on desktop hover */}
-                                  <div className="hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity duration-200 items-center text-xs text-purple-600">
-                                    <Eye className="h-3 w-3 mr-1" />
-                                    <span>Click to review</span>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="font-bold text-lg sm:text-xl text-slate-900 line-clamp-1 group-hover:text-purple-600 transition-colors duration-200">
+                                        {application.menteeName}
+                                      </h3>
+                                      {isPending && (
+                                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs animate-pulse flex-shrink-0">
+                                          ⏳ New
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-base font-medium text-slate-600 line-clamp-1 mb-2">
+                                      {application.menteeEmail}
+                                    </p>
                                   </div>
                                 </div>
-                                
-                                {/* Information Section */}
-                                <div className="space-y-3 sm:space-y-4 mb-4">
-                                  {/* Primary Info Row */}
-                                  <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                                    <Badge
-                                      variant="outline"
-                                      className={cn(
-                                        "text-sm font-semibold",
-                                        application.status === "ACCEPTED" &&
-                                        "bg-green-50 text-green-700 border-green-200",
-                                        application.status === "PENDING" &&
-                                        "bg-amber-50 text-amber-700 border-amber-200",
-                                        application.status === "REJECTED" &&
-                                        "bg-red-50 text-red-700 border-red-200"
-                                      )}
-                                    >
-                                      {application.status === "PENDING" && (
-                                        <Clock className="h-3 w-3 mr-1" />
-                                      )}
-                                      {application.status === "ACCEPTED" && (
-                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                      )}
-                                      {application.status === "REJECTED" && (
-                                        <XCircle className="h-3 w-3 mr-1" />
-                                      )}
-                                      {application.status}
-                                    </Badge>
-                                    
-                                    {opportunity && (
-                                      <div className="flex items-center gap-1 text-sm text-slate-600">
-                                        <Briefcase className="h-4 w-4 flex-shrink-0" />
-                                        <span className="font-semibold truncate">{opportunity.title}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  {/* Secondary Info Row */}
-                                  <div className="flex items-center justify-between text-sm text-slate-500">
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="h-4 w-4" />
-                                      <span className="font-medium">Applied {new Date(application.appliedAt).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        year: new Date(application.appliedAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-                                      })}</span>
-                                    </div>
-                                    
-                                    {application.resumeUrl && (
-                                      <div className="flex items-center gap-1 text-blue-600">
-                                        <FileText className="h-4 w-4" />
-                                        <span className="font-semibold">Resume attached</span>
-                                      </div>
-                                    )}
-                                  </div>
+
+                                {/* Click hint - visible on desktop hover */}
+                                <div className="hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity duration-200 items-center text-xs text-purple-600">
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  <span>Click to review</span>
                                 </div>
-                                
-                                {/* Action Footer */}
-                                <div className="flex items-center justify-end pt-3 border-t border-slate-100">
-                                  <div 
-                                    className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200" 
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleReviewApplication(application);
-                                      }}
-                                      className={cn(
-                                        "text-slate-600 hover:text-purple-600 hover:bg-purple-50 px-3",
-                                        isPending && "text-amber-700 hover:text-amber-800 hover:bg-amber-50"
-                                      )}
-                                    >
-                                      <Eye className="h-4 w-4 mr-1" />
-                                      <span className="text-sm font-semibold">{isPending ? "Review Now" : "View Details"}</span>
-                                    </Button>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-
-                        {/* Pagination Controls for Applications */}
-                        {totalApplicationPages > 1 && (
-                          <div className="flex justify-center mt-6">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setApplicationPage((prev) =>
-                                    Math.max(1, prev - 1)
-                                  )
-                                }
-                                disabled={applicationPage === 1}
-                              >
-                                <ArrowLeft className="h-4 w-4 mr-1" />
-                                Previous
-                              </Button>
-
-                              <div className="flex items-center gap-1">
-                                {Array.from(
-                                  {
-                                    length: Math.min(5, totalApplicationPages),
-                                  },
-                                  (_, i) => {
-                                    let pageNum;
-                                    if (totalApplicationPages <= 5) {
-                                      pageNum = i + 1;
-                                    } else if (applicationPage <= 3) {
-                                      pageNum = i + 1;
-                                    } else if (
-                                      applicationPage >=
-                                      totalApplicationPages - 2
-                                    ) {
-                                      pageNum = totalApplicationPages - 4 + i;
-                                    } else {
-                                      pageNum = applicationPage - 2 + i;
-                                    }
-
-                                    return (
-                                      <Button
-                                        key={pageNum}
-                                        variant={
-                                          applicationPage === pageNum
-                                            ? "default"
-                                            : "outline"
-                                        }
-                                        size="sm"
-                                        className={cn(
-                                          "w-8 h-8 p-0",
-                                          applicationPage === pageNum &&
-                                          "bg-purple-600 text-white"
-                                        )}
-                                        onClick={() =>
-                                          setApplicationPage(pageNum)
-                                        }
-                                      >
-                                        {pageNum}
-                                      </Button>
-                                    );
-                                  }
-                                )}
                               </div>
 
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setApplicationPage((prev) =>
-                                    Math.min(totalApplicationPages, prev + 1)
-                                  )
+                              {/* Information Section */}
+                              <div className="space-y-3 sm:space-y-4 mb-4">
+                                {/* Primary Info Row */}
+                                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-sm font-semibold",
+                                      application.status === "ACCEPTED" &&
+                                      "bg-green-50 text-green-700 border-green-200",
+                                      application.status === "PENDING" &&
+                                      "bg-amber-50 text-amber-700 border-amber-200",
+                                      application.status === "REJECTED" &&
+                                      "bg-red-50 text-red-700 border-red-200"
+                                    )}
+                                  >
+                                    {application.status === "PENDING" && (
+                                      <Clock className="h-3 w-3 mr-1" />
+                                    )}
+                                    {application.status === "ACCEPTED" && (
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                    )}
+                                    {application.status === "REJECTED" && (
+                                      <XCircle className="h-3 w-3 mr-1" />
+                                    )}
+                                    {application.status}
+                                  </Badge>
+
+                                  {opportunity && (
+                                    <div className="flex items-center gap-1 text-sm text-slate-600">
+                                      <Briefcase className="h-4 w-4 flex-shrink-0" />
+                                      <span className="font-semibold truncate">{opportunity.title}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Secondary Info Row */}
+                                <div className="flex items-center justify-between text-sm text-slate-500">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    <span className="font-medium">Applied {new Date(application.appliedAt).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: new Date(application.appliedAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                                    })}</span>
+                                  </div>
+
+                                  {application.resumeUrl && (
+                                    <div className="flex items-center gap-1 text-blue-600">
+                                      <FileText className="h-4 w-4" />
+                                      <span className="font-semibold">Resume attached</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Action Footer */}
+                              <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                                <div
+                                  className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleReviewApplication(application);
+                                    }}
+                                    className={cn(
+                                      "text-slate-600 hover:text-purple-600 hover:bg-purple-50 px-3",
+                                      isPending && "text-amber-700 hover:text-amber-800 hover:bg-amber-50"
+                                    )}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    <span className="text-sm font-semibold">{isPending ? "Review Now" : "View Details"}</span>
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+
+                      {/* Pagination Controls for Applications */}
+                      {totalApplicationPages > 1 && (
+                        <div className="flex justify-center mt-6">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setApplicationPage((prev) =>
+                                  Math.max(1, prev - 1)
+                                )
+                              }
+                              disabled={applicationPage === 1}
+                            >
+                              <ArrowLeft className="h-4 w-4 mr-1" />
+                              Previous
+                            </Button>
+
+                            <div className="flex items-center gap-1">
+                              {Array.from(
+                                {
+                                  length: Math.min(5, totalApplicationPages),
+                                },
+                                (_, i) => {
+                                  let pageNum;
+                                  if (totalApplicationPages <= 5) {
+                                    pageNum = i + 1;
+                                  } else if (applicationPage <= 3) {
+                                    pageNum = i + 1;
+                                  } else if (
+                                    applicationPage >=
+                                    totalApplicationPages - 2
+                                  ) {
+                                    pageNum = totalApplicationPages - 4 + i;
+                                  } else {
+                                    pageNum = applicationPage - 2 + i;
+                                  }
+
+                                  return (
+                                    <Button
+                                      key={pageNum}
+                                      variant={
+                                        applicationPage === pageNum
+                                          ? "default"
+                                          : "outline"
+                                      }
+                                      size="sm"
+                                      className={cn(
+                                        "w-8 h-8 p-0",
+                                        applicationPage === pageNum &&
+                                        "bg-purple-600 text-white"
+                                      )}
+                                      onClick={() =>
+                                        setApplicationPage(pageNum)
+                                      }
+                                    >
+                                      {pageNum}
+                                    </Button>
+                                  );
                                 }
-                                disabled={
-                                  applicationPage === totalApplicationPages
-                                }
-                              >
-                                Next
-                                <ArrowRight className="h-4 w-4 ml-1" />
-                              </Button>
+                              )}
                             </div>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setApplicationPage((prev) =>
+                                  Math.min(totalApplicationPages, prev + 1)
+                                )
+                              }
+                              disabled={
+                                applicationPage === totalApplicationPages
+                              }
+                            >
+                              Next
+                              <ArrowRight className="h-4 w-4 ml-1" />
+                            </Button>
                           </div>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -2656,8 +2657,8 @@ export default function MentorDashboardPage() {
                         >
                           Cancel
                         </Button>
-                        <Button 
-                          type="submit" 
+                        <Button
+                          type="submit"
                           disabled={postingOpportunity}
                           className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg min-w-[160px] transition-all duration-200"
                         >
@@ -2768,7 +2769,7 @@ export default function MentorDashboardPage() {
                           }
                         />
                       </div>
-                      
+
                       <div>
                         <Label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                           <Briefcase className="h-4 w-4" />
@@ -2804,7 +2805,7 @@ export default function MentorDashboardPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                           <Target className="h-4 w-4" />
@@ -2846,7 +2847,7 @@ export default function MentorDashboardPage() {
                           </>
                         )}
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -2950,7 +2951,7 @@ export default function MentorDashboardPage() {
                                     <div className="h-2 w-2 bg-white rounded-full"></div>
                                   </div>
                                 </div>
-                                
+
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
@@ -2958,7 +2959,7 @@ export default function MentorDashboardPage() {
                                     </h3>
                                   </div>
                                   <p className="text-sm text-slate-600 mb-2">{mentee.email}</p>
-                                  
+
                                   {/* Quick Info Pills */}
                                   <div className="flex flex-wrap gap-2">
                                     {mentee.profile?.location && (
@@ -2973,7 +2974,7 @@ export default function MentorDashboardPage() {
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 {/* Action Hint */}
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-blue-600 flex items-center gap-1">
                                   <Eye className="h-3 w-3" />
@@ -2992,7 +2993,7 @@ export default function MentorDashboardPage() {
                                   </p>
                                 </div>
                               )}
-                              
+
                               {/* Education */}
                               {mentee.profile?.education && (
                                 <div className="flex items-center gap-2">
@@ -3004,7 +3005,7 @@ export default function MentorDashboardPage() {
                                   </span>
                                 </div>
                               )}
-                              
+
                               {/* Interests/Skills */}
                               {mentee.profile?.interests && mentee.profile.interests.length > 0 && (
                                 <div>
@@ -3030,7 +3031,7 @@ export default function MentorDashboardPage() {
                                   </div>
                                 </div>
                               )}
-                              
+
                               {/* Purpose */}
                               {mentee.profile?.purposeOfRegistration && (
                                 <div className="bg-slate-50 rounded-lg p-3">
@@ -3044,7 +3045,7 @@ export default function MentorDashboardPage() {
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Action Bar */}
                             <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/80 border-t border-slate-200/60 flex items-center justify-between">
                               <div className="flex items-center gap-2 sm:gap-3">
@@ -3072,7 +3073,7 @@ export default function MentorDashboardPage() {
                                   Contact
                                 </Button>
                               </div>
-                              
+
                               <div className="text-xs text-slate-400">
                                 #{String(index + 1).padStart(2, '0')}
                               </div>
@@ -3095,13 +3096,13 @@ export default function MentorDashboardPage() {
                             <ArrowLeft className="h-4 w-4 mr-1" />
                             Previous
                           </Button>
-                          
+
                           <div className="flex items-center gap-1">
                             {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
                               let pageNum = pagination.page - 2 + i;
                               if (pageNum < 1) pageNum = i + 1;
                               if (pageNum > pagination.pages) pageNum = pagination.pages - 4 + i;
-                              
+
                               return (
                                 <Button
                                   key={pageNum}
@@ -3115,7 +3116,7 @@ export default function MentorDashboardPage() {
                               );
                             })}
                           </div>
-                          
+
                           <Button
                             variant="outline"
                             size="sm"
@@ -3149,7 +3150,7 @@ export default function MentorDashboardPage() {
                     community.
                   </p>
                 </div>
-                
+
                 {/* Start New Discussion Button */}
                 <div className="flex justify-center">
                   <Button
@@ -3245,7 +3246,7 @@ export default function MentorDashboardPage() {
       {/* Enhanced View Opportunity Modal */}
       {showViewModal && selectedOpportunity && (
         <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
-          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{maxWidth: 'min(90vw, 1400px)'}}>
+          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{ maxWidth: 'min(90vw, 1400px)' }}>
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
               <div className="flex items-start justify-between gap-4">
@@ -3255,7 +3256,7 @@ export default function MentorDashboardPage() {
                       <Briefcase className="h-6 w-6 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                    <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight break-words">
+                      <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight break-words">
                         {selectedOpportunity.title}
                       </DialogTitle>
                       <p className="text-sm text-slate-600 mt-1 break-words">
@@ -3267,7 +3268,7 @@ export default function MentorDashboardPage() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap items-center gap-2">
                     {getTypeBadge(selectedOpportunity.opportunityType?.name || '') && (
                       <Badge className={cn(
@@ -3287,15 +3288,15 @@ export default function MentorDashboardPage() {
                       <CheckCircle className="h-3 w-3 mr-1" />
                       {selectedOpportunity.status}
                     </Badge>
-                    {selectedOpportunity.id.startsWith('temp-') || 
+                    {selectedOpportunity.id.startsWith('temp-') ||
                       (new Date().getTime() - new Date(selectedOpportunity.createdAt).getTime()) < 30 * 60 * 1000 && (
                         <Badge className="bg-green-100 text-green-800 border-green-200 text-xs animate-pulse">
                           ✨ New
                         </Badge>
-                    )}
+                      )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Button
                     variant="outline"
@@ -3338,7 +3339,7 @@ export default function MentorDashboardPage() {
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {selectedOpportunity.experienceLevel && (
                   <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
                     <CardContent className="p-4 flex items-center gap-3 min-w-0">
@@ -3352,7 +3353,7 @@ export default function MentorDashboardPage() {
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {selectedOpportunity.duration && (
                   <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
                     <CardContent className="p-4 flex items-center gap-3 min-w-0">
@@ -3366,7 +3367,7 @@ export default function MentorDashboardPage() {
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {selectedOpportunity.compensation && (
                   <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
                     <CardContent className="p-4 flex items-center gap-3 min-w-0">
@@ -3380,7 +3381,7 @@ export default function MentorDashboardPage() {
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {selectedOpportunity.applicationDeadline && (
                   <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
                     <CardContent className="p-4 flex items-center gap-3 min-w-0">
@@ -3545,7 +3546,7 @@ export default function MentorDashboardPage() {
       {/* Enhanced Edit Opportunity Modal */}
       {showEditModal && selectedOpportunity && (
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-[85vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{maxWidth: 'min(85vw, 1200px)'}}>
+          <DialogContent className="max-w-[85vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{ maxWidth: 'min(85vw, 1200px)' }}>
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
               <div className="flex items-center justify-between gap-4">
@@ -3562,7 +3563,7 @@ export default function MentorDashboardPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Button
                     variant="ghost"
@@ -3866,15 +3867,29 @@ export default function MentorDashboardPage() {
           <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto p-0">
             <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 shadow-lg">
-                    <FileText className="h-6 w-6 text-white" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 shadow-lg">
+                      <FileText className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-2xl font-bold text-slate-900">
+                        Review Application
+                      </DialogTitle>
+                      <p className="text-base text-slate-600 mt-1">
+                        Review and decide on this mentee's application
+                      </p>
+                    </div>
                   </div>
-                  Review Application
-                </DialogTitle>
-                <p className="text-base text-slate-600 mt-2">
-                  Review and decide on this mentee's application
-                </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowReviewModal(false)}
+                    className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full p-2"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
               </DialogHeader>
             </div>
             <div className="p-6 space-y-6">
@@ -4124,7 +4139,7 @@ export default function MentorDashboardPage() {
               </Button>
             </div>
           </div>
-          
+
           {/* Modal Body - Scrollable */}
           <div className="overflow-y-auto max-h-[calc(95vh-120px)] px-6 py-6">
             <ProfileForm
@@ -4176,7 +4191,7 @@ export default function MentorDashboardPage() {
       {/* Comprehensive Mentee Profile Modal */}
       {showMenteeProfileModal && selectedMentee && (
         <Dialog open={showMenteeProfileModal} onOpenChange={setShowMenteeProfileModal}>
-          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{maxWidth: 'min(90vw, 1200px)'}}>
+          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{ maxWidth: 'min(90vw, 1200px)' }}>
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
               <div className="flex items-start justify-between gap-4">
@@ -4271,7 +4286,7 @@ export default function MentorDashboardPage() {
                           <p className="text-slate-700 ml-6">{selectedMentee.profile.education}</p>
                         </div>
                       )}
-                      
+
                       {selectedMentee.profile?.experience && (
                         <div>
                           <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
@@ -4283,13 +4298,13 @@ export default function MentorDashboardPage() {
                           <p className="text-slate-700 ml-6">{selectedMentee.profile.experience}</p>
                         </div>
                       )}
-                      
+
                       <div className="flex items-center gap-2 ml-6">
                         <Calendar className="h-4 w-4 text-slate-400" />
                         <span className="text-sm text-slate-600">
-                          Joined {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', { 
-                            month: 'long', 
-                            year: 'numeric' 
+                          Joined {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
+                            month: 'long',
+                            year: 'numeric'
                           })}
                         </span>
                       </div>
@@ -4375,31 +4390,31 @@ export default function MentorDashboardPage() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600">Member since</span>
                         <span className="font-medium text-slate-900">
-                          {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            year: 'numeric' 
+                          {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            year: 'numeric'
                           })}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600">Profile completion</span>
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
-                              style={{ 
-                                width: `${Math.min(100, 
+                              style={{
+                                width: `${Math.min(100,
                                   (selectedMentee.profile?.bio ? 25 : 0) +
                                   (selectedMentee.profile?.education ? 25 : 0) +
                                   (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
                                   (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
-                                )}%` 
+                                )}%`
                               }}
                             ></div>
                           </div>
                           <span className="font-medium text-slate-900">
-                            {Math.min(100, 
+                            {Math.min(100,
                               (selectedMentee.profile?.bio ? 25 : 0) +
                               (selectedMentee.profile?.education ? 25 : 0) +
                               (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
@@ -4408,7 +4423,7 @@ export default function MentorDashboardPage() {
                           </span>
                         </div>
                       </div>
-                      
+
                     </CardContent>
                   </Card>
 
@@ -4425,14 +4440,14 @@ export default function MentorDashboardPage() {
                         <Mail className="h-4 w-4 text-slate-400" />
                         <span className="text-slate-700">{selectedMentee.email}</span>
                       </div>
-                      
+
                       {selectedMentee.profile?.phone && (
                         <div className="flex items-center gap-2 text-sm">
                           <Phone className="h-4 w-4 text-slate-400" />
                           <span className="text-slate-700">{selectedMentee.profile.phone}</span>
                         </div>
                       )}
-                      
+
                       {selectedMentee.profile?.location && (
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-slate-400" />
@@ -4458,7 +4473,7 @@ export default function MentorDashboardPage() {
                 Contact {selectedMentee.firstName}
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="space-y-6">
               {/* Mentee Info Header */}
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
@@ -4521,9 +4536,8 @@ export default function MentorDashboardPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label className="text-sm font-medium text-slate-700">Subject</Label>
-                  <span className={`text-xs ${
-                    contactForm.subject.length > 200 ? 'text-red-500' : 'text-slate-400'
-                  }`}>
+                  <span className={`text-xs ${contactForm.subject.length > 200 ? 'text-red-500' : 'text-slate-400'
+                    }`}>
                     {contactForm.subject.length}/200
                   </span>
                 </div>
@@ -4531,9 +4545,8 @@ export default function MentorDashboardPage() {
                   value={contactForm.subject}
                   onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
                   placeholder="Enter message subject"
-                  className={`w-full ${
-                    contactForm.subject.length > 200 ? 'border-red-300 focus:border-red-500' : ''
-                  }`}
+                  className={`w-full ${contactForm.subject.length > 200 ? 'border-red-300 focus:border-red-500' : ''
+                    }`}
                   maxLength={250}
                   disabled={sendingMessage}
                 />
@@ -4548,9 +4561,8 @@ export default function MentorDashboardPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label className="text-sm font-medium text-slate-700">Message</Label>
-                  <span className={`text-xs ${
-                    contactForm.message.length > 5000 ? 'text-red-500' : 'text-slate-400'
-                  }`}>
+                  <span className={`text-xs ${contactForm.message.length > 5000 ? 'text-red-500' : 'text-slate-400'
+                    }`}>
                     {contactForm.message.length}/5000
                   </span>
                 </div>
@@ -4558,9 +4570,8 @@ export default function MentorDashboardPage() {
                   value={contactForm.message}
                   onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
                   placeholder="Write your message here..."
-                  className={`w-full min-h-[200px] resize-none ${
-                    contactForm.message.length > 5000 ? 'border-red-300 focus:border-red-500' : ''
-                  }`}
+                  className={`w-full min-h-[200px] resize-none ${contactForm.message.length > 5000 ? 'border-red-300 focus:border-red-500' : ''
+                    }`}
                   maxLength={5100}
                   disabled={sendingMessage}
                 />
@@ -4627,19 +4638,18 @@ export default function MentorDashboardPage() {
                     </DialogTitle>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge
-                        className={`text-xs font-medium ${
-                          selectedDiscussion.status === "ACTIVE"
-                            ? "bg-green-100 text-green-800 border-green-200"
-                            : selectedDiscussion.status === "CLOSED"
+                        className={`text-xs font-medium ${selectedDiscussion.status === "ACTIVE"
+                          ? "bg-green-100 text-green-800 border-green-200"
+                          : selectedDiscussion.status === "CLOSED"
                             ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                             : "bg-gray-100 text-gray-800 border-gray-200"
-                        }`}
+                          }`}
                       >
                         {selectedDiscussion.status === "ACTIVE" && "🟢 Active"}
                         {selectedDiscussion.status === "CLOSED" && "🔒 Closed"}
                         {selectedDiscussion.status === "ARCHIVED" && "📁 Archived"}
                       </Badge>
-                      
+
                       {user && selectedDiscussion.author.id === user.id && (
                         <Badge
                           variant="outline"
@@ -4663,7 +4673,7 @@ export default function MentorDashboardPage() {
                 </Button>
               </div>
             </DialogHeader>
-            
+
             <div className="space-y-6">
               {/* Author and Date */}
               <div className="flex items-center gap-4 text-sm text-slate-600">
@@ -4682,7 +4692,7 @@ export default function MentorDashboardPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4 ml-auto">
                   <div className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
@@ -4694,7 +4704,7 @@ export default function MentorDashboardPage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Tags */}
               {selectedDiscussion.tags && selectedDiscussion.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -4709,7 +4719,7 @@ export default function MentorDashboardPage() {
                   ))}
                 </div>
               )}
-              
+
               {/* Content */}
               <div className="prose prose-slate max-w-none">
                 <div className="p-4 bg-slate-50 rounded-lg border">
@@ -4718,7 +4728,7 @@ export default function MentorDashboardPage() {
                   </p>
                 </div>
               </div>
-              
+
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t">
                 <Button

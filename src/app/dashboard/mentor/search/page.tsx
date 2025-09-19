@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, MapPin, User, GraduationCap, Target } from "lucide-react";
+import SharedHeader from "@/components/shared-header";
 
 interface Mentee {
   id: string;
@@ -110,24 +111,7 @@ export default function MentorSearchPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-600">Loading...</span>
-              </div>
-              <div className="md:hidden">
-                <Button variant="outline" size="sm" disabled>
-                  Loading...
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
+        <SharedHeader />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
@@ -144,24 +128,7 @@ export default function MentorSearchPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-600">Error occurred</span>
-              </div>
-              <div className="md:hidden">
-                <Button variant="outline" size="sm" disabled>
-                  Error
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
+        <SharedHeader />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
@@ -171,8 +138,8 @@ export default function MentorSearchPage() {
               </CardHeader>
               <CardContent>
                 <p>{error}</p>
-                <Button 
-                  onClick={() => window.location.reload()} 
+                <Button
+                  onClick={() => window.location.reload()}
                   className="mt-4"
                 >
                   Try Again
@@ -187,58 +154,7 @@ export default function MentorSearchPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
-            </Link>
-            
-            <div className="hidden md:flex items-center gap-4">
-              {user === null ? (
-                <span className="text-sm text-gray-400 font-medium animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-sm text-gray-600 font-medium">
-                  Welcome, <span className="text-gray-900 font-semibold">{user.firstName || user.email || "User"}</span>
-                </span>
-              )}
-              <Link href="/profile">
-                <Button variant="outline" size="sm">
-                  Profile
-                </Button>
-              </Link>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  if (confirm("Are you sure you want to logout?")) {
-                    fetch("/api/logout", { method: "POST" })
-                      .then(() => router.push("/login"));
-                  }
-                }}
-              >
-                Logout
-              </Button>
-            </div>
-
-            <div className="md:hidden">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  if (confirm("Are you sure you want to logout?")) {
-                    fetch("/api/logout", { method: "POST" })
-                      .then(() => router.push("/login"));
-                  }
-                }}
-              >
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <SharedHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

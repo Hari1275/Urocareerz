@@ -32,6 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import SharedHeader from "@/components/shared-header";
 
 interface User {
   id: string;
@@ -178,26 +179,7 @@ export default function PostOpportunityPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 flex-shrink-0"
-              >
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">
-                  UroCareerz
-                </span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">
-                  Loading...
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <SharedHeader />
         <div className="container mx-auto py-8 px-4">
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
@@ -213,24 +195,7 @@ export default function PostOpportunityPage() {
   if (error && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        {/* Unified Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 flex-shrink-0"
-              >
-                <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">
-                  UroCareerz
-                </span>
-              </Link>
-              <div className="hidden md:flex items-center gap-4">
-                <span className="text-sm text-gray-500 font-medium">Error</span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <SharedHeader />
         <div className="container mx-auto py-8 px-4">
           <div className="text-center">
             <div className="text-red-500 mb-4">
@@ -256,121 +221,7 @@ export default function PostOpportunityPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Unified Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md rounded-b-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 flex-shrink-0"
-            >
-              <span className="text-base sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent tracking-tight">
-                UroCareerz
-              </span>
-            </Link>
-            <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-gray-600 font-medium">
-                Welcome,{" "}
-                <span className="text-gray-900 font-semibold">
-                  {user.firstName || "Doctor"}
-                </span>
-              </span>
-              
-              {/* Enhanced User Menu with Profile Image */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-2 p-1 h-auto hover:bg-slate-100 rounded-lg"
-                  >
-                    <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
-                      {user.profile?.avatar ? (
-                        <AvatarImage 
-                          src={user.profile.avatar} 
-                          alt={getUserDisplayName()}
-                          className="object-cover"
-                        />
-                      ) : null}
-                      <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-slate-900 truncate max-w-[120px]">
-                        {user.firstName || "Doctor"}
-                      </p>
-                      <p className="text-xs text-slate-500 capitalize">
-                        {user.role.toLowerCase()}
-                      </p>
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="flex items-center gap-2 p-2">
-                    <Avatar className="h-8 w-8">
-                      {user.profile?.avatar ? (
-                        <AvatarImage 
-                          src={user.profile.avatar} 
-                          alt={getUserDisplayName()}
-                          className="object-cover"
-                        />
-                      ) : null}
-                      <AvatarFallback className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-semibold text-sm">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{getUserDisplayName()}</p>
-                      <p className="text-xs text-slate-500 capitalize">
-                        {user.role.toLowerCase()}
-                      </p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/profile")}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Profile Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/mentor")}>
-                    <span className="mr-2">←</span>
-                    <span>Back to Dashboard</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="md:hidden flex items-center justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/dashboard/mentor")}
-                className="p-2 text-gray-700 hover:text-blue-600 transition-colors flex-shrink-0"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <SharedHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
@@ -429,7 +280,7 @@ export default function PostOpportunityPage() {
             {/* Main Form */}
             <div className="lg:col-span-3 space-y-6">
               <form onSubmit={handleSubmit} className="space-y-8">
-                
+
                 {/* Section 1: Basic Information */}
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg">
                   <CardHeader className="border-b border-slate-100">
@@ -459,7 +310,7 @@ export default function PostOpportunityPage() {
                         />
                         <p className="text-xs text-slate-500">Give your opportunity a clear, descriptive title</p>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="opportunityType" className="text-sm font-semibold text-slate-700">
                           Opportunity Type *
@@ -543,7 +394,7 @@ export default function PostOpportunityPage() {
                         />
                         <p className="text-xs text-slate-500">Where will this opportunity take place?</p>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="experienceLevel" className="text-sm font-semibold text-slate-700">
                           Experience Level
@@ -614,7 +465,7 @@ export default function PostOpportunityPage() {
                         />
                         <p className="text-xs text-slate-500">How long will this opportunity last?</p>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="compensation" className="text-sm font-semibold text-slate-700">
                           Compensation
@@ -686,7 +537,7 @@ export default function PostOpportunityPage() {
                         <h3 className="text-lg font-semibold text-slate-900">Ready to publish?</h3>
                         <p className="text-sm text-slate-600">Your opportunity will be reviewed by our team before going live.</p>
                       </div>
-                      
+
                       <div className="flex gap-3 w-full sm:w-auto">
                         <Button
                           type="button"
@@ -697,8 +548,8 @@ export default function PostOpportunityPage() {
                         >
                           Cancel
                         </Button>
-                        <Button 
-                          type="submit" 
+                        <Button
+                          type="submit"
                           disabled={submitting || !formData.title || !formData.description || !formData.opportunityTypeId}
                           className="flex-1 sm:flex-none bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                         >

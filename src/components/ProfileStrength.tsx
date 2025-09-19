@@ -78,13 +78,13 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
           name: "avatar",
           label: "Profile Photo",
           weight: 15,
-          isComplete: !!(profile?.avatar && 
-            profile.avatar !== "https://example.com" && 
+          isComplete: !!(profile?.avatar &&
+            profile.avatar !== "https://example.com" &&
             !profile.avatar.startsWith("local-")),
           required: false
         },
         {
-          name: "bio", 
+          name: "bio",
           label: "Biography",
           weight: 15,
           isComplete: !!(profile?.bio && profile.bio.trim().length > 10),
@@ -118,7 +118,7 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
           },
           {
             name: "purpose",
-            label: "Purpose of Registration", 
+            label: "Purpose of Registration",
             weight: 10,
             isComplete: !!(profile?.purposeOfRegistration && profile.purposeOfRegistration.trim().length > 0),
             required: false
@@ -127,8 +127,8 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
             name: "resume",
             label: "Resume Upload",
             weight: 15,
-            isComplete: !!(profile?.resume && 
-              profile.resume !== "https://example.com" && 
+            isComplete: !!(profile?.resume &&
+              profile.resume !== "https://example.com" &&
               !profile.resume.startsWith("local-")),
             required: true
           }
@@ -173,7 +173,7 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
       const completedWeight = baseFields
         .filter(field => field.isComplete)
         .reduce((sum, field) => sum + field.weight, 0);
-      
+
       const percentage = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
       setCompletionPercentage(percentage);
       setLoading(false);
@@ -198,22 +198,9 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
     return (
       <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 w-full ${className || ""}`}>
         <CardHeader className="pb-3 xl:pb-4">
-          <CardTitle className="text-base xl:text-lg font-semibold text-slate-900 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Target className="h-4 w-4 xl:h-5 xl:w-5 text-blue-500 flex-shrink-0" />
-              <span className="truncate">Profile Strength</span>
-            </div>
-            {onEdit && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={onEdit}
-                className="text-xs bg-white/80 border-slate-200 hover:bg-white flex-shrink-0"
-              >
-                <Edit3 className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Edit</span>
-              </Button>
-            )}
+          <CardTitle className="text-base xl:text-lg font-semibold text-slate-900 flex items-center gap-2">
+            <Target className="h-4 w-4 xl:h-5 xl:w-5 text-blue-500 flex-shrink-0" />
+            <span className="truncate">Profile Strength</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -225,14 +212,6 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
               </div>
               <div className="h-2 bg-slate-200 rounded"></div>
             </div>
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                  <div className="h-4 bg-slate-200 rounded flex-1"></div>
-                </div>
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -242,22 +221,9 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
   return (
     <Card className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 w-full ${className || ""}`}>
       <CardHeader className="pb-3 xl:pb-4">
-        <CardTitle className="text-base xl:text-lg font-semibold text-slate-900 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <Target className="h-4 w-4 xl:h-5 xl:w-5 text-blue-500 flex-shrink-0" />
-            <span className="truncate">Profile Strength</span>
-          </div>
-          {onEdit && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={onEdit}
-              className="text-xs bg-white/80 border-slate-200 hover:bg-white flex-shrink-0"
-            >
-              <Edit3 className="h-3 w-3 mr-1" />
-              <span className="hidden sm:inline">Edit</span>
-            </Button>
-          )}
+        <CardTitle className="text-base xl:text-lg font-semibold text-slate-900 flex items-center gap-2">
+          <Target className="h-4 w-4 xl:h-5 xl:w-5 text-blue-500 flex-shrink-0" />
+          <span className="truncate">Profile Strength</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -268,28 +234,13 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
               <span className="text-sm xl:text-base font-medium text-slate-700">Completion</span>
               <span className="text-sm xl:text-base font-bold text-slate-900">{completionPercentage}%</span>
             </div>
-            <Progress 
-              value={completionPercentage} 
+            <Progress
+              value={completionPercentage}
               className="h-2 xl:h-2.5"
             />
           </div>
-          
-          {/* Profile Fields List - Responsive spacing */}
-          <div className="space-y-2 xl:space-y-2.5">
-            {profileFields.map((field) => (
-              <div key={field.name} className="flex items-center gap-2 xl:gap-3 text-sm xl:text-base">
-                <div 
-                  className={`w-2 h-2 xl:w-2.5 xl:h-2.5 rounded-full ${getStatusColor(field.isComplete, field.required)}`}
-                  title={getStatusLabel(field.isComplete, field.required)}
-                ></div>
-                <span className="text-slate-600 flex-1 truncate">{field.label}</span>
-                {field.required && !field.isComplete && (
-                  <span className="text-xs xl:text-sm text-red-500 font-medium flex-shrink-0">Required</span>
-                )}
-              </div>
-            ))}
-          </div>
-          
+
+
           {/* Call-to-Action Section - Responsive layout */}
           {completionPercentage < 100 && (
             <div className="mt-4 xl:mt-5 p-3 xl:p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -300,8 +251,8 @@ export default function ProfileStrength({ user, profile, className, onEdit }: Pr
                   </p>
                 </div>
                 {onEdit && (
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={onEdit}
                     className="bg-blue-600 hover:bg-blue-700 text-white text-xs xl:text-sm px-3 xl:px-4 py-1.5 xl:py-2 h-auto w-full sm:w-auto"
                   >

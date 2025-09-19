@@ -414,7 +414,7 @@ export default function MenteeDashboardPage() {
   const [submissionSearchTerm, setSubmissionSearchTerm] = useState("");
   const [submissionTypeFilter, setSubmissionTypeFilter] = useState("all");
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
-  
+
   // Withdraw confirmation dialog state
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
   const [applicationToWithdraw, setApplicationToWithdraw] = useState<string | null>(null);
@@ -664,7 +664,7 @@ export default function MenteeDashboardPage() {
 
     console.log("🔍 fetchDiscussions called with:", { category, status, page, reset, force, myDiscussions });
     console.log("👤 Current user for filtering:", user?.id, user?.firstName);
-    
+
     setDiscussionsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -687,15 +687,15 @@ export default function MenteeDashboardPage() {
       const response = await fetch(`/api/discussions?${params.toString()}`, {
         cache: "no-store",
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const newDiscussions = data.threads || [];
         console.log(`✅ Loaded ${newDiscussions.length} discussions from API`);
-        console.log("🔍 Filter status:", { 
-          myDiscussions, 
+        console.log("🔍 Filter status:", {
+          myDiscussions,
           userHasDiscussions: newDiscussions.filter((d: any) => d.author.id === user?.id).length,
-          totalDiscussions: newDiscussions.length 
+          totalDiscussions: newDiscussions.length
         });
 
         setDiscussions(prev => reset ? newDiscussions : [...prev, ...newDiscussions]);
@@ -1071,7 +1071,7 @@ export default function MenteeDashboardPage() {
 
   const confirmWithdrawApplication = async () => {
     if (!applicationToWithdraw) return;
-    
+
     setWithdrawingId(applicationToWithdraw);
     try {
       const response = await fetch(
@@ -1088,14 +1088,14 @@ export default function MenteeDashboardPage() {
             app.id === applicationToWithdraw ? { ...app, status: "WITHDRAWN" } : app
           )
         );
-        
+
         // Show success toast
         toast({
           title: "Success!",
           description: "Application withdrawn successfully",
           variant: "default",
         });
-        
+
         // Refresh dashboard data to update stats
         fetchDashboardData();
       } else {
@@ -1129,7 +1129,7 @@ export default function MenteeDashboardPage() {
 
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedOpportunityForApply) {
       toast({
         title: "Error",
@@ -1138,7 +1138,7 @@ export default function MenteeDashboardPage() {
       });
       return;
     }
-    
+
     if (!cvFile) {
       toast({
         title: "Missing File",
@@ -1151,7 +1151,7 @@ export default function MenteeDashboardPage() {
     setApplyLoading(true);
     try {
       let resumeUrl = "";
-      
+
       // Upload the file first if provided
       if (cvFile) {
         const uploadFormData = new FormData();
@@ -1514,15 +1514,15 @@ export default function MenteeDashboardPage() {
   const formatDate = (dateString: string | null | undefined) => {
     // Handle invalid or missing dates
     if (!dateString) return "Unknown date";
-    
+
     // Use a consistent date format to prevent hydration mismatches
     const date = new Date(dateString);
-    
+
     // Check if the date is invalid
     if (isNaN(date.getTime())) {
       return "Unknown date";
     }
-    
+
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -1665,7 +1665,7 @@ export default function MenteeDashboardPage() {
                 {/* Enhanced Stats Grid */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {/* Total Applications */}
-                  <Card 
+                  <Card
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
                     onClick={() => setActiveSection("applications")}
                   >
@@ -1682,9 +1682,9 @@ export default function MenteeDashboardPage() {
                             Applications
                           </p>
                           <p className="text-xs text-blue-600 font-medium leading-tight">
-                            {stats.totalApplications === 0 ? "Start applying" : 
-                             stats.applicationSuccessRate > 0 ? `${stats.applicationSuccessRate}% success` :
-                             "Track your progress"}
+                            {stats.totalApplications === 0 ? "Start applying" :
+                              stats.applicationSuccessRate > 0 ? `${stats.applicationSuccessRate}% success` :
+                                "Track your progress"}
                           </p>
                         </div>
                       </div>
@@ -1692,7 +1692,7 @@ export default function MenteeDashboardPage() {
                   </Card>
 
                   {/* Pending Applications */}
-                  <Card 
+                  <Card
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
                     onClick={() => setActiveSection("applications")}
                   >
@@ -1717,7 +1717,7 @@ export default function MenteeDashboardPage() {
                   </Card>
 
                   {/* Saved Opportunities */}
-                  <Card 
+                  <Card
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
                     onClick={() => setActiveSection("saved")}
                   >
@@ -1742,7 +1742,7 @@ export default function MenteeDashboardPage() {
                   </Card>
 
                   {/* My Submissions */}
-                  <Card 
+                  <Card
                     className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 h-fit"
                     onClick={() => setActiveSection("submissions")}
                   >
@@ -1759,9 +1759,9 @@ export default function MenteeDashboardPage() {
                             My Posts
                           </p>
                           <p className="text-xs text-emerald-600 font-medium leading-tight">
-                            {stats.submittedOpportunities === 0 ? "Share opportunities" : 
-                             stats.approvedSubmissions > 0 ? `${stats.approvedSubmissions} approved` :
-                             "Under review"}
+                            {stats.submittedOpportunities === 0 ? "Share opportunities" :
+                              stats.approvedSubmissions > 0 ? `${stats.approvedSubmissions} approved` :
+                                "Under review"}
                           </p>
                         </div>
                       </div>
@@ -2065,7 +2065,7 @@ export default function MenteeDashboardPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       {/* Clear Filters Button */}
                       {hasActiveFilters && (
                         <div className="flex justify-center pt-2 border-t border-slate-100">
@@ -2261,7 +2261,7 @@ export default function MenteeDashboardPage() {
                           </Select>
                         </div>
                       </div>
-                      
+
                       {/* Clear Filters Button */}
                       {hasActiveApplicationFilters && (
                         <div className="flex justify-center pt-2 border-t border-slate-100">
@@ -2305,7 +2305,7 @@ export default function MenteeDashboardPage() {
                         {applicationStatusFilter !== "all" ? "No applications found" : "No applications yet"}
                       </h3>
                       <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                        {applicationStatusFilter !== "all" 
+                        {applicationStatusFilter !== "all"
                           ? `No applications with ${applicationStatusFilter.toLowerCase()} status found.`
                           : "Start applying for opportunities to see your applications here."
                         }
@@ -2967,22 +2967,6 @@ export default function MenteeDashboardPage() {
                     <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Submit Opportunity
                   </Button>
-                  <Button
-                    onClick={() => setActiveSection("opportunities")}
-                    variant="outline"
-                    className="w-full bg-white/80 border-slate-200 hover:bg-white text-xs sm:text-sm"
-                  >
-                    <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                    Browse Opportunities
-                  </Button>
-                  <Button
-                    onClick={handleEditProfile}
-                    variant="outline"
-                    className="w-full bg-white/80 border-slate-200 hover:bg-white text-xs sm:text-sm"
-                  >
-                    <Edit3 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                    Edit Profile
-                  </Button>
                 </CardContent>
               </Card>
 
@@ -3121,7 +3105,7 @@ export default function MenteeDashboardPage() {
                 CV/Resume
                 <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">Required</span>
               </Label>
-              
+
               {/* Compact File Upload */}
               <div className="relative border-2 border-dashed border-slate-300 rounded-lg p-4 hover:border-slate-400 transition-colors cursor-pointer" onClick={() => document.getElementById('cvFile')?.click()}>
                 <div className="flex items-center gap-3">
@@ -3158,7 +3142,7 @@ export default function MenteeDashboardPage() {
                   required
                 />
               </div>
-              
+
               <p className="text-xs text-slate-500">
                 PDF, DOC, DOCX (Max 10MB)
               </p>
@@ -4069,31 +4053,29 @@ export default function MenteeDashboardPage() {
                       </DialogTitle>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge
-                          className={`text-xs font-medium ${
-                            selectedDiscussion.status === "ACTIVE"
-                              ? "bg-green-100 text-green-800 border-green-200"
-                              : selectedDiscussion.status === "CLOSED"
+                          className={`text-xs font-medium ${selectedDiscussion.status === "ACTIVE"
+                            ? "bg-green-100 text-green-800 border-green-200"
+                            : selectedDiscussion.status === "CLOSED"
                               ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                               : "bg-gray-100 text-gray-800 border-gray-200"
-                          }`}
+                            }`}
                         >
                           {selectedDiscussion.status === "ACTIVE" && "🟢 Active"}
                           {selectedDiscussion.status === "CLOSED" && "🔒 Closed"}
                           {selectedDiscussion.status === "ARCHIVED" && "📁 Archived"}
                         </Badge>
-                        
+
                         <Badge
-                          className={`text-xs ${
-                            categoryColors[
-                              selectedDiscussion.category as keyof typeof categoryColors
-                            ] || categoryColors.GENERAL
-                          }`}
+                          className={`text-xs ${categoryColors[
+                            selectedDiscussion.category as keyof typeof categoryColors
+                          ] || categoryColors.GENERAL
+                            }`}
                         >
                           {categoryLabels[
                             selectedDiscussion.category as keyof typeof categoryLabels
                           ] || selectedDiscussion.category}
                         </Badge>
-                        
+
                         {user && selectedDiscussion.author.id === user.id && (
                           <Badge
                             variant="outline"
@@ -4117,7 +4099,7 @@ export default function MenteeDashboardPage() {
                   </Button>
                 </div>
               </DialogHeader>
-              
+
               <div className="space-y-6">
                 {/* Author and Date */}
                 <div className="flex items-center gap-4 text-sm text-slate-600">
@@ -4136,7 +4118,7 @@ export default function MenteeDashboardPage() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4 ml-auto">
                     <div className="flex items-center gap-1">
                       <Eye className="h-4 w-4" />
@@ -4148,7 +4130,7 @@ export default function MenteeDashboardPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Tags */}
                 {selectedDiscussion.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -4163,7 +4145,7 @@ export default function MenteeDashboardPage() {
                     ))}
                   </div>
                 )}
-                
+
                 {/* Content */}
                 <div className="prose prose-slate max-w-none">
                   <div className="p-4 bg-slate-50 rounded-lg border">
@@ -4172,7 +4154,7 @@ export default function MenteeDashboardPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Actions */}
                 <div className="flex gap-3 pt-4 border-t">
                   <Button
