@@ -116,13 +116,16 @@ async function getAnalytics(request: NextRequest) {
         },
       }),
 
-      // Total discussions
-      prisma.discussionThread.count({
+      // Total discussions (fetch all, filter manually due to MongoDB/Prisma null handling issue)
+      prisma.discussionThread.findMany({
         where: {
-          deletedAt: null,
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
+        },
+        select: {
+          id: true,
+          deletedAt: true,
         },
       }),
 
@@ -260,6 +263,10 @@ async function getAnalytics(request: NextRequest) {
     const filteredTotalUsers = filterRecentlyDeleted(totalUsers);
     const filteredPendingUsers = filterRecentlyDeleted(pendingUsers);
 
+    // Filter discussions to exclude deleted ones (due to MongoDB/Prisma null handling issue)
+    const filteredDiscussions = totalDiscussions.filter((discussion: any) => discussion.deletedAt === null);
+    const deletedDiscussions = totalDiscussions.filter((discussion: any) => discussion.deletedAt !== null);
+
     return NextResponse.json({
       overview: {
         totalUsers: filteredTotalUsers.length,
@@ -268,7 +275,8 @@ async function getAnalytics(request: NextRequest) {
         pendingOpportunities,
         totalMenteeOpportunities,
         pendingMenteeOpportunities,
-        totalDiscussions,
+        totalDiscussions: filteredDiscussions.length,
+        deletedDiscussions: deletedDiscussions.length,
         totalApplications,
       },
       trends: {
