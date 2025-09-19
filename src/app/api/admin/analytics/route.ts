@@ -53,7 +53,7 @@ async function getAnalytics(request: NextRequest) {
           }),
         },
       }),
-      
+
       // Pending users (users with OTP secret - not yet verified, exclude admins)
       prisma.user.count({
         where: {
@@ -65,16 +65,17 @@ async function getAnalytics(request: NextRequest) {
           }),
         },
       }),
-      
-      // Total opportunities
+
+      // Total opportunities (approved/active only, excluding pending)
       prisma.opportunity.count({
         where: {
+          status: { not: "PENDING" },
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
         },
       }),
-      
+
       // Pending opportunities
       prisma.opportunity.count({
         where: {
@@ -84,7 +85,7 @@ async function getAnalytics(request: NextRequest) {
           }),
         },
       }),
-      
+
       // Total mentee opportunities (opportunities created by mentees)
       prisma.opportunity.count({
         where: {
@@ -94,7 +95,7 @@ async function getAnalytics(request: NextRequest) {
           }),
         },
       }),
-      
+
       // Pending mentee opportunities (mentee-created, pending approval)
       prisma.opportunity.count({
         where: {
@@ -105,7 +106,7 @@ async function getAnalytics(request: NextRequest) {
           }),
         },
       }),
-      
+
       // Total discussions
       prisma.discussionThread.count({
         where: {
@@ -115,7 +116,7 @@ async function getAnalytics(request: NextRequest) {
           }),
         },
       }),
-      
+
       // Total applications
       prisma.application.count({
         where: {
@@ -124,7 +125,7 @@ async function getAnalytics(request: NextRequest) {
           }),
         },
       }),
-      
+
       // User registrations in last 30 days (fetch all, aggregate in JS)
       prisma.user.findMany({
         where: {
@@ -143,7 +144,7 @@ async function getAnalytics(request: NextRequest) {
         },
         select: { createdAt: true },
       }),
-      
+
       // User role distribution
       prisma.user.groupBy({
         by: ['role'],
@@ -151,7 +152,7 @@ async function getAnalytics(request: NextRequest) {
           id: true,
         },
       }),
-      
+
       // Opportunity type distribution
       prisma.opportunity.groupBy({
         by: ['opportunityTypeId'],
@@ -159,7 +160,7 @@ async function getAnalytics(request: NextRequest) {
           id: true,
         },
       }),
-      
+
       // Recent activity (last 50 audit logs for better data consistency)
       prisma.auditLog.findMany({
         take: 50,
