@@ -33,13 +33,13 @@ export default function Home() {
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xl font-extrabold bg-gradient-to-tr from-blue-700 to-indigo-600 bg-clip-text text-transparent tracking-tight">UroCareerz</span>
           </Link>
-          
+
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
             <Link href="/login" className="text-gray-700 hover:text-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-all">Log in</Link>
-            <Link href="/register" className="premium-button bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-800 hover:to-indigo-700 text-white shadow-md shadow-blue-500/10 text-sm">Get Started</Link>
+            <Link href="/register" className="premium-button bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-800 hover:to-indigo-700 text-white shadow-md shadow-blue-500/10 text-sm">Register</Link>
           </div>
-          
+
           {/* Mobile Navigation */}
           <div className="md:hidden">
             <Link href="/register" className="premium-button bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-800 hover:to-indigo-700 text-white shadow-md shadow-blue-500/10 text-sm px-4 py-2 rounded-lg">
@@ -221,7 +221,7 @@ export default function Home() {
           <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full bg-blue-600/20 blur-3xl"></div>
           <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-indigo-600/20 blur-3xl"></div>
         </div>
-        
+
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <motion.h2
             className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6"
@@ -248,7 +248,7 @@ export default function Home() {
             variants={fadeUp(3)}
           >
             <Link href="/register" className="premium-button bg-white text-blue-700 hover:bg-blue-50 font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-xl shadow-xl shadow-blue-800/20 text-base sm:text-lg">
-              Get Started
+              Register
             </Link>
           </motion.div>
         </div>
