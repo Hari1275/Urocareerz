@@ -346,10 +346,10 @@ export default function ProfileForm({
         resume: "",
         resumeFileName: "",
       }));
-      
+
       // Reset selected file state to allow re-upload
       setSelectedResumeFile(null);
-      
+
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -382,10 +382,10 @@ export default function ProfileForm({
         avatar: "",
         avatarFileName: "",
       }));
-      
+
       // Reset selected file state to allow re-upload
       setSelectedAvatarFile(null);
-      
+
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -439,7 +439,7 @@ export default function ProfileForm({
       if (formData.avatar.startsWith("http")) {
         return formData.avatar;
       }
-      // Otherwise, use the download API
+      // For file keys, use the download API
       return `/api/download?key=${encodeURIComponent(formData.avatar)}`;
     }
     return undefined;
@@ -461,18 +461,45 @@ export default function ProfileForm({
         return undefined; // Don't show preview for mock files
       }
 
-      // If it's already a full S3 URL, convert it to a download URL
+      // If it's already a full S3 URL, use it directly
       if (formData.resume.startsWith("http")) {
-        // Extract the file key from the S3 URL
-        const url = new URL(formData.resume);
-        const fileKey = url.pathname.substring(1); // Remove leading slash
-        return `/api/download?key=${encodeURIComponent(fileKey)}`;
+        return formData.resume;
       }
 
-      // If it's a file key, use it directly
+      // For file keys, use the download API
       return `/api/download?key=${encodeURIComponent(formData.resume)}`;
     }
     return undefined;
+  };
+
+  const handlePreviewFile = async (fileKey: string, fileType: 'avatar' | 'resume') => {
+    try {
+      // If it's already a full URL, open it directly
+      if (fileKey.startsWith("http")) {
+        window.open(fileKey, '_blank');
+        return;
+      }
+
+      // For file keys, get the presigned URL first
+      const response = await fetch(`/api/download?key=${encodeURIComponent(fileKey)}`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get download URL');
+      }
+
+      const data = await response.json();
+      if (data.success && data.downloadUrl) {
+        window.open(data.downloadUrl, '_blank');
+      } else {
+        throw new Error('No download URL received');
+      }
+    } catch (error: any) {
+      console.error(`Error previewing ${fileType}:`, error);
+      alert(`Failed to preview ${fileType}: ${error.message}`);
+    }
   };
 
   return (
@@ -814,7 +841,7 @@ export default function ProfileForm({
                 Files & Documents
               </CardTitle>
               <p className="text-sm text-slate-600 mt-1">
-                {profile?.user?.role === "MENTEE" 
+                {profile?.user?.role === "MENTEE"
                   ? "Upload your profile picture and resume"
                   : "Upload your professional profile picture"
                 }
@@ -833,7 +860,7 @@ export default function ProfileForm({
                 Profile Picture
               </Label>
             </div>
-            
+
             {getAvatarUrl() && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <div className="flex items-center gap-3">
@@ -855,12 +882,7 @@ export default function ProfileForm({
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={async () => {
-                          const avatarUrl = getAvatarUrl();
-                          if (avatarUrl) {
-                            window.open(avatarUrl, '_blank');
-                          }
-                        }}
+                        onClick={() => handlePreviewFile(formData.avatar, 'avatar')}
                         className="text-green-700 border-green-300 hover:bg-green-100 text-xs h-7 px-2"
                       >
                         Preview
@@ -906,7 +928,7 @@ export default function ProfileForm({
                   Resume/CV
                 </Label>
               </div>
-              
+
               {getResumeUrl() && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center gap-3">
@@ -928,12 +950,7 @@ export default function ProfileForm({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            const resumeUrl = getResumeUrl();
-                            if (resumeUrl) {
-                              window.open(resumeUrl, '_blank');
-                            }
-                          }}
+                          onClick={() => handlePreviewFile(formData.resume, 'resume')}
                           className="text-blue-700 border-blue-300 hover:bg-blue-100 text-xs h-7 px-2"
                         >
                           Preview
@@ -1001,7 +1018,7 @@ export default function ProfileForm({
           )}
         </Button>
       </div>
-      
+
       {/* Progress indicator */}
       {(isUploadingAvatar || isUploadingResume || isSubmitting) && (
         <div className="text-center pt-3">
