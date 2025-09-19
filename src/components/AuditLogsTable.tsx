@@ -311,7 +311,6 @@ export default function AuditLogsTable() {
                 <TableHead className="font-bold text-base">Action</TableHead>
                 <TableHead className="font-bold text-base">Entity</TableHead>
                 <TableHead className="font-bold text-base">User</TableHead>
-                <TableHead className="font-bold text-base">Details</TableHead>
                 <TableHead className="font-bold text-base">IP Address</TableHead>
                 <TableHead className="font-bold text-base">Date</TableHead>
               </TableRow>
@@ -319,7 +318,7 @@ export default function AuditLogsTable() {
             <TableBody>
               {auditLogs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                     No audit logs found
                   </TableCell>
                 </TableRow>
@@ -349,15 +348,6 @@ export default function AuditLogsTable() {
                           {log.user.role}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {log.details ? (
-                        <div className="max-w-xs truncate" title={log.details}>
-                          {log.details}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
                     </TableCell>
                     <TableCell>
                       {log.ipAddress ? (
