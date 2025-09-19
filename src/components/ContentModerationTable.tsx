@@ -63,6 +63,9 @@ import {
   Calendar,
   Clock,
   DollarSign,
+  Mail,
+  Shield,
+  UserCheck,
 } from "lucide-react";
 import React from "react";
 
@@ -438,7 +441,7 @@ export default function ContentModerationTable() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Content Moderation</CardTitle>
+          <CardTitle>Opportunities</CardTitle>
           <div className="text-sm text-muted-foreground">
             Loading opportunities...
           </div>
@@ -1347,18 +1350,17 @@ export default function ContentModerationTable() {
       <Dialog open={showOpportunityDetails} onOpenChange={setShowOpportunityDetails}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-blue-600" />
+            <DialogTitle className="flex items-center gap-2 text-2xl">
               Opportunity Details
             </DialogTitle>
           </DialogHeader>
 
           {opportunityDetails && (
-            <div className="space-y-4">
+            <div className="space-y-8">
               {/* Header */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">{opportunityDetails.title}</h2>
-                <div className="flex items-center gap-2">
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900 leading-tight">{opportunityDetails.title}</h2>
+                <div className="flex items-center gap-3">
                   {(() => {
                     const typeInfo = getTypeBadge(opportunityDetails.opportunityType.name);
                     return typeInfo ? (
@@ -1375,71 +1377,93 @@ export default function ContentModerationTable() {
               </div>
 
               {/* Creator & Dates */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-3 border-y border-gray-100">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">
+              <div className="space-y-4 py-6 border-y border-gray-200">
+                {/* Creator Name */}
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-gray-500" />
+                  <span className="font-semibold text-gray-900">
                     {opportunityDetails.creator.firstName && opportunityDetails.creator.lastName
                       ? `${opportunityDetails.creator.firstName} ${opportunityDetails.creator.lastName}`
                       : "puneeth K"}
                   </span>
-                  <Badge
-                    variant={opportunityDetails.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
-                    className="text-xs"
-                  >
-                    {opportunityDetails.creatorRole}
-                  </Badge>
                 </div>
-                <div className="text-sm text-gray-500 ml-6 sm:ml-0">
-                  {opportunityDetails.creator.email}
-                </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>Posted: {formatDate(opportunityDetails.createdAt)}</span>
-                </div>
-                {opportunityDetails.updatedAt && (
+                {/* Role */}
+                <div className="flex items-center gap-3">
+                  <UserCheck className="h-5 w-5 text-gray-500" />
                   <div className="flex items-center gap-2">
-                    <Edit className="h-4 w-4" />
-                    <span>Updated: {formatDate(opportunityDetails.updatedAt)}</span>
+                    <span className="font-medium text-gray-700">Role:</span>
+                    <Badge
+                      variant={opportunityDetails.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
+                      className="text-xs px-0"
+                    >
+                      {opportunityDetails.creatorRole}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-gray-500" />
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-700">Email:</span>
+                    <span className="text-gray-600">{opportunityDetails.creator.email}</span>
+                  </div>
+                </div>
+
+                {/* Posted Date */}
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-gray-500" />
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-700">Posted:</span>
+                    <span className="text-gray-600">{formatDate(opportunityDetails.createdAt)}</span>
+                  </div>
+                </div>
+
+                {/* Updated Date */}
+                {opportunityDetails.updatedAt && (
+                  <div className="flex items-center gap-3">
+                    <Edit className="h-5 w-5 text-gray-500" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700">Updated:</span>
+                      <span className="text-gray-600">{formatDate(opportunityDetails.updatedAt)}</span>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Description */}
-              <div>
-                <h5 className="font-semibold text-gray-900 mb-2">Description</h5>
-                <div className="text-gray-700 leading-relaxed">
+              <div className="space-y-4">
+                <h5 className="text-lg font-semibold text-gray-900">Description</h5>
+                <div className="text-gray-700 leading-relaxed text-base bg-gray-50 p-4 rounded-lg">
                   {opportunityDetails.description}
                 </div>
               </div>
 
               {/* Additional Information */}
               {(opportunityDetails.location || opportunityDetails.duration || opportunityDetails.stipend) && (
-                <div>
-                  <h5 className="font-semibold text-gray-900 mb-3">Additional Information</h5>
-                  <div className="space-y-2">
+                <div className="space-y-4">
+                  <h5 className="text-lg font-semibold text-gray-900">Additional Information</h5>
+                  <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                     {opportunityDetails.location && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">Location</span>
-                        <span>{opportunityDetails.location}</span>
+                      <div className="flex items-center gap-3 text-sm">
+                        <MapPin className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                        <span className="font-medium text-gray-700">Location:</span>
+                        <span className="text-gray-600">{opportunityDetails.location}</span>
                       </div>
                     )}
                     {opportunityDetails.duration && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">Duration</span>
-                        <span>{opportunityDetails.duration}</span>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Clock className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                        <span className="font-medium text-gray-700">Duration:</span>
+                        <span className="text-gray-600">{opportunityDetails.duration}</span>
                       </div>
                     )}
                     {opportunityDetails.stipend && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <DollarSign className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">Stipend</span>
-                        <span>{opportunityDetails.stipend}</span>
+                      <div className="flex items-center gap-3 text-sm">
+                        <DollarSign className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                        <span className="font-medium text-gray-700">Stipend:</span>
+                        <span className="text-gray-600">{opportunityDetails.stipend}</span>
                       </div>
                     )}
                   </div>
@@ -1447,42 +1471,60 @@ export default function ContentModerationTable() {
               )}
 
               {/* Engagement Metrics */}
-              <div>
-                <h5 className="font-semibold text-gray-900 mb-3">Engagement Metrics</h5>
-                <div className="flex gap-8">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    <div className="text-2xl font-bold text-blue-600">{opportunityDetails._count.applications}</div>
-                    <div className="text-sm text-gray-600">Applications</div>
+              <div className="space-y-4">
+                <h5 className="text-lg font-semibold text-gray-900">Engagement Metrics</h5>
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  {/* Applications Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pb-4">
+                    <div className="flex items-start gap-3">
+                      <Users className="h-6 w-6 text-blue-600 mt-2" />
+                      <div>
+                        <div className="text-3xl font-bold text-blue-600 leading-tight">{opportunityDetails._count.applications}</div>
+                        <div className="text-sm text-gray-600 font-medium">
+                          {opportunityDetails._count.applications === 1 ? 'Application' : 'Applications'}
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleShowApplications(opportunityDetails)}
+                      variant="default"
+                      size="sm"
+                      className="flex items-center gap-2 text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+                    >
+                      <Users className="h-4 w-4" />
+                      View {opportunityDetails._count.applications === 1 ? 'Application' : 'Applications'}
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Bookmark className="h-5 w-5 text-green-600" />
-                    <div className="text-2xl font-bold text-green-600">{opportunityDetails._count.savedOpportunities}</div>
-                    <div className="text-sm text-gray-600">Saved</div>
+
+                  {/* Divider Line */}
+                  <div className="border-t border-gray-300 my-4"></div>
+
+                  {/* Saved Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pt-4">
+                    <div className="flex items-start gap-3">
+                      <Bookmark className="h-6 w-6 text-green-600 mt-2" />
+                      <div>
+                        <div className="text-3xl font-bold text-green-600 leading-tight">{opportunityDetails._count.savedOpportunities}</div>
+                        <div className="text-sm text-gray-600 font-medium">
+                          {opportunityDetails._count.savedOpportunities === 1 ? 'Save' : 'Saved'}
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleShowSaved(opportunityDetails)}
+                      variant="default"
+                      size="sm"
+                      className="flex items-center gap-2 text-sm px-4 py-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+                    >
+                      <Bookmark className="h-4 w-4" />
+                      View {opportunityDetails._count.savedOpportunities === 1 ? 'Save' : 'Saved'}
+                    </Button>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2 pt-3 border-t">
-                <Button
-                  onClick={() => handleShowApplications(opportunityDetails)}
-                  variant="ghost"
-                  size="sm"
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <Users className="h-4 w-4" />
-                  View Applications ({opportunityDetails._count.applications})
-                </Button>
-                <Button
-                  onClick={() => handleShowSaved(opportunityDetails)}
-                  variant="ghost"
-                  size="sm"
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <Bookmark className="h-4 w-4" />
-                  View Saved ({opportunityDetails._count.savedOpportunities})
-                </Button>
+              <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-200">
                 <Button
                   onClick={() => {
                     setShowOpportunityDetails(false);
@@ -1490,7 +1532,7 @@ export default function ContentModerationTable() {
                   }}
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 text-sm"
+                  className="flex items-center gap-2 text-sm px-4 py-2 border-2 border-gray-600 hover:bg-gray-50"
                 >
                   <Edit className="h-4 w-4" />
                   Edit Opportunity
