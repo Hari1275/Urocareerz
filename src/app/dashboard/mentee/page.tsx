@@ -2252,7 +2252,7 @@ export default function MenteeDashboardPage() {
                   <CardContent className="p-4 sm:p-6">
                     <div className="space-y-4">
                       {/* Filter Row */}
-                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-between">
                         <div className="w-full sm:w-48">
                           <Select
                             value={applicationStatusFilter}
@@ -2270,11 +2270,9 @@ export default function MenteeDashboardPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                      </div>
 
-                      {/* Clear Filters Button */}
-                      {hasActiveApplicationFilters && (
-                        <div className="flex justify-center pt-2 border-t border-slate-100">
+                        {/* Clear Filters Button */}
+                        {hasActiveApplicationFilters && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -2284,8 +2282,8 @@ export default function MenteeDashboardPage() {
                             <Filter className="h-4 w-4 mr-2" />
                             Clear Filters
                           </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
