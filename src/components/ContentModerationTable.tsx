@@ -66,6 +66,7 @@ import {
   Mail,
   Shield,
   UserCheck,
+  Globe,
 } from "lucide-react";
 import React from "react";
 
@@ -579,12 +580,12 @@ export default function ContentModerationTable() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Title</TableHead>
-                  <TableHead>Name & Role</TableHead>
+                  <TableHead>Creator</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Type</TableHead>
-                  {/* <TableHead>Location</TableHead> */}
-                  <TableHead>Status</TableHead>
-                  {/* <TableHead className="text-center">Engagement</TableHead> */}
                   <TableHead>Posted</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -615,57 +616,28 @@ export default function ContentModerationTable() {
                   paginatedOpportunities.map((opportunity) => (
                     <TableRow key={opportunity.id}>
                       <TableCell className="max-w-xs">
-                        <div>
-                          <div className="font-medium truncate">
-                            {opportunity.title}
-                          </div>
-                          {/* <div className="text-sm text-gray-500 line-clamp-2">
-                            {opportunity.description}
-                          </div> */}
-                          {(opportunity.duration || opportunity.stipend) && (
-                            <div className="flex gap-2 mt-1">
-                              {opportunity.duration && (
-                                <div className="flex items-center gap-1 text-xs text-gray-400">
-                                  <Clock className="h-3 w-3" />
-                                  {opportunity.duration}
-                                </div>
-                              )}
-                              {opportunity.stipend && (
-                                <div className="flex items-center gap-1 text-xs text-gray-400">
-                                  <DollarSign className="h-3 w-3" />
-                                  {opportunity.stipend}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                        <div className="font-medium truncate">
+                          {opportunity.title}
                         </div>
                       </TableCell>
-                      <TableCell className="max-w-48">
-                        <div className="flex items-center gap-2">
-                          {/* <User className="h-4 w-4 text-gray-400 flex-shrink-0" /> */}
-                          <div className="min-w-0">
-                            <div className="font-medium truncate">
-                              {opportunity.creator.firstName && opportunity.creator.lastName
-                                ? `${opportunity.creator.firstName} ${opportunity.creator.lastName}`
-                                : "No name provided"}
-                            </div>
-                            <div className="text-sm text-gray-500 truncate">
-                              {opportunity.creator.email}
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <Badge
-                              variant={opportunity.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
-                              className={opportunity.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
-                            >
-                              {opportunity.creatorRole}
-                            </Badge>
-                            {opportunity.sourceName && (
-                              <Badge variant="outline" className="text-xs">
-                                via {opportunity.sourceName}
-                              </Badge>
-                            )}
-                          </div>
+                      <TableCell className="max-w-32">
+                        <div className="font-medium truncate">
+                          {opportunity.creator.firstName && opportunity.creator.lastName
+                            ? `${opportunity.creator.firstName} ${opportunity.creator.lastName}`
+                            : "No name provided"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={opportunity.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
+                          className={opportunity.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
+                        >
+                          {opportunity.creatorRole}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-40">
+                        <div className="text-sm text-gray-600 truncate">
+                          {opportunity.creator.email}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -684,140 +656,100 @@ export default function ContentModerationTable() {
                           );
                         })()}
                       </TableCell>
-                      {/* <TableCell className="max-w-32">
-                        {opportunity.location ? (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <span className="truncate">
-                              {opportunity.location}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-sm">Not specified</span>
-                        )}
-                      </TableCell> */}
-                      <TableCell>
-                        {(() => {
-                          const statusInfo = getStatusBadge(opportunity.status);
-                          return (
-                            <Badge className={statusInfo.color}>
-                              {statusInfo.label}
-                            </Badge>
-                          );
-                        })()}
-                      </TableCell>
-                      {/* <TableCell className="text-center">
-                        <div className="flex flex-col gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleShowApplications(opportunity)}
-                            className="h-auto p-2 hover:bg-blue-50"
-                            disabled={opportunity._count.applications === 0}
-                          >
-                            <div className="flex flex-col items-center">
-                              <div className="font-semibold text-lg text-blue-600 flex items-center gap-1">
-                                {opportunity._count.applications}
-                                <Users className="h-4 w-4" />
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                applied
-                              </div>
-                            </div>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleShowSaved(opportunity)}
-                            className="h-auto p-2 hover:bg-green-50"
-                            disabled={opportunity._count.savedOpportunities === 0}
-                          >
-                            <div className="flex flex-col items-center">
-                              <div className="font-semibold text-lg text-green-600 flex items-center gap-1">
-                                {opportunity._count.savedOpportunities}
-                                <Bookmark className="h-4 w-4" />
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                saved
-                              </div>
-                            </div>
-                          </Button>
-                        </div>
-                      </TableCell> */}
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          {/* <Calendar className="h-4 w-4 text-gray-400" /> */}
                           {formatDate(opportunity.createdAt)}
                         </div>
                       </TableCell>
+                      <TableCell>
+                        {/* Status */}
+                        {opportunity.status === "PENDING" ? (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleApproveOpportunity(opportunity.id)
+                              }
+                              disabled={actionLoading === opportunity.id}
+                              className="h-8 px-2 text-green-600 hover:text-green-700"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openRejectDialog(opportunity)}
+                              disabled={actionLoading === opportunity.id}
+                              className="h-8 px-2 text-red-600 hover:text-red-700"
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        ) : (
+                          <Badge
+                            className={`${opportunity.status === "APPROVED"
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : opportunity.status === "REJECTED"
+                                ? "bg-red-100 text-red-800 border-red-200"
+                                : "bg-gray-100 text-gray-800 border-gray-200"
+                              }`}
+                          >
+                            {opportunity.status === "APPROVED" && (
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                            )}
+                            {opportunity.status === "REJECTED" && (
+                              <XCircle className="h-3 w-3 mr-1" />
+                            )}
+                            {opportunity.status === "APPROVED"
+                              ? "Approved"
+                              : opportunity.status === "REJECTED"
+                                ? "Rejected"
+                                : opportunity.status}
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          {opportunity.status === "PENDING" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  handleApproveOpportunity(opportunity.id)
-                                }
-                                disabled={actionLoading === opportunity.id}
-                                className="h-8 px-2 text-green-600 hover:text-green-700"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openRejectDialog(opportunity)}
-                                disabled={actionLoading === opportunity.id}
-                                className="h-8 px-2 text-red-600 hover:text-red-700"
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            </>
-                          )}
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className="h-8 w-8 p-0"
-                                disabled={actionLoading === opportunity.id}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleViewOpportunityDetails(opportunity)
-                                }
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleEditOpportunity(opportunity)
-                                }
-                                disabled={actionLoading === opportunity.id}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Opportunity
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => openDeleteDialog(opportunity)}
-                                disabled={actionLoading === opportunity.id}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Opportunity
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              disabled={actionLoading === opportunity.id}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleViewOpportunityDetails(opportunity)
+                              }
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleEditOpportunity(opportunity)
+                              }
+                              disabled={actionLoading === opportunity.id}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Opportunity
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openDeleteDialog(opportunity)}
+                              disabled={actionLoading === opportunity.id}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Opportunity
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -1427,6 +1359,17 @@ export default function ContentModerationTable() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-700">Updated:</span>
                       <span className="text-gray-600">{formatDate(opportunityDetails.updatedAt)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Source */}
+                {opportunityDetails.sourceName && opportunityDetails.sourceName.trim() !== "" && (
+                  <div className="flex items-center gap-3">
+                    <Globe className="h-5 w-5 text-gray-500" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700">Source:</span>
+                      <span className="text-gray-600">{opportunityDetails.sourceName}</span>
                     </div>
                   </div>
                 )}
