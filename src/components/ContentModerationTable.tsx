@@ -261,7 +261,7 @@ export default function ContentModerationTable() {
     setSelectedOpportunity(opportunity);
     setShowApplications(true);
     setShowSaved(false);
-    setShowOpportunityDetails(false); // Close opportunity details modal
+    // Don't close opportunity details modal - keep it open in background
     applicationsPagination.actions.goToFirstPage(); // Reset pagination
     fetchApplications(opportunity.id);
   };
@@ -270,7 +270,7 @@ export default function ContentModerationTable() {
     setSelectedOpportunity(opportunity);
     setShowSaved(true);
     setShowApplications(false);
-    setShowOpportunityDetails(false); // Close opportunity details modal
+    // Don't close opportunity details modal - keep it open in background
     savedPagination.actions.goToFirstPage(); // Reset pagination
     fetchSavedMentees(opportunity.id);
   };
@@ -1034,7 +1034,7 @@ export default function ContentModerationTable() {
       <Sheet open={showApplications} onOpenChange={(open) => {
         if (!open) {
           setShowApplications(false);
-          setSelectedOpportunity(null);
+          // Don't reset selectedOpportunity - keep it for potential return to details modal
         }
       }}>
         <SheetContent side="right" className="w-[50vw] max-w-none">
@@ -1158,7 +1158,7 @@ export default function ContentModerationTable() {
       <Sheet open={showSaved} onOpenChange={(open) => {
         if (!open) {
           setShowSaved(false);
-          setSelectedOpportunity(null);
+          // Don't reset selectedOpportunity - keep it for potential return to details modal
         }
       }}>
         <SheetContent side="right" className="w-[50vw] max-w-none">
@@ -1279,7 +1279,13 @@ export default function ContentModerationTable() {
       </Sheet>
 
       {/* Opportunity Details Dialog */}
-      <Dialog open={showOpportunityDetails} onOpenChange={setShowOpportunityDetails}>
+      <Dialog open={showOpportunityDetails} onOpenChange={(open) => {
+        setShowOpportunityDetails(open);
+        if (!open) {
+          // Reset selectedOpportunity when details modal is closed
+          setSelectedOpportunity(null);
+        }
+      }}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
