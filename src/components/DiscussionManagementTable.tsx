@@ -301,36 +301,32 @@ export default function DiscussionManagementTable() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-4">
-          <div className="flex-1 min-w-0">
-            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="CLOSED">Closed</SelectItem>
-                <SelectItem value="ARCHIVED">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex-1 min-w-0">
-            <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="GENERAL">General</SelectItem>
-                <SelectItem value="CASE_DISCUSSION">Case Discussion</SelectItem>
-                <SelectItem value="CAREER_ADVICE">Career Advice</SelectItem>
-                <SelectItem value="TECHNICAL">Technical</SelectItem>
-                <SelectItem value="NETWORKING">Networking</SelectItem>
-                <SelectItem value="RESOURCES">Resources</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-3 mt-4">
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+            <SelectTrigger className="w-full sm:w-auto sm:min-w-[140px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="CLOSED">Closed</SelectItem>
+              <SelectItem value="ARCHIVED">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+            <SelectTrigger className="w-full sm:w-auto sm:min-w-[160px]">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="GENERAL">General</SelectItem>
+              <SelectItem value="CASE_DISCUSSION">Case Discussion</SelectItem>
+              <SelectItem value="CAREER_ADVICE">Career Advice</SelectItem>
+              <SelectItem value="TECHNICAL">Technical</SelectItem>
+              <SelectItem value="NETWORKING">Networking</SelectItem>
+              <SelectItem value="RESOURCES">Resources</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>
