@@ -4354,108 +4354,219 @@ export default function MentorDashboardPage() {
                   )}
                 </div>
 
-                {/* Sidebar - Quick Info & Actions */}
-                <div className="space-y-6">
-                  {/* Quick Actions */}
-                  <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                    <CardHeader>
-                      <CardTitle className="text-lg font-bold text-blue-900 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5" />
-                        Quick Actions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <Button
-                        onClick={() => {
-                          setShowMenteeProfileModal(false);
-                          handleContactMentee(selectedMentee);
-                        }}
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        Send Message
-                      </Button>
-                    </CardContent>
-                  </Card>
+                {/* Sidebar - Quick Info & Actions - Mobile-First Optimized Bottom Section */}
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Mobile: Contact Information First (Most Important) */}
+                  <div className="block lg:hidden">
+                    <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-sm">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-slate-600" />
+                          Contact Info
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 pt-0">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="text-slate-700 truncate">{selectedMentee.email}</span>
+                        </div>
 
-                  {/* Profile Stats */}
-                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
-                    <CardHeader>
-                      <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <LayoutDashboard className="h-5 w-5 text-slate-600" />
-                        Profile Stats
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">Member since</span>
-                        <span className="font-medium text-slate-900">
-                          {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </span>
-                      </div>
+                        {selectedMentee.profile?.phone && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="text-slate-700">{selectedMentee.profile.phone}</span>
+                          </div>
+                        )}
 
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">Profile completion</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
-                              style={{
-                                width: `${Math.min(100,
+                        {selectedMentee.profile?.location && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="text-slate-700 truncate">{selectedMentee.profile.location}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Mobile: Quick Actions Second (Call-to-Action) */}
+                  <div className="block lg:hidden">
+                    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-bold text-blue-900 flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Actions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <Button
+                          onClick={() => {
+                            setShowMenteeProfileModal(false);
+                            handleContactMentee(selectedMentee);
+                          }}
+                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md h-10"
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          Send Message
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Mobile: Compact Profile Stats Last (Nice-to-Have) */}
+                  <div className="block lg:hidden">
+                    <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                          <LayoutDashboard className="h-4 w-4 text-slate-500" />
+                          Profile Info
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 pt-0">
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-600">Member since</span>
+                            <span className="font-medium text-slate-900">
+                              {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-600">Profile completion</span>
+                              <span className="font-medium text-slate-900">
+                                {Math.min(100,
                                   (selectedMentee.profile?.bio ? 25 : 0) +
                                   (selectedMentee.profile?.education ? 25 : 0) +
                                   (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
                                   (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
-                                )}%`
-                              }}
-                            ></div>
+                                )}%
+                              </span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${Math.min(100,
+                                    (selectedMentee.profile?.bio ? 25 : 0) +
+                                    (selectedMentee.profile?.education ? 25 : 0) +
+                                    (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
+                                    (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
+                                  )}%`
+                                }}
+                              ></div>
+                            </div>
                           </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Desktop: Original Layout (Hidden on Mobile) */}
+                  <div className="hidden lg:block space-y-6">
+                    {/* Quick Actions */}
+                    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-blue-900 flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5" />
+                          Quick Actions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <Button
+                          onClick={() => {
+                            setShowMenteeProfileModal(false);
+                            handleContactMentee(selectedMentee);
+                          }}
+                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          Send Message
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* Profile Stats */}
+                    <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <LayoutDashboard className="h-5 w-5 text-slate-600" />
+                          Profile Stats
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">Member since</span>
                           <span className="font-medium text-slate-900">
-                            {Math.min(100,
-                              (selectedMentee.profile?.bio ? 25 : 0) +
-                              (selectedMentee.profile?.education ? 25 : 0) +
-                              (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
-                              (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
-                            )}%
+                            {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              year: 'numeric'
+                            })}
                           </span>
                         </div>
-                      </div>
 
-                    </CardContent>
-                  </Card>
-
-                  {/* Contact Information */}
-                  <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
-                    <CardHeader>
-                      <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5 text-slate-600" />
-                        Contact Info
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-slate-400" />
-                        <span className="text-slate-700">{selectedMentee.email}</span>
-                      </div>
-
-                      {selectedMentee.profile?.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-700">{selectedMentee.profile.phone}</span>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">Profile completion</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
+                                style={{
+                                  width: `${Math.min(100,
+                                    (selectedMentee.profile?.bio ? 25 : 0) +
+                                    (selectedMentee.profile?.education ? 25 : 0) +
+                                    (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
+                                    (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
+                                  )}%`
+                                }}
+                              ></div>
+                            </div>
+                            <span className="font-medium text-slate-900">
+                              {Math.min(100,
+                                (selectedMentee.profile?.bio ? 25 : 0) +
+                                (selectedMentee.profile?.education ? 25 : 0) +
+                                (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
+                                (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
+                              )}%
+                            </span>
+                          </div>
                         </div>
-                      )}
 
-                      {selectedMentee.profile?.location && (
+                      </CardContent>
+                    </Card>
+
+                    {/* Contact Information */}
+                    <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                          <MessageSquare className="h-5 w-5 text-slate-600" />
+                          Contact Info
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
                         <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-700">{selectedMentee.profile.location}</span>
+                          <Mail className="h-4 w-4 text-slate-400" />
+                          <span className="text-slate-700">{selectedMentee.email}</span>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
+
+                        {selectedMentee.profile?.phone && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-4 w-4 text-slate-400" />
+                            <span className="text-slate-700">{selectedMentee.profile.phone}</span>
+                          </div>
+                        )}
+
+                        {selectedMentee.profile?.location && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="h-4 w-4 text-slate-400" />
+                            <span className="text-slate-700">{selectedMentee.profile.location}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>
             </div>

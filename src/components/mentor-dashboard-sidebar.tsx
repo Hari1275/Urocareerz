@@ -190,12 +190,12 @@ export default function MentorDashboardSidebar({
 
             <Separator className="my-6" />
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Mobile Optimized Bottom Section */}
             <div>
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">
                 Quick Actions
               </h3>
-              <div className="space-y-1">
+              <div className="space-y-1 sm:space-y-1">
                 {quickActions.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeSection === item.id;
@@ -204,7 +204,8 @@ export default function MentorDashboardSidebar({
                       key={item.id}
                       onClick={() => handleSectionClick(item.id)}
                       className={cn(
-                        "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group min-h-[48px]",
+                        // Mobile: Compact button height and optimized spacing
+                        "w-full flex items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group min-h-[44px] sm:min-h-[48px]",
                         isActive
                           ? item.id === "post-opportunity"
                             ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25"
@@ -214,15 +215,22 @@ export default function MentorDashboardSidebar({
                     >
                       <Icon
                         className={cn(
-                          "h-5 w-5 transition-all duration-200 flex-shrink-0",
+                          // Mobile: Smaller icons for better touch targets
+                          "h-4 w-4 sm:h-5 sm:w-5 transition-all duration-200 flex-shrink-0",
                           isActive
                             ? "text-white"
                             : "text-slate-500 group-hover:text-slate-700"
                         )}
                       />
                       <div className="flex-1 text-left">
-                        <div className="font-medium leading-tight">
-                          {item.label}
+                        <div className="font-medium leading-tight text-sm sm:text-base">
+                          {/* Mobile: Shorter labels for key actions */}
+                          <span className="sm:hidden">
+                            {item.id === "post-opportunity" ? "Post Opp" : item.label}
+                          </span>
+                          <span className="hidden sm:block">
+                            {item.label}
+                          </span>
                         </div>
                       </div>
                     </button>

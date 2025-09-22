@@ -2960,7 +2960,7 @@ export default function MenteeDashboardPage() {
           </div>
 
           {/* Right Sidebar - Profile Strength & Widgets */}
-          <div className="lg:col-span-12 xl:col-span-3 order-1 lg:order-2">
+          <div className="lg:col-span-12 xl:col-span-3 order-3 lg:order-2">
             <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-4 sm:space-y-6">
               {/* Profile Strength */}
               <ProfileStrength
