@@ -2008,13 +2008,13 @@ export default function MenteeDashboardPage() {
             {activeSection === "opportunities" && (
               <div className="space-y-6">
                 <div className="text-center">
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-4">
                     Find{" "}
                     <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                       Opportunities
                     </span>
                   </h1>
-                  <p className="text-slate-600 mb-6">
+                  <p className="text-sm sm:text-base text-slate-600 mb-6 px-4 sm:px-0">
                     Discover career opportunities that match your interests and
                     goals.
                   </p>
@@ -2025,20 +2025,23 @@ export default function MenteeDashboardPage() {
                   <CardContent className="p-4 sm:p-6">
                     <div className="space-y-4">
                       {/* Filter Grid */}
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                        {/* First Row */}
-                        <Input
-                          placeholder="Search opportunities..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="bg-white/80 w-full"
-                        />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        {/* Search Field - Full width on mobile */}
+                        <div className="sm:col-span-2">
+                          <Input
+                            placeholder="Search opportunities..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-white/80 w-full"
+                          />
+                        </div>
+                        {/* Filter Dropdowns */}
                         <Select
                           value={experienceFilter}
                           onValueChange={setExperienceFilter}
                         >
                           <SelectTrigger className="bg-white/80 w-full">
-                            <SelectValue placeholder="Experience Level" />
+                            <SelectValue placeholder="All Levels" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Levels</SelectItem>
@@ -2047,10 +2050,9 @@ export default function MenteeDashboardPage() {
                             <SelectItem value="SENIOR">Senior Level</SelectItem>
                           </SelectContent>
                         </Select>
-                        {/* Second Row */}
                         <Select value={typeFilter} onValueChange={setTypeFilter}>
                           <SelectTrigger className="bg-white/80 w-full">
-                            <SelectValue placeholder="Opportunity Type" />
+                            <SelectValue placeholder="All Types" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Types</SelectItem>
@@ -2066,7 +2068,7 @@ export default function MenteeDashboardPage() {
                           onValueChange={setSavedFilter}
                         >
                           <SelectTrigger className="bg-white/80 w-full">
-                            <SelectValue placeholder="Saved Status" />
+                            <SelectValue placeholder="All Opportunities" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Opportunities</SelectItem>
@@ -2134,8 +2136,8 @@ export default function MenteeDashboardPage() {
                             handleShowOpportunityDetails(opportunity.id)
                           }
                         >
-                          <CardContent className="p-6">
-                            <div className="flex justify-between items-start mb-4">
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0 sm:mb-4">
                               <div className="flex-1">
                                 <h3 className="text-lg font-bold text-slate-900 mb-2 hover:text-blue-600 transition-colors">
                                   {opportunity.title}
@@ -2143,7 +2145,7 @@ export default function MenteeDashboardPage() {
                                 <p className="text-slate-600 text-sm line-clamp-2 mb-3">
                                   {opportunity.description}
                                 </p>
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                                   {opportunity.opportunityType && (
                                     <Badge
                                       variant="secondary"
@@ -2155,12 +2157,12 @@ export default function MenteeDashboardPage() {
                                   {opportunity.location && (
                                     <div className="flex items-center gap-1 text-sm text-slate-500">
                                       <MapPin className="h-4 w-4" />
-                                      <span>{opportunity.location}</span>
+                                      <span className="truncate">{opportunity.location}</span>
                                     </div>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-4 sm:mt-0">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -2170,7 +2172,7 @@ export default function MenteeDashboardPage() {
                                   }}
                                   disabled={saveLoading[opportunity.id]}
                                   className={cn(
-                                    "border-slate-200",
+                                    "border-slate-200 min-h-[36px] flex-1 sm:flex-none",
                                     savedOpportunityIds.includes(opportunity.id)
                                       ? "bg-pink-50 text-pink-600 border-pink-200"
                                       : "hover:bg-slate-50"
@@ -2184,16 +2186,21 @@ export default function MenteeDashboardPage() {
                                       className="h-4 w-4"
                                     />
                                   ) : (
-                                    <Heart
-                                      className={cn(
-                                        "h-4 w-4",
-                                        savedOpportunityIds.includes(
-                                          opportunity.id
-                                        )
-                                          ? "fill-current"
-                                          : ""
-                                      )}
-                                    />
+                                    <>
+                                      <Heart
+                                        className={cn(
+                                          "h-4 w-4 sm:mr-0 mr-2",
+                                          savedOpportunityIds.includes(
+                                            opportunity.id
+                                          )
+                                            ? "fill-current"
+                                            : ""
+                                        )}
+                                      />
+                                      <span className="sm:hidden">
+                                        {savedOpportunityIds.includes(opportunity.id) ? "Saved" : "Save"}
+                                      </span>
+                                    </>
                                   )}
                                 </Button>
                                 <Button
@@ -2205,7 +2212,7 @@ export default function MenteeDashboardPage() {
                                   disabled={userApplications.includes(
                                     opportunity.id
                                   )}
-                                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all duration-200"
+                                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 min-h-[36px] flex-1 sm:flex-none"
                                 >
                                   {userApplications.includes(opportunity.id)
                                     ? "Applied"
