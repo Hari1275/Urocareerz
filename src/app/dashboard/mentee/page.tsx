@@ -2341,19 +2341,19 @@ export default function MenteeDashboardPage() {
                           key={application.id}
                           className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5"
                         >
-                          <CardContent className="p-6">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex-1">
-                                <h3 className="text-lg font-bold text-slate-900 mb-2">
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-3 sm:gap-0">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2 line-clamp-2">
                                   {application.opportunity.title}
                                 </h3>
-                                <p className="text-slate-600 text-sm mb-3">
+                                <p className="text-slate-600 text-sm mb-3 line-clamp-3">
                                   {application.opportunity.description}
                                 </p>
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                                   {getStatusBadge(application.status)}
-                                  <div className="flex items-center gap-1 text-sm text-slate-500">
-                                    <Calendar className="h-4 w-4" />
+                                  <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-500">
+                                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                                     <span>
                                       Applied{" "}
                                       {formatDate(application.createdAt)}
@@ -2361,7 +2361,7 @@ export default function MenteeDashboardPage() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -2370,9 +2370,10 @@ export default function MenteeDashboardPage() {
                                       application.opportunity.id
                                     )
                                   }
+                                  className="w-full sm:w-auto h-9 sm:h-8 bg-white/80 hover:bg-white border-slate-200"
                                 >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View
+                                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+                                  <span className="text-sm font-medium">View Details</span>
                                 </Button>
                                 {application.status === "PENDING" && (
                                   <Button
@@ -2382,11 +2383,13 @@ export default function MenteeDashboardPage() {
                                       handleWithdrawApplication(application.id)
                                     }
                                     disabled={withdrawingId === application.id}
-                                    className="text-red-600 hover:text-red-700"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-slate-200 hover:border-red-200 w-full sm:w-auto h-9 sm:h-8 bg-white/80"
                                   >
-                                    {withdrawingId === application.id
-                                      ? "Withdrawing..."
-                                      : "Withdraw"}
+                                    <span className="text-sm font-medium">
+                                      {withdrawingId === application.id
+                                        ? "Withdrawing..."
+                                        : "Withdraw"}
+                                    </span>
                                   </Button>
                                 )}
                               </div>
@@ -4013,21 +4016,20 @@ export default function MenteeDashboardPage() {
 
       {/* Profile Editing Modal */}
       <Dialog open={showProfileModal} onOpenChange={handleCloseProfileModal}>
-        <DialogContent className="sm:max-w-2xl w-[95vw] max-w-[95vw] lg:max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
+        <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-2xl lg:max-w-3xl h-[95vh] max-h-[95vh] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-4 flex-shrink-0 border-b border-slate-100">
+            <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
               <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500">
                 <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               Edit Profile
             </DialogTitle>
-            <DialogDescription className="text-sm sm:text-base text-slate-600">
-              Update your profile information to help others find and connect
-              with you.
+            <DialogDescription className="text-sm sm:text-base text-slate-600 mt-1">
+              Update your profile information to help others find and connect with you.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-2 sm:py-4">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2 sm:py-4">
             <ProfileForm
               key={showProfileModal ? "editing" : "closed"}
               profile={profile ? { ...profile, user } : { user }}

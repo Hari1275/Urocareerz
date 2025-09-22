@@ -384,17 +384,17 @@ export default function ApplicationsPage() {
           ) : (
             applications.map((application) => (
               <Card key={application.id} className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl transition-all duration-300 rounded-2xl">
-                <CardHeader className="pb-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl font-bold text-slate-900 mb-3">
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3 line-clamp-2">
                         {application.opportunity.title}
                       </CardTitle>
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                         {application.opportunity.opportunityType && (
                           <Badge
                             variant="secondary"
-                            className="rounded-lg font-medium"
+                            className="rounded-lg font-medium text-xs sm:text-sm"
                             style={{
                               backgroundColor: application.opportunity.opportunityType.color ? application.opportunity.opportunityType.color + '20' : undefined,
                               color: application.opportunity.opportunityType.color || undefined,
@@ -405,35 +405,35 @@ export default function ApplicationsPage() {
                           </Badge>
                         )}
                         {application.opportunity.location && (
-                          <div className="flex items-center gap-1 text-base text-slate-500">
-                            <MapPin className="h-4 w-4" />
-                            <span className="font-medium">{application.opportunity.location}</span>
+                          <div className="flex items-center gap-1 text-sm sm:text-base text-slate-500">
+                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="font-medium truncate">{application.opportunity.location}</span>
                           </div>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-start sm:justify-end">
                       {getStatusBadge(application.status)}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pb-4">
-                  <p className="text-slate-600 mb-4 line-clamp-3 text-base leading-relaxed">
+                <CardContent className="pb-3 sm:pb-4 px-4 sm:px-6">
+                  <p className="text-slate-600 mb-3 sm:mb-4 line-clamp-3 text-sm sm:text-base leading-relaxed">
                     {application.opportunity.description?.replace(/\s+/g, ' ').trim() || ''}
                   </p>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     {application.opportunity.experienceLevel && (
-                      <div className="flex items-center gap-2 text-base text-slate-500">
-                        <Briefcase className="h-4 w-4 text-slate-400" />
+                      <div className="flex items-center gap-2 text-sm sm:text-base text-slate-500">
+                        <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 flex-shrink-0" />
                         <span className="font-medium">{application.opportunity.experienceLevel}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-base text-slate-500">
-                      <Calendar className="h-4 w-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-sm sm:text-base text-slate-500">
+                      <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 flex-shrink-0" />
                       <span className="font-medium">Applied on {formatDate(application.createdAt)}</span>
                     </div>
                     {application.opportunity.creator && (
-                      <div className="text-base text-slate-500">
+                      <div className="text-sm sm:text-base text-slate-500">
                         <span>Posted by </span>
                         <span className="font-semibold text-slate-700">
                           Dr. {application.opportunity.creator.firstName} {application.opportunity.creator.lastName}
@@ -442,16 +442,16 @@ export default function ApplicationsPage() {
                     )}
                   </div>
                 </CardContent>
-                <CardContent className="pt-0">
-                  <div className="flex gap-3">
+                <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+                  <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigateToOpportunity(application.opportunity.id)}
-                      className="bg-white/80 hover:bg-white border-slate-200 rounded-xl transition-all duration-200"
+                      className="bg-white/80 hover:bg-white border-slate-200 rounded-xl transition-all duration-200 w-full sm:w-auto h-9 sm:h-8"
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
+                      <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
+                      <span className="text-sm font-medium">View Details</span>
                     </Button>
                     {application.status === "PENDING" && (
                       <Button
@@ -459,14 +459,14 @@ export default function ApplicationsPage() {
                         size="sm"
                         onClick={() => handleWithdrawApplication(application.id)}
                         disabled={withdrawingId === application.id}
-                        className="bg-white/80 hover:bg-red-50 border-slate-200 text-red-600 hover:text-red-700 hover:border-red-200 rounded-xl transition-all duration-200"
+                        className="bg-white/80 hover:bg-red-50 border-slate-200 text-red-600 hover:text-red-700 hover:border-red-200 rounded-xl transition-all duration-200 w-full sm:w-auto h-9 sm:h-8"
                       >
                         {withdrawingId === application.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                          <div className="animate-spin rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 border-b-2 border-red-600 mr-2"></div>
                         ) : (
-                          <ArrowLeft className="w-4 h-4 mr-2" />
+                          <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
                         )}
-                        Withdraw
+                        <span className="text-sm font-medium">Withdraw</span>
                       </Button>
                     )}
                   </div>
