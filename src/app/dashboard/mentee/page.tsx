@@ -1651,9 +1651,6 @@ export default function MenteeDashboardPage() {
                 setActiveSection(section);
                 setIsMobileSidebarOpen(false);
               }}
-              stats={{
-                pendingApplications: stats.pendingApplications,
-              }}
               isOpen={isMobileSidebarOpen}
               onClose={() => setIsMobileSidebarOpen(false)}
             />

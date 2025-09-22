@@ -42,14 +42,9 @@ interface MenuItem {
   icon: any;
 }
 
-interface SidebarStats {
-  pendingApplications: number;
-}
-
 interface DashboardSidebarProps {
   activeSection: ActiveSection;
   onSectionChange: (section: ActiveSection) => void;
-  stats?: SidebarStats;
   isOpen?: boolean;
   onClose?: () => void;
   className?: string;
@@ -66,7 +61,6 @@ const menuItems: MenuItem[] = [
 export default function DashboardSidebar({
   activeSection,
   onSectionChange,
-  stats = { pendingApplications: 0 },
   isOpen = false,
   onClose,
   className = ""
@@ -159,19 +153,6 @@ export default function DashboardSidebar({
                           <span className="block">{item.label}</span>
                         )}
                       </span>
-                      {item.id === 'applications' && stats.pendingApplications > 0 && (
-                        <Badge 
-                          variant={isActive ? "secondary" : "outline"} 
-                          className={cn(
-                            "flex-shrink-0 h-5 min-w-[20px] text-xs font-semibold",
-                            isActive 
-                              ? "bg-white/20 text-white border-white/30" 
-                              : "bg-blue-50 text-blue-600 border-blue-200"
-                          )}
-                        >
-                          {stats.pendingApplications}
-                        </Badge>
-                      )}
                     </button>
                   );
                 })}
