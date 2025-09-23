@@ -151,7 +151,7 @@ export default function MentorDashboardSidebar({
           <CardContent className="p-6">
             {/* Primary Navigation */}
             <div className="mb-6">
-              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3 px-2 pb-1 sm:pb-0">
                 Main Menu
               </h3>
               <nav className="space-y-1">
@@ -192,7 +192,7 @@ export default function MentorDashboardSidebar({
 
             {/* Quick Actions - Mobile Optimized Bottom Section */}
             <div>
-              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3 px-2 pb-1 sm:pb-0 pt-2 sm:pt-0">
                 Quick Actions
               </h3>
               <div className="space-y-1 sm:space-y-1">

@@ -1548,16 +1548,16 @@ export default function MentorDashboardPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
                       <Button
                         onClick={() => setActiveSection("post-opportunity")}
                         className="h-auto p-3 sm:p-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg flex flex-col items-center gap-1 sm:gap-2"
                       >
                         <Plus className="h-5 w-5 sm:h-6 sm:w-6" />
-                        <span className="text-xs sm:text-sm font-medium">
+                        <span className="text-xs md:text-sm font-medium">
                           Post Opportunity
                         </span>
-                        <span className="text-xs opacity-90 hidden sm:block">
+                        <span className="text-xs opacity-90 hidden lg:block">
                           Share new opportunities
                         </span>
                       </Button>
@@ -1568,10 +1568,10 @@ export default function MentorDashboardPage() {
                         className="h-auto p-3 sm:p-4 border-emerald-200 hover:bg-emerald-50 flex flex-col items-center gap-1 sm:gap-2"
                       >
                         <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
-                        <span className="text-xs sm:text-sm font-medium text-emerald-700">
+                        <span className="text-xs md:text-sm font-medium text-emerald-700">
                           My Opportunities
                         </span>
-                        <span className="text-xs text-emerald-600 hidden sm:block">
+                        <span className="text-xs text-emerald-600 hidden lg:block">
                           Manage posted items
                         </span>
                       </Button>
@@ -1582,10 +1582,10 @@ export default function MentorDashboardPage() {
                         className="h-auto p-3 sm:p-4 border-purple-200 hover:bg-purple-50 flex flex-col items-center gap-1 sm:gap-2"
                       >
                         <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-                        <span className="text-xs sm:text-sm font-medium text-purple-700">
+                        <span className="text-xs md:text-sm font-medium text-purple-700">
                           Review Applications
                         </span>
-                        <span className="text-xs text-purple-600 hidden sm:block">
+                        <span className="text-xs text-purple-600 hidden lg:block">
                           Check mentee responses
                         </span>
                       </Button>
@@ -1596,10 +1596,10 @@ export default function MentorDashboardPage() {
                         className="h-auto p-3 sm:p-4 border-cyan-200 hover:bg-cyan-50 flex flex-col items-center gap-1 sm:gap-2"
                       >
                         <Search className="h-5 w-5 sm:h-6 sm:w-6 text-cyan-600" />
-                        <span className="text-xs sm:text-sm font-medium text-cyan-700">
+                        <span className="text-xs md:text-sm font-medium text-cyan-700">
                           Find Mentees
                         </span>
-                        <span className="text-xs text-cyan-600 hidden sm:block">
+                        <span className="text-xs text-cyan-600 hidden lg:block">
                           Search candidates
                         </span>
                       </Button>
@@ -1610,10 +1610,10 @@ export default function MentorDashboardPage() {
                         className="h-auto p-3 sm:p-4 border-pink-200 hover:bg-pink-50 flex flex-col items-center gap-1 sm:gap-2"
                       >
                         <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
-                        <span className="text-xs sm:text-sm font-medium text-pink-700">
+                        <span className="text-xs md:text-sm font-medium text-pink-700">
                           Discussions
                         </span>
-                        <span className="text-xs text-pink-600 hidden sm:block">
+                        <span className="text-xs text-pink-600 hidden lg:block">
                           Community forum
                         </span>
                       </Button>
@@ -1629,10 +1629,10 @@ export default function MentorDashboardPage() {
                 {/* Page Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4 sm:py-6">
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-4">
                       My Opportunities
                     </h1>
-                    <p className="text-sm sm:text-base text-slate-600">
+                    <p className="text-sm sm:text-base text-slate-600 pb-2 sm:pb-0">
                       Manage and track all your posted opportunities.
                     </p>
                   </div>
@@ -2053,10 +2053,10 @@ export default function MentorDashboardPage() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
                 <div className="py-4 sm:py-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-4">
                     Applications
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600">
+                  <p className="text-sm sm:text-base text-slate-600 pb-2 sm:pb-0">
                     Review and manage applications from mentees.
                   </p>
                 </div>
@@ -2506,10 +2506,10 @@ export default function MentorDashboardPage() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
                 <div className="py-4 sm:py-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-4">
                     Post New Opportunity
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600">
+                  <p className="text-sm sm:text-base text-slate-600 pb-2 sm:pb-0">
                     Share a new opportunity with mentees in the community.
                   </p>
                 </div>
@@ -2800,10 +2800,10 @@ export default function MentorDashboardPage() {
                 <div className="space-y-3 sm:space-y-4 py-4 sm:py-6">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                     <div className="flex-1">
-                      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-4">
                         Find Mentees
                       </h1>
-                      <p className="text-sm sm:text-base text-slate-600">
+                      <p className="text-sm sm:text-base text-slate-600 pb-2 sm:pb-0">
                         Discover and connect with talented mentees looking for
                         guidance.
                       </p>
@@ -3311,13 +3311,13 @@ export default function MentorDashboardPage() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
                 <div className="text-center py-4 sm:py-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-4">
                     Community{" "}
                     <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                       Discussions
                     </span>
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600 mb-6">
+                  <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6 pb-2 sm:pb-0">
                     Connect with mentees and other mentors in our growing
                     community.
                   </p>
@@ -3385,13 +3385,13 @@ export default function MentorDashboardPage() {
             {activeSection === "new-discussion" && (
               <div className="space-y-6">
                 <div className="text-center py-4 sm:py-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-4">
                     Start a{" "}
                     <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                       Discussion
                     </span>
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600 mb-6">
+                  <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6 pb-2 sm:pb-0">
                     Share your thoughts, questions, or case details with the
                     community.
                   </p>
@@ -3433,19 +3433,19 @@ export default function MentorDashboardPage() {
       {showViewModal && selectedOpportunity && (
         <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
           <DialogContent
-            className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
-            style={{ maxWidth: "min(90vw, 1400px)" }}
+            className="w-[98vw] sm:max-w-[95vw] max-h-[90vh] sm:max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
+            style={{ maxWidth: "min(98vw, 1400px)", maxHeight: "min(90vh, 640px)" }}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
-              <div className="flex items-start justify-between gap-4">
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-2 sm:p-4 md:p-6">
+                <div className="flex items-start justify-between gap-2 sm:gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
-                      <Briefcase className="h-6 w-6 text-white" />
+                    <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                      <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight break-words">
+                      <DialogTitle className="text-lg sm:text-2xl font-bold text-slate-900 leading-tight break-words">
                         {selectedOpportunity.title}
                       </DialogTitle>
                       <p className="text-sm text-slate-600 mt-1 break-words">
@@ -3528,9 +3528,9 @@ export default function MentorDashboardPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-8">
+            <div className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8">
               {/* Quick Info Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-4">
                 {selectedOpportunity.location && (
                   <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm overflow-hidden">
                     <CardContent className="p-4 flex items-center gap-3 min-w-0">
@@ -3629,7 +3629,7 @@ export default function MentorDashboardPage() {
               </div>
 
               {/* Main Content Sections */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                 {/* Left Column */}
                 <div className="space-y-6">
                   {/* Description */}
@@ -3706,8 +3706,9 @@ export default function MentorDashboardPage() {
                         }}
                         className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
                       >
-                        <Edit3 className="h-4 w-4 mr-2" />
-                        Edit Opportunity
+                        <Edit3 className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Edit Opportunity</span>
+                        <span className="sm:hidden">Edit</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -3717,8 +3718,9 @@ export default function MentorDashboardPage() {
                         }}
                         className="w-full bg-white/80 hover:bg-white border-red-200 text-red-600 hover:text-red-700"
                       >
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Delete Opportunity
+                        <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Delete Opportunity</span>
+                        <span className="sm:hidden">Delete</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -3730,8 +3732,9 @@ export default function MentorDashboardPage() {
                         }
                         className="w-full bg-white/80 hover:bg-white border-slate-200"
                       >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Public Page
+                        <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">View Public Page</span>
+                        <span className="sm:hidden">View</span>
                       </Button>
                     </CardContent>
                   </Card>
@@ -3777,18 +3780,18 @@ export default function MentorDashboardPage() {
       {showEditModal && selectedOpportunity && (
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
           <DialogContent
-            className="max-w-[85vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
-            style={{ maxWidth: "min(85vw, 1200px)" }}
+            className="w-[98vw] sm:max-w-[95vw] max-h-[90vh] sm:max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
+            style={{ maxWidth: "min(98vw, 1200px)", maxHeight: "min(90vh, 720px)" }}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
-                    <Edit3 className="h-6 w-6 text-white" />
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-2 sm:p-4 md:p-6">
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                    <Edit3 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight break-words">
+                    <DialogTitle className="text-lg sm:text-2xl font-bold text-slate-900 leading-tight break-words">
                       Edit Opportunity
                     </DialogTitle>
                     <p className="text-sm text-slate-600 mt-1 break-words">
@@ -3812,7 +3815,7 @@ export default function MentorDashboardPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6">
+            <div className="p-2 sm:p-4 md:p-6">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
