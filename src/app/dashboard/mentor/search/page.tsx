@@ -101,10 +101,10 @@ export default function MentorSearchPage() {
   const formatDate = (dateString: string) => {
     // Use a consistent date format to prevent hydration mismatches
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -161,10 +161,14 @@ export default function MentorSearchPage() {
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Find <span className="bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent">Mentees</span>
+              Find{" "}
+              <span className="bg-gradient-to-tr from-blue-600 to-indigo-500 bg-clip-text text-transparent">
+                Mentees
+              </span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Search and connect with mentees who match your expertise and interests
+              Search and connect with mentees who match your expertise and
+              interests
             </p>
           </div>
         </div>
@@ -250,7 +254,10 @@ export default function MentorSearchPage() {
         {/* Mentee Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mentees.map((mentee) => (
-            <Card key={mentee.id} className="hover:shadow-lg transition-shadow shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <Card
+              key={mentee.id}
+              className="hover:shadow-lg transition-shadow shadow-lg border-0 bg-white/80 backdrop-blur-sm"
+            >
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">

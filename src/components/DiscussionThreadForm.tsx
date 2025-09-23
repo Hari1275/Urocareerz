@@ -45,7 +45,10 @@ const categoryOptions = [
   { value: "RESOURCES", label: "Resources & Tools" },
 ];
 
-export default function DiscussionThreadForm({ onSuccess, onCancel }: DiscussionThreadFormProps) {
+export default function DiscussionThreadForm({
+  onSuccess,
+  onCancel,
+}: DiscussionThreadFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -374,27 +377,27 @@ export default function DiscussionThreadForm({ onSuccess, onCancel }: Discussion
 
       {/* Action Buttons */}
       <div className="flex flex-col gap-4">
-        {/* Back Button */}
-        <div className="flex justify-start">
+        {/* Back Button - hide on mobile, show on sm and up */}
+        <div className="hidden sm:flex justify-start">
           <Button
             type="button"
             variant="outline"
             onClick={handleBack}
             disabled={loading}
-            className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:border-blue-500 w-full sm:w-auto"
+            className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:border-blue-500 sm:w-auto"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Discussions
           </Button>
         </div>
-        
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+
+        {/* Action Buttons - side-by-side on mobile, unchanged on desktop */}
+        <div className="flex flex-row gap-3 sm:px-0 sm:justify-end">
           <Button
             variant="outline"
             onClick={handleCancel}
             disabled={loading}
-            className="text-gray-700 hover:text-blue-600 transition-colors w-full sm:w-auto order-2 sm:order-1"
+            className="text-gray-700 hover:text-blue-600 transition-colors flex-1 sm:w-auto sm:flex-none order-1 sm:order-1"
           >
             Cancel
           </Button>
@@ -408,7 +411,7 @@ export default function DiscussionThreadForm({ onSuccess, onCancel }: Discussion
               formData.content.trim().length < MIN_CONTENT ||
               formData.content.length > MAX_CONTENT
             }
-            className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600 w-full sm:w-auto order-1 sm:order-2"
+            className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600 flex-1 sm:w-auto sm:flex-none order-2 sm:order-2"
           >
             {loading ? "Creating..." : "Create Discussion"}
           </Button>

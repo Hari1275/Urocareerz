@@ -122,7 +122,7 @@ export default function MentorDashboardSidebar({
     <div className="h-full flex flex-col bg-white lg:bg-transparent">
       {/* Mobile Header with Branding */}
       {onClose && (
-        <div className="flex items-center justify-between p-6 border-b border-slate-200/60 lg:hidden bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-slate-200/60 lg:hidden bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-sm">U</span>
@@ -226,11 +226,11 @@ export default function MentorDashboardSidebar({
                         <div className="font-medium leading-tight text-sm sm:text-base">
                           {/* Mobile: Shorter labels for key actions */}
                           <span className="sm:hidden">
-                            {item.id === "post-opportunity" ? "Post Opp" : item.label}
+                            {item.id === "post-opportunity"
+                              ? "Post Opp"
+                              : item.label}
                           </span>
-                          <span className="hidden sm:block">
-                            {item.label}
-                          </span>
+                          <span className="hidden sm:block">{item.label}</span>
                         </div>
                       </div>
                     </button>
@@ -271,7 +271,7 @@ export default function MentorDashboardSidebar({
       >
         <div
           className={cn(
-            "sticky top-20 sm:top-24 space-y-4 sm:space-y-6",
+            "sticky sm:top-24 space-y-4 sm:space-y-6",
             onClose ? "lg:block" : ""
           )}
         >

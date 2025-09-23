@@ -296,7 +296,8 @@ export default function MentorDashboardPage() {
     pages: 0,
     loading: false,
   });
-  const [currentDiscussionCategory, setCurrentDiscussionCategory] = useState("all");
+  const [currentDiscussionCategory, setCurrentDiscussionCategory] =
+    useState("all");
   const [currentDiscussionStatus, setCurrentDiscussionStatus] = useState("all");
   const [showMyDiscussions, setShowMyDiscussions] = useState(false);
   const [selectedDiscussion, setSelectedDiscussion] = useState<any>(null);
@@ -311,7 +312,6 @@ export default function MentorDashboardPage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
 
   // Optimized data fetching - fetch all data in parallel
   useEffect(() => {
@@ -473,14 +473,21 @@ export default function MentorDashboardPage() {
   useEffect(() => {
     if (!isClient || activeSection !== "discussions") return;
     fetchDiscussions(
-      currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+      currentDiscussionCategory === "all"
+        ? undefined
+        : currentDiscussionCategory,
       currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
       1,
       true,
       true,
       showMyDiscussions
     );
-  }, [currentDiscussionCategory, currentDiscussionStatus, showMyDiscussions, isClient]);
+  }, [
+    currentDiscussionCategory,
+    currentDiscussionStatus,
+    showMyDiscussions,
+    isClient,
+  ]);
 
   // Optimized individual fetch functions for manual refresh
   const fetchOpportunities = async () => {
@@ -553,10 +560,9 @@ export default function MentorDashboardPage() {
         params.append("author", "me");
       }
 
-      const response = await fetch(
-        `/api/discussions?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`/api/discussions?${params.toString()}`, {
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -602,7 +608,9 @@ export default function MentorDashboardPage() {
       !discussionsLoading
     ) {
       fetchDiscussions(
-        currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+        currentDiscussionCategory === "all"
+          ? undefined
+          : currentDiscussionCategory,
         currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
         discussionPagination.page + 1,
         false,
@@ -675,7 +683,7 @@ export default function MentorDashboardPage() {
           const data = await resp.json();
           setOpportunities(data.opportunities || []);
         }
-      } catch { }
+      } catch {}
 
       // Show success toast
       toast({
@@ -766,7 +774,9 @@ export default function MentorDashboardPage() {
 
         // Show success toast
         toast({
-          title: `✅ Application ${status === 'ACCEPTED' ? 'Accepted' : 'Rejected'}`,
+          title: `✅ Application ${
+            status === "ACCEPTED" ? "Accepted" : "Rejected"
+          }`,
           description: `The mentee's application has been ${status.toLowerCase()} successfully.`,
           duration: 4000,
         });
@@ -900,7 +910,8 @@ export default function MentorDashboardPage() {
           setActiveSection("opportunities");
           toast({
             title: "📋 Redirected to My Opportunities",
-            description: "Your new opportunity is now visible and ready to receive applications!",
+            description:
+              "Your new opportunity is now visible and ready to receive applications!",
             duration: 5000,
           });
         }, 1500);
@@ -944,7 +955,9 @@ export default function MentorDashboardPage() {
       // Show search completion toast
       toast({
         title: "🔍 Search Completed",
-        description: `Found ${mentees.length} mentee${mentees.length !== 1 ? 's' : ''} matching your criteria.`,
+        description: `Found ${mentees.length} mentee${
+          mentees.length !== 1 ? "s" : ""
+        } matching your criteria.`,
         duration: 3000,
       });
       setFormError(null);
@@ -964,15 +977,25 @@ export default function MentorDashboardPage() {
   const handleContactMentee = (mentee: any) => {
     setSelectedMentee(mentee);
     setContactForm({
-      subject: `Mentorship Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
-      message: `Hi ${mentee.firstName},\n\nI hope this message finds you well. I came across your profile on UroCareerz and I'm impressed by your background and interests.\n\nAs a mentor in the field, I'd love to discuss potential mentorship opportunities with you. I believe my experience could be valuable for your career development.\n\nWould you be interested in having a conversation about this?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
+      subject: `Mentorship Opportunity - ${user?.firstName || "Dr."} ${
+        user?.lastName || ""
+      }`,
+      message: `Hi ${
+        mentee.firstName
+      },\n\nI hope this message finds you well. I came across your profile on UroCareerz and I'm impressed by your background and interests.\n\nAs a mentor in the field, I'd love to discuss potential mentorship opportunities with you. I believe my experience could be valuable for your career development.\n\nWould you be interested in having a conversation about this?\n\nBest regards,\n${
+        user?.firstName || "Dr."
+      } ${user?.lastName || ""}`,
       template: "general",
     });
     setShowContactModal(true);
   };
 
   const handleSendMessage = async () => {
-    if (!selectedMentee || !contactForm.subject.trim() || !contactForm.message.trim()) {
+    if (
+      !selectedMentee ||
+      !contactForm.subject.trim() ||
+      !contactForm.message.trim()
+    ) {
       toast({
         title: "⚠️ Missing Information",
         description: "Please fill in both subject and message before sending.",
@@ -985,10 +1008,10 @@ export default function MentorDashboardPage() {
     setSendingMessage(true);
 
     try {
-      const response = await fetch('/api/messages/send', {
-        method: 'POST',
+      const response = await fetch("/api/messages/send", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           menteeEmail: selectedMentee.email,
@@ -1016,7 +1039,8 @@ export default function MentorDashboardPage() {
         setShowContactModal(false);
       } else {
         // Handle API errors
-        const errorMessage = result.error || "Failed to send message. Please try again.";
+        const errorMessage =
+          result.error || "Failed to send message. Please try again.";
         toast({
           title: "❌ Failed to Send Message",
           description: errorMessage,
@@ -1025,10 +1049,11 @@ export default function MentorDashboardPage() {
         });
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
       toast({
         title: "❌ Network Error",
-        description: "Unable to send message. Please check your connection and try again.",
+        description:
+          "Unable to send message. Please check your connection and try again.",
         variant: "destructive",
         duration: 6000,
       });
@@ -1127,28 +1152,40 @@ export default function MentorDashboardPage() {
     switch (status) {
       case "PENDING":
         return (
-          <Badge variant="outline" className="border-amber-500 text-amber-700 bg-amber-50 font-semibold text-sm">
+          <Badge
+            variant="outline"
+            className="border-amber-500 text-amber-700 bg-amber-50 font-semibold text-sm"
+          >
             <Clock className="w-4 h-4 mr-1" />
             Pending Review
           </Badge>
         );
       case "ACCEPTED":
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-semibold text-sm">
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200 font-semibold text-sm"
+          >
             <CheckCircle className="w-4 h-4 mr-1" />
             Accepted
           </Badge>
         );
       case "REJECTED":
         return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-semibold text-sm">
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200 font-semibold text-sm"
+          >
             <XCircle className="w-4 h-4 mr-1" />
             Rejected
           </Badge>
         );
       case "WITHDRAWN":
         return (
-          <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-semibold text-sm">
+          <Badge
+            variant="outline"
+            className="bg-gray-50 text-gray-700 border-gray-200 font-semibold text-sm"
+          >
             <AlertCircle className="w-4 h-4 mr-1" />
             Withdrawn
           </Badge>
@@ -1346,7 +1383,7 @@ export default function MentorDashboardPage() {
         }}
       />
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-6 xl:px-8 py-4 sm:py-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-6 xl:px-8 pt-2 pb-4 sm:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-4 xl:gap-8">
           {/* Sidebar */}
           <MentorDashboardSidebar
@@ -1414,7 +1451,7 @@ export default function MentorDashboardPage() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight py-4">
                     Welcome back, {user?.firstName || "Dr."}!
                   </h1>
                   <p className="text-sm sm:text-base text-slate-600">
@@ -1627,12 +1664,19 @@ export default function MentorDashboardPage() {
                         onValueChange={setOpportunityTypeFilter}
                       >
                         <SelectTrigger className="w-full sm:w-[220px] bg-white/80">
-                          <SelectValue placeholder="Type" className="truncate" />
+                          <SelectValue
+                            placeholder="Type"
+                            className="truncate"
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Types</SelectItem>
                           {opportunityTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.name} className="truncate">
+                            <SelectItem
+                              key={type.id}
+                              value={type.name}
+                              className="truncate"
+                            >
                               {type.name}
                             </SelectItem>
                           ))}
@@ -1650,18 +1694,18 @@ export default function MentorDashboardPage() {
                       </Button>
                       {(opportunitySearchTerm ||
                         opportunityTypeFilter !== "all") && (
-                          <Button
-                            variant="ghost"
-                            className="shrink-0"
-                            onClick={() => {
-                              setOpportunitySearchTerm("");
-                              setOpportunityTypeFilter("all");
-                              setOpportunityPage(1);
-                            }}
-                          >
-                            Clear
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          className="shrink-0"
+                          onClick={() => {
+                            setOpportunitySearchTerm("");
+                            setOpportunityTypeFilter("all");
+                            setOpportunityPage(1);
+                          }}
+                        >
+                          Clear
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1722,33 +1766,37 @@ export default function MentorDashboardPage() {
                       </p>
                       {(opportunitySearchTerm ||
                         opportunityTypeFilter !== "all") && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setOpportunitySearchTerm("");
-                              setOpportunityTypeFilter("all");
-                              setOpportunityPage(1);
-                            }}
-                          >
-                            Clear Filters
-                          </Button>
-                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setOpportunitySearchTerm("");
+                            setOpportunityTypeFilter("all");
+                            setOpportunityPage(1);
+                          }}
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
                     </div>
 
                     {/* Enhanced Card Layout */}
                     <div className="space-y-4">
                       {paginatedOpportunities.map((opportunity) => {
                         // Check if opportunity is newly created (within last 30 minutes)
-                        const isNewlyCreated = opportunity.id.startsWith('temp-') ||
-                          (new Date().getTime() - new Date(opportunity.createdAt).getTime()) < 30 * 60 * 1000;
+                        const isNewlyCreated =
+                          opportunity.id.startsWith("temp-") ||
+                          new Date().getTime() -
+                            new Date(opportunity.createdAt).getTime() <
+                            30 * 60 * 1000;
 
                         return (
                           <Card
                             key={opportunity.id}
                             className={cn(
                               "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-blue-300/60 transition-all duration-300 cursor-pointer group",
-                              isNewlyCreated && "ring-2 ring-green-500/30 border-green-200 bg-green-50/50"
+                              isNewlyCreated &&
+                                "ring-2 ring-green-500/30 border-green-200 bg-green-50/50"
                             )}
                             onClick={() => handleViewOpportunity(opportunity)}
                           >
@@ -1756,12 +1804,14 @@ export default function MentorDashboardPage() {
                               {/* Header Section */}
                               <div className="flex items-start justify-between mb-3 sm:mb-4">
                                 <div className="flex items-start gap-3">
-                                  <div className={cn(
-                                    "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0",
-                                    isNewlyCreated
-                                      ? "bg-gradient-to-tr from-green-500 to-emerald-500"
-                                      : "bg-gradient-to-tr from-blue-500 to-indigo-500"
-                                  )}>
+                                  <div
+                                    className={cn(
+                                      "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0",
+                                      isNewlyCreated
+                                        ? "bg-gradient-to-tr from-green-500 to-emerald-500"
+                                        : "bg-gradient-to-tr from-blue-500 to-indigo-500"
+                                    )}
+                                  >
                                     <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                   </div>
                                   <div className="min-w-0 flex-1">
@@ -1771,7 +1821,9 @@ export default function MentorDashboardPage() {
                                           {opportunity.title}
                                         </h3>
                                         <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                                          {opportunity.description?.replace(/\s+/g, ' ').trim() || ''}
+                                          {opportunity.description
+                                            ?.replace(/\s+/g, " ")
+                                            .trim() || ""}
                                         </p>
                                       </div>
                                       {isNewlyCreated && (
@@ -1793,24 +1845,30 @@ export default function MentorDashboardPage() {
                                     className={cn(
                                       "text-xs font-medium",
                                       opportunity.status === "APPROVED" &&
-                                      "bg-green-50 text-green-700 border-green-200",
+                                        "bg-green-50 text-green-700 border-green-200",
                                       opportunity.status === "PENDING" &&
-                                      "bg-yellow-50 text-yellow-700 border-yellow-200",
+                                        "bg-yellow-50 text-yellow-700 border-yellow-200",
                                       opportunity.status === "REJECTED" &&
-                                      "bg-red-50 text-red-700 border-red-200"
+                                        "bg-red-50 text-red-700 border-red-200"
                                     )}
                                   >
                                     {opportunity.status}
                                   </Badge>
 
-                                  <Badge variant="secondary" className="text-xs font-medium">
-                                    {opportunity.opportunityType?.name || "No Type"}
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs font-medium"
+                                  >
+                                    {opportunity.opportunityType?.name ||
+                                      "No Type"}
                                   </Badge>
 
                                   {opportunity.location && (
                                     <div className="flex items-center gap-1 text-xs text-slate-600">
                                       <MapPin className="h-3 w-3 flex-shrink-0" />
-                                      <span className="font-medium">{opportunity.location}</span>
+                                      <span className="font-medium">
+                                        {opportunity.location}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -1819,20 +1877,34 @@ export default function MentorDashboardPage() {
                                 <div className="flex items-center justify-between text-xs text-slate-500">
                                   <div className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                                    <span>Posted {new Date(opportunity.createdAt).toLocaleDateString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      year: new Date(opportunity.createdAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-                                    })}</span>
+                                    <span>
+                                      Posted{" "}
+                                      {new Date(
+                                        opportunity.createdAt
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year:
+                                          new Date(
+                                            opportunity.createdAt
+                                          ).getFullYear() !==
+                                          new Date().getFullYear()
+                                            ? "numeric"
+                                            : undefined,
+                                      })}
+                                    </span>
                                   </div>
 
                                   {opportunity.applicationDeadline && (
                                     <div className="flex items-center gap-1 text-orange-600">
                                       <Clock className="h-3 w-3" />
                                       <span className="font-medium">
-                                        Deadline: {new Date(opportunity.applicationDeadline).toLocaleDateString('en-US', {
-                                          month: 'short',
-                                          day: 'numeric'
+                                        Deadline:{" "}
+                                        {new Date(
+                                          opportunity.applicationDeadline
+                                        ).toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
                                         })}
                                       </span>
                                     </div>
@@ -1856,7 +1928,9 @@ export default function MentorDashboardPage() {
                                     className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-2 sm:px-3"
                                   >
                                     <Eye className="h-4 w-4 sm:mr-1" />
-                                    <span className="text-xs hidden sm:inline">View</span>
+                                    <span className="text-xs hidden sm:inline">
+                                      View
+                                    </span>
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -1868,7 +1942,9 @@ export default function MentorDashboardPage() {
                                     className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 px-2 sm:px-3"
                                   >
                                     <Edit3 className="h-4 w-4 sm:mr-1" />
-                                    <span className="text-xs hidden sm:inline">Edit</span>
+                                    <span className="text-xs hidden sm:inline">
+                                      Edit
+                                    </span>
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -1880,7 +1956,9 @@ export default function MentorDashboardPage() {
                                     className="text-slate-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3"
                                   >
                                     <XCircle className="h-4 w-4 sm:mr-1" />
-                                    <span className="text-xs hidden sm:inline">Delete</span>
+                                    <span className="text-xs hidden sm:inline">
+                                      Delete
+                                    </span>
                                   </Button>
                                 </div>
                               </div>
@@ -1938,7 +2016,7 @@ export default function MentorDashboardPage() {
                                     className={cn(
                                       "w-8 h-8 p-0",
                                       opportunityPage === pageNum &&
-                                      "bg-blue-600 text-white"
+                                        "bg-blue-600 text-white"
                                     )}
                                     onClick={() => setOpportunityPage(pageNum)}
                                   >
@@ -2090,12 +2168,19 @@ export default function MentorDashboardPage() {
                         }}
                       >
                         <SelectTrigger className="w-full sm:w-[220px] md:w-[280px] bg-white/80">
-                          <SelectValue placeholder="Opportunity" className="truncate" />
+                          <SelectValue
+                            placeholder="Opportunity"
+                            className="truncate"
+                          />
                         </SelectTrigger>
                         <SelectContent className="max-w-[280px] sm:max-w-[350px]">
                           <SelectItem value="all">All Opportunities</SelectItem>
                           {opportunities.map((opp) => (
-                            <SelectItem key={opp.id} value={opp.id} className="truncate">
+                            <SelectItem
+                              key={opp.id}
+                              value={opp.id}
+                              className="truncate"
+                            >
                               <span className="truncate" title={opp.title}>
                                 {opp.title}
                               </span>
@@ -2163,19 +2248,19 @@ export default function MentorDashboardPage() {
                         {(applicationSearchTerm ||
                           applicationOpportunityFilter !== "all" ||
                           applicationStatusFilter !== "all") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setApplicationSearchTerm("");
-                                setApplicationStatusFilter("all");
-                                setApplicationOpportunityFilter("all");
-                                setApplicationPage(1);
-                              }}
-                            >
-                              Clear Filters
-                            </Button>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setApplicationSearchTerm("");
+                              setApplicationStatusFilter("all");
+                              setApplicationOpportunityFilter("all");
+                              setApplicationPage(1);
+                            }}
+                          >
+                            Clear Filters
+                          </Button>
+                        )}
                       </div>
                       {paginatedApplications.map((application) => {
                         const opportunity = opportunities.find(
@@ -2188,7 +2273,8 @@ export default function MentorDashboardPage() {
                             key={application.id}
                             className={cn(
                               "bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-purple-300/60 transition-all duration-300 cursor-pointer group",
-                              isPending && "ring-1 ring-amber-200 border-amber-200 bg-amber-50/30"
+                              isPending &&
+                                "ring-1 ring-amber-200 border-amber-200 bg-amber-50/30"
                             )}
                             onClick={() => handleReviewApplication(application)}
                           >
@@ -2197,7 +2283,8 @@ export default function MentorDashboardPage() {
                               <div className="flex items-start justify-between mb-3 sm:mb-4">
                                 <div className="flex items-start gap-3">
                                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
-                                    {application.menteeName?.[0]?.toUpperCase() || "M"}
+                                    {application.menteeName?.[0]?.toUpperCase() ||
+                                      "M"}
                                   </div>
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 mb-1">
@@ -2232,11 +2319,11 @@ export default function MentorDashboardPage() {
                                     className={cn(
                                       "text-sm font-semibold",
                                       application.status === "ACCEPTED" &&
-                                      "bg-green-50 text-green-700 border-green-200",
+                                        "bg-green-50 text-green-700 border-green-200",
                                       application.status === "PENDING" &&
-                                      "bg-amber-50 text-amber-700 border-amber-200",
+                                        "bg-amber-50 text-amber-700 border-amber-200",
                                       application.status === "REJECTED" &&
-                                      "bg-red-50 text-red-700 border-red-200"
+                                        "bg-red-50 text-red-700 border-red-200"
                                     )}
                                   >
                                     {application.status === "PENDING" && (
@@ -2254,7 +2341,9 @@ export default function MentorDashboardPage() {
                                   {opportunity && (
                                     <div className="flex items-center gap-1 text-sm text-slate-600">
                                       <Briefcase className="h-4 w-4 flex-shrink-0" />
-                                      <span className="font-semibold truncate">{opportunity.title}</span>
+                                      <span className="font-semibold truncate">
+                                        {opportunity.title}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -2263,17 +2352,30 @@ export default function MentorDashboardPage() {
                                 <div className="flex items-center justify-between text-sm text-slate-500">
                                   <div className="flex items-center gap-1">
                                     <Calendar className="h-4 w-4" />
-                                    <span className="font-medium">Applied {new Date(application.appliedAt).toLocaleDateString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      year: new Date(application.appliedAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-                                    })}</span>
+                                    <span className="font-medium">
+                                      Applied{" "}
+                                      {new Date(
+                                        application.appliedAt
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year:
+                                          new Date(
+                                            application.appliedAt
+                                          ).getFullYear() !==
+                                          new Date().getFullYear()
+                                            ? "numeric"
+                                            : undefined,
+                                      })}
+                                    </span>
                                   </div>
 
                                   {application.resumeUrl && (
                                     <div className="flex items-center gap-1 text-blue-600">
                                       <FileText className="h-4 w-4" />
-                                      <span className="font-semibold">Resume attached</span>
+                                      <span className="font-semibold">
+                                        Resume attached
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -2294,11 +2396,16 @@ export default function MentorDashboardPage() {
                                     }}
                                     className={cn(
                                       "text-slate-600 hover:text-purple-600 hover:bg-purple-50 px-3",
-                                      isPending && "text-amber-700 hover:text-amber-800 hover:bg-amber-50"
+                                      isPending &&
+                                        "text-amber-700 hover:text-amber-800 hover:bg-amber-50"
                                     )}
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
-                                    <span className="text-sm font-semibold">{isPending ? "Review Now" : "View Details"}</span>
+                                    <span className="text-sm font-semibold">
+                                      {isPending
+                                        ? "Review Now"
+                                        : "View Details"}
+                                    </span>
                                   </Button>
                                 </div>
                               </div>
@@ -2357,7 +2464,7 @@ export default function MentorDashboardPage() {
                                       className={cn(
                                         "w-8 h-8 p-0",
                                         applicationPage === pageNum &&
-                                        "bg-purple-600 text-white"
+                                          "bg-purple-600 text-white"
                                       )}
                                       onClick={() =>
                                         setApplicationPage(pageNum)
@@ -2696,19 +2803,21 @@ export default function MentorDashboardPage() {
                       <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-2">
                         Find Mentees
                       </h1>
-                      <p className="text-sm sm:text-base text-slate-600">
-                        Discover and connect with talented mentees looking for guidance.
+                      <p className="text-xs sm:text-sm lg:text-base text-slate-600">
+                        Discover and connect with talented mentees looking for
+                        guidance.
                       </p>
                     </div>
-                    {mentees.length > 0 && (
+                    {/* {mentees.length > 0 && (
                       <div className="flex-shrink-0">
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg px-3 py-2">
                           <span className="text-xs sm:text-sm font-semibold text-blue-700">
-                            {mentees.length} mentee{mentees.length !== 1 ? 's' : ''} found
+                            {mentees.length} mentee
+                            {mentees.length !== 1 ? "s" : ""} found
                           </span>
                         </div>
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
 
@@ -2720,8 +2829,12 @@ export default function MentorDashboardPage() {
                         <Search className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-900">Smart Mentee Search</h3>
-                        <p className="text-sm text-slate-600">Use advanced filters to find your ideal mentees</p>
+                        <p className="font-semibold text-slate-900">
+                          Smart Mentee Search
+                        </p>
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          Use advanced filters to find your ideal mentees
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -2795,10 +2908,18 @@ export default function MentorDashboardPage() {
                             <SelectValue placeholder="Any level" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">Any Experience Level</SelectItem>
-                            <SelectItem value="beginner">Beginner (0-1 years)</SelectItem>
-                            <SelectItem value="intermediate">Intermediate (1-3 years)</SelectItem>
-                            <SelectItem value="advanced">Advanced (3+ years)</SelectItem>
+                            <SelectItem value="all">
+                              Any Experience Level
+                            </SelectItem>
+                            <SelectItem value="beginner">
+                              Beginner (0-1 years)
+                            </SelectItem>
+                            <SelectItem value="intermediate">
+                              Intermediate (1-3 years)
+                            </SelectItem>
+                            <SelectItem value="advanced">
+                              Advanced (3+ years)
+                            </SelectItem>
                             <SelectItem value="student">Student</SelectItem>
                             <SelectItem value="resident">Resident</SelectItem>
                             <SelectItem value="fellow">Fellow</SelectItem>
@@ -2837,7 +2958,13 @@ export default function MentorDashboardPage() {
                       >
                         {searchingMentees ? (
                           <>
-                            <LoadingSpinner size="sm" variant="minimal" showText={false} color="white" className="mr-2" />
+                            <LoadingSpinner
+                              size="sm"
+                              variant="minimal"
+                              showText={false}
+                              color="white"
+                              className="mr-2"
+                            />
                             Searching...
                           </>
                         ) : (
@@ -2879,16 +3006,27 @@ export default function MentorDashboardPage() {
                         Start Your Mentee Discovery
                       </h3>
                       <p className="text-slate-600 mb-6 max-w-md mx-auto leading-relaxed">
-                        Use the search filters above to find mentees who match your expertise and interests. Try searching by location, experience level, or specific specialties.
+                        Use the search filters above to find mentees who match
+                        your expertise and interests. Try searching by location,
+                        experience level, or specific specialties.
                       </p>
                       <div className="flex flex-wrap justify-center gap-2 mb-6">
-                        {['urology', 'surgery', 'research', 'clinical', 'oncology'].map((tag) => (
+                        {[
+                          "urology",
+                          "surgery",
+                          "research",
+                          "clinical",
+                          "oncology",
+                        ].map((tag) => (
                           <Badge
                             key={tag}
                             variant="outline"
                             className="cursor-pointer hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
                             onClick={() => {
-                              setFindMenteesForm(prev => ({ ...prev, interests: tag }));
+                              setFindMenteesForm((prev) => ({
+                                ...prev,
+                                interests: tag,
+                              }));
                               handleFindMentees();
                             }}
                           >
@@ -2898,7 +3036,10 @@ export default function MentorDashboardPage() {
                       </div>
                       <Button
                         onClick={() => {
-                          setFindMenteesForm(prev => ({ ...prev, search: '' }));
+                          setFindMenteesForm((prev) => ({
+                            ...prev,
+                            search: "",
+                          }));
                           handleFindMentees();
                         }}
                         variant="outline"
@@ -2917,7 +3058,8 @@ export default function MentorDashboardPage() {
                     {/* Results Header */}
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-semibold text-slate-900">
-                        {mentees.length} mentee{mentees.length !== 1 ? 's' : ''} found
+                        {mentees.length} mentee{mentees.length !== 1 ? "s" : ""}{" "}
+                        found
                       </h2>
                     </div>
 
@@ -2943,7 +3085,8 @@ export default function MentorDashboardPage() {
                                       />
                                     ) : (
                                       <span className="text-white font-bold text-xl">
-                                        {mentee.firstName?.[0]?.toUpperCase()}{mentee.lastName?.[0]?.toUpperCase()}
+                                        {mentee.firstName?.[0]?.toUpperCase()}
+                                        {mentee.lastName?.[0]?.toUpperCase()}
                                       </span>
                                     )}
                                   </div>
@@ -2958,7 +3101,9 @@ export default function MentorDashboardPage() {
                                       {mentee.firstName} {mentee.lastName}
                                     </h3>
                                   </div>
-                                  <p className="text-sm text-slate-600 mb-2">{mentee.email}</p>
+                                  <p className="text-sm text-slate-600 mb-2">
+                                    {mentee.email}
+                                  </p>
 
                                   {/* Quick Info Pills */}
                                   <div className="flex flex-wrap gap-2">
@@ -2970,7 +3115,13 @@ export default function MentorDashboardPage() {
                                     )}
                                     <div className="inline-flex items-center gap-1 bg-white/80 px-2 py-1 rounded-md text-xs text-slate-600">
                                       <Calendar className="h-3 w-3" />
-                                      Joined {new Date(mentee.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                      Joined{" "}
+                                      {new Date(
+                                        mentee.createdAt
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        year: "numeric",
+                                      })}
                                     </div>
                                   </div>
                                 </div>
@@ -2978,7 +3129,9 @@ export default function MentorDashboardPage() {
                                 {/* Action Hint */}
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-blue-600 flex items-center gap-1">
                                   <Eye className="h-3 w-3" />
-                                  <span className="hidden sm:inline">View Profile</span>
+                                  <span className="hidden sm:inline">
+                                    View Profile
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -3007,37 +3160,48 @@ export default function MentorDashboardPage() {
                               )}
 
                               {/* Interests/Skills */}
-                              {mentee.profile?.interests && mentee.profile.interests.length > 0 && (
-                                <div>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Target className="h-4 w-4 text-slate-400" />
-                                    <span className="text-sm font-medium text-slate-700">Interests</span>
+                              {mentee.profile?.interests &&
+                                mentee.profile.interests.length > 0 && (
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Target className="h-4 w-4 text-slate-400" />
+                                      <span className="text-sm font-medium text-slate-700">
+                                        Interests
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {mentee.profile.interests
+                                        .slice(0, 4)
+                                        .map((interest, idx) => (
+                                          <Badge
+                                            key={idx}
+                                            variant="secondary"
+                                            className="text-xs bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200"
+                                          >
+                                            {interest}
+                                          </Badge>
+                                        ))}
+                                      {mentee.profile.interests.length > 4 && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs text-slate-500"
+                                        >
+                                          +{mentee.profile.interests.length - 4}{" "}
+                                          more
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {mentee.profile.interests.slice(0, 4).map((interest, idx) => (
-                                      <Badge
-                                        key={idx}
-                                        variant="secondary"
-                                        className="text-xs bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200"
-                                      >
-                                        {interest}
-                                      </Badge>
-                                    ))}
-                                    {mentee.profile.interests.length > 4 && (
-                                      <Badge variant="outline" className="text-xs text-slate-500">
-                                        +{mentee.profile.interests.length - 4} more
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
+                                )}
 
                               {/* Purpose */}
                               {mentee.profile?.purposeOfRegistration && (
                                 <div className="bg-slate-50 rounded-lg p-3">
                                   <div className="flex items-center gap-2 mb-1">
                                     <Star className="h-4 w-4 text-amber-500" />
-                                    <span className="text-sm font-medium text-slate-700">Goal</span>
+                                    <span className="text-sm font-medium text-slate-700">
+                                      Goal
+                                    </span>
                                   </div>
                                   <p className="text-sm text-slate-600 line-clamp-2">
                                     {mentee.profile.purposeOfRegistration}
@@ -3075,7 +3239,7 @@ export default function MentorDashboardPage() {
                               </div>
 
                               <div className="text-xs text-slate-400">
-                                #{String(index + 1).padStart(2, '0')}
+                                #{String(index + 1).padStart(2, "0")}
                               </div>
                             </div>
                           </CardContent>
@@ -3098,23 +3262,31 @@ export default function MentorDashboardPage() {
                           </Button>
 
                           <div className="flex items-center gap-1">
-                            {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                              let pageNum = pagination.page - 2 + i;
-                              if (pageNum < 1) pageNum = i + 1;
-                              if (pageNum > pagination.pages) pageNum = pagination.pages - 4 + i;
+                            {Array.from(
+                              { length: Math.min(5, pagination.pages) },
+                              (_, i) => {
+                                let pageNum = pagination.page - 2 + i;
+                                if (pageNum < 1) pageNum = i + 1;
+                                if (pageNum > pagination.pages)
+                                  pageNum = pagination.pages - 4 + i;
 
-                              return (
-                                <Button
-                                  key={pageNum}
-                                  variant={pagination.page === pageNum ? "default" : "outline"}
-                                  size="sm"
-                                  className="w-8 h-8 p-0"
-                                  onClick={() => changePage(pageNum)}
-                                >
-                                  {pageNum}
-                                </Button>
-                              );
-                            })}
+                                return (
+                                  <Button
+                                    key={pageNum}
+                                    variant={
+                                      pagination.page === pageNum
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    size="sm"
+                                    className="w-8 h-8 p-0"
+                                    onClick={() => changePage(pageNum)}
+                                  >
+                                    {pageNum}
+                                  </Button>
+                                );
+                              }
+                            )}
                           </div>
 
                           <Button
@@ -3176,11 +3348,25 @@ export default function MentorDashboardPage() {
                   <DiscussionThreadsList
                     threads={discussions}
                     pagination={discussionPagination}
-                    onRefresh={(category, status, page, reset, force, myDiscussions) => {
+                    onRefresh={(
+                      category,
+                      status,
+                      page,
+                      reset,
+                      force,
+                      myDiscussions
+                    ) => {
                       setCurrentDiscussionCategory(category || "all");
                       setCurrentDiscussionStatus(status || "all");
                       setShowMyDiscussions(myDiscussions || false);
-                      fetchDiscussions(category, status, page, reset, force, myDiscussions);
+                      fetchDiscussions(
+                        category,
+                        status,
+                        page,
+                        reset,
+                        force,
+                        myDiscussions
+                      );
                     }}
                     onNewDiscussion={() => setActiveSection("new-discussion")}
                     currentCategory={currentDiscussionCategory}
@@ -3232,7 +3418,7 @@ export default function MentorDashboardPage() {
                     setTimeout(() => {
                       fetchDiscussions(undefined, undefined, 1, true, true);
                       // Scroll to top of the page
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }, 0);
                   }}
                   onCancel={() => setActiveSection("discussions")}
@@ -3246,7 +3432,10 @@ export default function MentorDashboardPage() {
       {/* Enhanced View Opportunity Modal */}
       {showViewModal && selectedOpportunity && (
         <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
-          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{ maxWidth: 'min(90vw, 1400px)' }}>
+          <DialogContent
+            className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
+            style={{ maxWidth: "min(90vw, 1400px)" }}
+          >
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
               <div className="flex items-start justify-between gap-4">
@@ -3260,40 +3449,56 @@ export default function MentorDashboardPage() {
                         {selectedOpportunity.title}
                       </DialogTitle>
                       <p className="text-sm text-slate-600 mt-1 break-words">
-                        Posted on {new Date(selectedOpportunity.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
+                        Posted on{" "}
+                        {new Date(
+                          selectedOpportunity.createdAt
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
                         })}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    {getTypeBadge(selectedOpportunity.opportunityType?.name || '') && (
-                      <Badge className={cn(
-                        "text-xs font-medium",
-                        getTypeBadge(selectedOpportunity.opportunityType?.name || '')?.colorClass
-                      )}>
+                    {getTypeBadge(
+                      selectedOpportunity.opportunityType?.name || ""
+                    ) && (
+                      <Badge
+                        className={cn(
+                          "text-xs font-medium",
+                          getTypeBadge(
+                            selectedOpportunity.opportunityType?.name || ""
+                          )?.colorClass
+                        )}
+                      >
                         <Target className="h-3 w-3 mr-1" />
                         {selectedOpportunity.opportunityType?.name || "Type"}
                       </Badge>
                     )}
-                    <Badge className={cn(
-                      "text-xs font-medium",
-                      selectedOpportunity.status === "APPROVED" && "bg-green-100 text-green-800 border-green-200",
-                      selectedOpportunity.status === "PENDING" && "bg-amber-100 text-amber-800 border-amber-200",
-                      selectedOpportunity.status === "REJECTED" && "bg-red-100 text-red-800 border-red-200"
-                    )}>
+                    <Badge
+                      className={cn(
+                        "text-xs font-medium",
+                        selectedOpportunity.status === "APPROVED" &&
+                          "bg-green-100 text-green-800 border-green-200",
+                        selectedOpportunity.status === "PENDING" &&
+                          "bg-amber-100 text-amber-800 border-amber-200",
+                        selectedOpportunity.status === "REJECTED" &&
+                          "bg-red-100 text-red-800 border-red-200"
+                      )}
+                    >
                       <CheckCircle className="h-3 w-3 mr-1" />
                       {selectedOpportunity.status}
                     </Badge>
-                    {selectedOpportunity.id.startsWith('temp-') ||
-                      (new Date().getTime() - new Date(selectedOpportunity.createdAt).getTime()) < 30 * 60 * 1000 && (
+                    {selectedOpportunity.id.startsWith("temp-") ||
+                      (new Date().getTime() -
+                        new Date(selectedOpportunity.createdAt).getTime() <
+                        30 * 60 * 1000 && (
                         <Badge className="bg-green-100 text-green-800 border-green-200 text-xs animate-pulse">
                           ✨ New
                         </Badge>
-                      )}
+                      ))}
                   </div>
                 </div>
 
@@ -3333,8 +3538,12 @@ export default function MentorDashboardPage() {
                         <MapPin className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Location</p>
-                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.location}</p>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          Location
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">
+                          {selectedOpportunity.location}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -3347,8 +3556,12 @@ export default function MentorDashboardPage() {
                         <User className="h-5 w-5 text-purple-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Experience</p>
-                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.experienceLevel}</p>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          Experience
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">
+                          {selectedOpportunity.experienceLevel}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -3361,8 +3574,12 @@ export default function MentorDashboardPage() {
                         <Clock className="h-5 w-5 text-emerald-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Duration</p>
-                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.duration}</p>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          Duration
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">
+                          {selectedOpportunity.duration}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -3375,8 +3592,12 @@ export default function MentorDashboardPage() {
                         <Award className="h-5 w-5 text-amber-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Compensation</p>
-                        <p className="text-sm font-semibold text-slate-900 break-words">{selectedOpportunity.compensation}</p>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          Compensation
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900 break-words">
+                          {selectedOpportunity.compensation}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -3389,12 +3610,16 @@ export default function MentorDashboardPage() {
                         <Calendar className="h-5 w-5 text-red-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Deadline</p>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          Deadline
+                        </p>
                         <p className="text-sm font-semibold text-slate-900 break-words">
-                          {new Date(selectedOpportunity.applicationDeadline).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
+                          {new Date(
+                            selectedOpportunity.applicationDeadline
+                          ).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
                           })}
                         </p>
                       </div>
@@ -3497,7 +3722,12 @@ export default function MentorDashboardPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => window.open(`/opportunities/${selectedOpportunity.id}`, '_blank')}
+                        onClick={() =>
+                          window.open(
+                            `/opportunities/${selectedOpportunity.id}`,
+                            "_blank"
+                          )
+                        }
                         className="w-full bg-white/80 hover:bg-white border-slate-200"
                       >
                         <Eye className="h-4 w-4 mr-2" />
@@ -3546,7 +3776,10 @@ export default function MentorDashboardPage() {
       {/* Enhanced Edit Opportunity Modal */}
       {showEditModal && selectedOpportunity && (
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-[85vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{ maxWidth: 'min(85vw, 1200px)' }}>
+          <DialogContent
+            className="max-w-[85vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
+            style={{ maxWidth: "min(85vw, 1200px)" }}
+          >
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
               <div className="flex items-center justify-between gap-4">
@@ -3580,7 +3813,13 @@ export default function MentorDashboardPage() {
 
             {/* Modal Body */}
             <div className="p-6">
-              <form onSubmit={(e) => { e.preventDefault(); handleSaveOpportunity(); }} className="space-y-8">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSaveOpportunity();
+                }}
+                className="space-y-8"
+              >
                 {/* Basic Information Section */}
                 <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60 shadow-sm">
                   <CardHeader>
@@ -3588,12 +3827,17 @@ export default function MentorDashboardPage() {
                       <FileText className="h-5 w-5 text-blue-600" />
                       Basic Information
                     </CardTitle>
-                    <p className="text-sm text-slate-600">Essential details about your opportunity</p>
+                    <p className="text-sm text-slate-600">
+                      Essential details about your opportunity
+                    </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="edit-title" className="text-sm font-medium text-slate-700">
+                        <Label
+                          htmlFor="edit-title"
+                          className="text-sm font-medium text-slate-700"
+                        >
                           Title <span className="text-red-500">*</span>
                         </Label>
                         <Input
@@ -3611,7 +3855,10 @@ export default function MentorDashboardPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="edit-location" className="text-sm font-medium text-slate-700">
+                        <Label
+                          htmlFor="edit-location"
+                          className="text-sm font-medium text-slate-700"
+                        >
                           Location
                         </Label>
                         <div className="relative">
@@ -3633,7 +3880,10 @@ export default function MentorDashboardPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-description" className="text-sm font-medium text-slate-700">
+                      <Label
+                        htmlFor="edit-description"
+                        className="text-sm font-medium text-slate-700"
+                      >
                         Description <span className="text-red-500">*</span>
                       </Label>
                       <Textarea
@@ -3664,12 +3914,17 @@ export default function MentorDashboardPage() {
                       <User className="h-5 w-5 text-purple-600" />
                       Position Details
                     </CardTitle>
-                    <p className="text-sm text-slate-600">Specify the role requirements and duration</p>
+                    <p className="text-sm text-slate-600">
+                      Specify the role requirements and duration
+                    </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="edit-experienceLevel" className="text-sm font-medium text-slate-700">
+                        <Label
+                          htmlFor="edit-experienceLevel"
+                          className="text-sm font-medium text-slate-700"
+                        >
                           Experience Level
                         </Label>
                         <Select
@@ -3685,15 +3940,24 @@ export default function MentorDashboardPage() {
                             <SelectValue placeholder="Select experience level" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="ENTRY">🎯 Entry Level</SelectItem>
+                            <SelectItem value="ENTRY">
+                              🎯 Entry Level
+                            </SelectItem>
                             <SelectItem value="MID">📈 Mid Level</SelectItem>
-                            <SelectItem value="SENIOR">🚀 Senior Level</SelectItem>
-                            <SelectItem value="EXPERT">⭐ Expert Level</SelectItem>
+                            <SelectItem value="SENIOR">
+                              🚀 Senior Level
+                            </SelectItem>
+                            <SelectItem value="EXPERT">
+                              ⭐ Expert Level
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="edit-duration" className="text-sm font-medium text-slate-700">
+                        <Label
+                          htmlFor="edit-duration"
+                          className="text-sm font-medium text-slate-700"
+                        >
                           Duration
                         </Label>
                         <Select
@@ -3709,22 +3973,39 @@ export default function MentorDashboardPage() {
                             <SelectValue placeholder="Select duration" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1-3 months">⏱️ 1-3 months</SelectItem>
-                            <SelectItem value="3-6 months">📅 3-6 months</SelectItem>
-                            <SelectItem value="6 months">📆 6 months</SelectItem>
+                            <SelectItem value="1-3 months">
+                              ⏱️ 1-3 months
+                            </SelectItem>
+                            <SelectItem value="3-6 months">
+                              📅 3-6 months
+                            </SelectItem>
+                            <SelectItem value="6 months">
+                              📆 6 months
+                            </SelectItem>
                             <SelectItem value="1 year">🗓️ 1 year</SelectItem>
                             <SelectItem value="2 years">📊 2 years</SelectItem>
-                            <SelectItem value="Permanent">🏢 Permanent</SelectItem>
-                            <SelectItem value="Part-time">⏰ Part-time</SelectItem>
-                            <SelectItem value="Full-time">🕘 Full-time</SelectItem>
-                            <SelectItem value="Flexible">🔄 Flexible</SelectItem>
+                            <SelectItem value="Permanent">
+                              🏢 Permanent
+                            </SelectItem>
+                            <SelectItem value="Part-time">
+                              ⏰ Part-time
+                            </SelectItem>
+                            <SelectItem value="Full-time">
+                              🕘 Full-time
+                            </SelectItem>
+                            <SelectItem value="Flexible">
+                              🔄 Flexible
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-compensation" className="text-sm font-medium text-slate-700">
+                      <Label
+                        htmlFor="edit-compensation"
+                        className="text-sm font-medium text-slate-700"
+                      >
                         Compensation
                       </Label>
                       <div className="relative">
@@ -3747,7 +4028,10 @@ export default function MentorDashboardPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-applicationDeadline" className="text-sm font-medium text-slate-700">
+                      <Label
+                        htmlFor="edit-applicationDeadline"
+                        className="text-sm font-medium text-slate-700"
+                      >
                         Application Deadline
                       </Label>
                       <div className="relative">
@@ -3776,11 +4060,16 @@ export default function MentorDashboardPage() {
                       <CheckCircle className="h-5 w-5 text-emerald-600" />
                       Additional Details
                     </CardTitle>
-                    <p className="text-sm text-slate-600">Requirements, benefits, and other important information</p>
+                    <p className="text-sm text-slate-600">
+                      Requirements, benefits, and other important information
+                    </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-requirements" className="text-sm font-medium text-slate-700">
+                      <Label
+                        htmlFor="edit-requirements"
+                        className="text-sm font-medium text-slate-700"
+                      >
                         Requirements & Qualifications
                       </Label>
                       <Textarea
@@ -3799,7 +4088,10 @@ export default function MentorDashboardPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-benefits" className="text-sm font-medium text-slate-700">
+                      <Label
+                        htmlFor="edit-benefits"
+                        className="text-sm font-medium text-slate-700"
+                      >
                         Benefits & Perks
                       </Label>
                       <Textarea
@@ -3833,7 +4125,11 @@ export default function MentorDashboardPage() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={savingOpportunity || !editingOpportunity.title || !editingOpportunity.description}
+                      disabled={
+                        savingOpportunity ||
+                        !editingOpportunity.title ||
+                        !editingOpportunity.description
+                      }
                       className="min-w-[140px] bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg"
                     >
                       {savingOpportunity ? (
@@ -3918,12 +4214,14 @@ export default function MentorDashboardPage() {
                             Applied:
                           </span>
                           <p className="text-base text-slate-900 font-medium">
-                            {new Date(selectedApplication.appliedAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
+                            {new Date(
+                              selectedApplication.appliedAt
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
                             })}
                           </p>
                         </div>
@@ -3934,7 +4232,9 @@ export default function MentorDashboardPage() {
                             Status:
                           </span>
                           <div className="flex items-start">
-                            {getApplicationStatusBadge(selectedApplication.status)}
+                            {getApplicationStatusBadge(
+                              selectedApplication.status
+                            )}
                           </div>
                         </div>
                         <div className="flex flex-col gap-2">
@@ -3943,12 +4243,18 @@ export default function MentorDashboardPage() {
                           </span>
                           <div className="flex items-start">
                             {selectedApplication.resumeUrl ? (
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-50 text-blue-700 border-blue-200"
+                              >
                                 <FileText className="h-3 w-3 mr-1" />
                                 Available
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+                              <Badge
+                                variant="outline"
+                                className="bg-gray-50 text-gray-600 border-gray-200"
+                              >
                                 <XCircle className="h-3 w-3 mr-1" />
                                 Not Provided
                               </Badge>
@@ -4012,7 +4318,12 @@ export default function MentorDashboardPage() {
                       </div>
                       <div className="flex gap-3">
                         <Button
-                          onClick={() => window.open(selectedApplication.resumeUrl!, '_blank')}
+                          onClick={() =>
+                            window.open(
+                              selectedApplication.resumeUrl!,
+                              "_blank"
+                            )
+                          }
                           className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md font-semibold"
                         >
                           <Eye className="h-4 w-4 mr-2" />
@@ -4021,9 +4332,12 @@ export default function MentorDashboardPage() {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            const link = document.createElement('a');
+                            const link = document.createElement("a");
                             link.href = selectedApplication.resumeUrl!;
-                            link.download = `${selectedApplication.menteeName.replace(/\s+/g, '_')}_Resume.pdf`;
+                            link.download = `${selectedApplication.menteeName.replace(
+                              /\s+/g,
+                              "_"
+                            )}_Resume.pdf`;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
@@ -4063,7 +4377,8 @@ export default function MentorDashboardPage() {
                     Make Your Decision
                   </h3>
                   <p className="text-base text-amber-800 mb-6">
-                    Review all the information above and decide whether to accept or reject this application.
+                    Review all the information above and decide whether to
+                    accept or reject this application.
                   </p>
                   <div className="flex justify-end gap-4">
                     <Button
@@ -4190,8 +4505,14 @@ export default function MentorDashboardPage() {
 
       {/* Comprehensive Mentee Profile Modal */}
       {showMenteeProfileModal && selectedMentee && (
-        <Dialog open={showMenteeProfileModal} onOpenChange={setShowMenteeProfileModal}>
-          <DialogContent className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white" style={{ maxWidth: 'min(90vw, 1200px)' }}>
+        <Dialog
+          open={showMenteeProfileModal}
+          onOpenChange={setShowMenteeProfileModal}
+        >
+          <DialogContent
+            className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
+            style={{ maxWidth: "min(90vw, 1200px)" }}
+          >
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
               <div className="flex items-start justify-between gap-4">
@@ -4206,7 +4527,8 @@ export default function MentorDashboardPage() {
                         />
                       ) : (
                         <span className="text-white font-bold text-2xl">
-                          {selectedMentee.firstName?.[0]?.toUpperCase()}{selectedMentee.lastName?.[0]?.toUpperCase()}
+                          {selectedMentee.firstName?.[0]?.toUpperCase()}
+                          {selectedMentee.lastName?.[0]?.toUpperCase()}
                         </span>
                       )}
                     </div>
@@ -4218,7 +4540,9 @@ export default function MentorDashboardPage() {
                     <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight">
                       {selectedMentee.firstName} {selectedMentee.lastName}
                     </DialogTitle>
-                    <p className="text-slate-600 text-sm mt-1">{selectedMentee.email}</p>
+                    <p className="text-slate-600 text-sm mt-1">
+                      {selectedMentee.email}
+                    </p>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                         <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
@@ -4283,7 +4607,9 @@ export default function MentorDashboardPage() {
                             </div>
                             Education
                           </h4>
-                          <p className="text-slate-700 ml-6">{selectedMentee.profile.education}</p>
+                          <p className="text-slate-700 ml-6">
+                            {selectedMentee.profile.education}
+                          </p>
                         </div>
                       )}
 
@@ -4295,16 +4621,21 @@ export default function MentorDashboardPage() {
                             </div>
                             Experience
                           </h4>
-                          <p className="text-slate-700 ml-6">{selectedMentee.profile.experience}</p>
+                          <p className="text-slate-700 ml-6">
+                            {selectedMentee.profile.experience}
+                          </p>
                         </div>
                       )}
 
                       <div className="flex items-center gap-2 ml-6">
                         <Calendar className="h-4 w-4 text-slate-400" />
                         <span className="text-sm text-slate-600">
-                          Joined {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
-                            month: 'long',
-                            year: 'numeric'
+                          Joined{" "}
+                          {new Date(
+                            selectedMentee.createdAt
+                          ).toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
                           })}
                         </span>
                       </div>
@@ -4312,29 +4643,32 @@ export default function MentorDashboardPage() {
                   </Card>
 
                   {/* Interests & Specialties */}
-                  {selectedMentee.profile?.interests && selectedMentee.profile.interests.length > 0 && (
-                    <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                          <Target className="h-5 w-5 text-teal-600" />
-                          Interests & Specialties
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedMentee.profile.interests.map((interest: string, idx: number) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className="bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 border-teal-200"
-                            >
-                              {interest}
-                            </Badge>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                  {selectedMentee.profile?.interests &&
+                    selectedMentee.profile.interests.length > 0 && (
+                      <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
+                        <CardHeader>
+                          <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <Target className="h-5 w-5 text-teal-600" />
+                            Interests & Specialties
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedMentee.profile.interests.map(
+                              (interest: string, idx: number) => (
+                                <Badge
+                                  key={idx}
+                                  variant="secondary"
+                                  className="bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 border-teal-200"
+                                >
+                                  {interest}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
 
                   {/* Goals & Aspirations */}
                   {selectedMentee.profile?.purposeOfRegistration && (
@@ -4368,20 +4702,26 @@ export default function MentorDashboardPage() {
                       <CardContent className="space-y-2 pt-0">
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-3.5 w-3.5 text-slate-400" />
-                          <span className="text-slate-700 truncate">{selectedMentee.email}</span>
+                          <span className="text-slate-700 truncate">
+                            {selectedMentee.email}
+                          </span>
                         </div>
 
                         {selectedMentee.profile?.phone && (
                           <div className="flex items-center gap-2 text-sm">
                             <Phone className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700">{selectedMentee.profile.phone}</span>
+                            <span className="text-slate-700">
+                              {selectedMentee.profile.phone}
+                            </span>
                           </div>
                         )}
 
                         {selectedMentee.profile?.location && (
                           <div className="flex items-center gap-2 text-sm">
                             <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700 truncate">{selectedMentee.profile.location}</span>
+                            <span className="text-slate-700 truncate">
+                              {selectedMentee.profile.location}
+                            </span>
                           </div>
                         )}
                       </CardContent>
@@ -4426,35 +4766,58 @@ export default function MentorDashboardPage() {
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-slate-600">Member since</span>
                             <span className="font-medium text-slate-900">
-                              {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
-                                month: 'short',
-                                year: 'numeric'
+                              {new Date(
+                                selectedMentee.createdAt
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                year: "numeric",
                               })}
                             </span>
                           </div>
 
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-slate-600">Profile completion</span>
+                              <span className="text-slate-600">
+                                Profile completion
+                              </span>
                               <span className="font-medium text-slate-900">
-                                {Math.min(100,
+                                {Math.min(
+                                  100,
                                   (selectedMentee.profile?.bio ? 25 : 0) +
-                                  (selectedMentee.profile?.education ? 25 : 0) +
-                                  (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
-                                  (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
-                                )}%
+                                    (selectedMentee.profile?.education
+                                      ? 25
+                                      : 0) +
+                                    (selectedMentee.profile?.interests?.length >
+                                    0
+                                      ? 25
+                                      : 0) +
+                                    (selectedMentee.profile
+                                      ?.purposeOfRegistration
+                                      ? 25
+                                      : 0)
+                                )}
+                                %
                               </span>
                             </div>
                             <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-300"
                                 style={{
-                                  width: `${Math.min(100,
+                                  width: `${Math.min(
+                                    100,
                                     (selectedMentee.profile?.bio ? 25 : 0) +
-                                    (selectedMentee.profile?.education ? 25 : 0) +
-                                    (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
-                                    (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
-                                  )}%`
+                                      (selectedMentee.profile?.education
+                                        ? 25
+                                        : 0) +
+                                      (selectedMentee.profile?.interests
+                                        ?.length > 0
+                                        ? 25
+                                        : 0) +
+                                      (selectedMentee.profile
+                                        ?.purposeOfRegistration
+                                        ? 25
+                                        : 0)
+                                  )}%`,
                                 }}
                               ></div>
                             </div>
@@ -4500,40 +4863,58 @@ export default function MentorDashboardPage() {
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-600">Member since</span>
                           <span className="font-medium text-slate-900">
-                            {new Date(selectedMentee.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              year: 'numeric'
+                            {new Date(
+                              selectedMentee.createdAt
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              year: "numeric",
                             })}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-600">Profile completion</span>
+                          <span className="text-slate-600">
+                            Profile completion
+                          </span>
                           <div className="flex items-center gap-2">
                             <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
                                 style={{
-                                  width: `${Math.min(100,
+                                  width: `${Math.min(
+                                    100,
                                     (selectedMentee.profile?.bio ? 25 : 0) +
-                                    (selectedMentee.profile?.education ? 25 : 0) +
-                                    (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
-                                    (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
-                                  )}%`
+                                      (selectedMentee.profile?.education
+                                        ? 25
+                                        : 0) +
+                                      (selectedMentee.profile?.interests
+                                        ?.length > 0
+                                        ? 25
+                                        : 0) +
+                                      (selectedMentee.profile
+                                        ?.purposeOfRegistration
+                                        ? 25
+                                        : 0)
+                                  )}%`,
                                 }}
                               ></div>
                             </div>
                             <span className="font-medium text-slate-900">
-                              {Math.min(100,
+                              {Math.min(
+                                100,
                                 (selectedMentee.profile?.bio ? 25 : 0) +
-                                (selectedMentee.profile?.education ? 25 : 0) +
-                                (selectedMentee.profile?.interests?.length > 0 ? 25 : 0) +
-                                (selectedMentee.profile?.purposeOfRegistration ? 25 : 0)
-                              )}%
+                                  (selectedMentee.profile?.education ? 25 : 0) +
+                                  (selectedMentee.profile?.interests?.length > 0
+                                    ? 25
+                                    : 0) +
+                                  (selectedMentee.profile?.purposeOfRegistration
+                                    ? 25
+                                    : 0)
+                              )}
+                              %
                             </span>
                           </div>
                         </div>
-
                       </CardContent>
                     </Card>
 
@@ -4548,20 +4929,26 @@ export default function MentorDashboardPage() {
                       <CardContent className="space-y-3">
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-700">{selectedMentee.email}</span>
+                          <span className="text-slate-700">
+                            {selectedMentee.email}
+                          </span>
                         </div>
 
                         {selectedMentee.profile?.phone && (
                           <div className="flex items-center gap-2 text-sm">
                             <Phone className="h-4 w-4 text-slate-400" />
-                            <span className="text-slate-700">{selectedMentee.profile.phone}</span>
+                            <span className="text-slate-700">
+                              {selectedMentee.profile.phone}
+                            </span>
                           </div>
                         )}
 
                         {selectedMentee.profile?.location && (
                           <div className="flex items-center gap-2 text-sm">
                             <MapPin className="h-4 w-4 text-slate-400" />
-                            <span className="text-slate-700">{selectedMentee.profile.location}</span>
+                            <span className="text-slate-700">
+                              {selectedMentee.profile.location}
+                            </span>
                           </div>
                         )}
                       </CardContent>
@@ -4590,43 +4977,66 @@ export default function MentorDashboardPage() {
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                 <div className="h-12 w-12 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
                   <span className="text-white font-bold">
-                    {selectedMentee.firstName?.[0]?.toUpperCase()}{selectedMentee.lastName?.[0]?.toUpperCase()}
+                    {selectedMentee.firstName?.[0]?.toUpperCase()}
+                    {selectedMentee.lastName?.[0]?.toUpperCase()}
                   </span>
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-900">
                     {selectedMentee.firstName} {selectedMentee.lastName}
                   </h3>
-                  <p className="text-sm text-slate-600">{selectedMentee.email}</p>
+                  <p className="text-sm text-slate-600">
+                    {selectedMentee.email}
+                  </p>
                 </div>
               </div>
 
               {/* Message Template Selector */}
               <div>
-                <Label className="text-sm font-medium text-slate-700 mb-2">Message Template</Label>
+                <Label className="text-sm font-medium text-slate-700 mb-2">
+                  Message Template
+                </Label>
                 <Select
                   value={contactForm.template}
                   disabled={sendingMessage}
                   onValueChange={(value) => {
-                    setContactForm(prev => ({ ...prev, template: value }));
+                    setContactForm((prev) => ({ ...prev, template: value }));
                     // Update message based on template
                     if (value === "general") {
-                      setContactForm(prev => ({
+                      setContactForm((prev) => ({
                         ...prev,
-                        subject: `Mentorship Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
-                        message: `Hi ${selectedMentee.firstName},\n\nI hope this message finds you well. I came across your profile on UroCareerz and I'm impressed by your background and interests.\n\nAs a mentor in the field, I'd love to discuss potential mentorship opportunities with you. I believe my experience could be valuable for your career development.\n\nWould you be interested in having a conversation about this?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`
+                        subject: `Mentorship Opportunity - ${
+                          user?.firstName || "Dr."
+                        } ${user?.lastName || ""}`,
+                        message: `Hi ${
+                          selectedMentee.firstName
+                        },\n\nI hope this message finds you well. I came across your profile on UroCareerz and I'm impressed by your background and interests.\n\nAs a mentor in the field, I'd love to discuss potential mentorship opportunities with you. I believe my experience could be valuable for your career development.\n\nWould you be interested in having a conversation about this?\n\nBest regards,\n${
+                          user?.firstName || "Dr."
+                        } ${user?.lastName || ""}`,
                       }));
                     } else if (value === "research") {
-                      setContactForm(prev => ({
+                      setContactForm((prev) => ({
                         ...prev,
-                        subject: `Research Collaboration Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
-                        message: `Dear ${selectedMentee.firstName},\n\nI noticed your interest in research from your profile. I'm currently working on several research projects and I think you might be interested in collaborating.\n\nI'd be happy to discuss potential research opportunities that align with your interests and career goals.\n\nWould you be available for a brief call to discuss this further?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`
+                        subject: `Research Collaboration Opportunity - ${
+                          user?.firstName || "Dr."
+                        } ${user?.lastName || ""}`,
+                        message: `Dear ${
+                          selectedMentee.firstName
+                        },\n\nI noticed your interest in research from your profile. I'm currently working on several research projects and I think you might be interested in collaborating.\n\nI'd be happy to discuss potential research opportunities that align with your interests and career goals.\n\nWould you be available for a brief call to discuss this further?\n\nBest regards,\n${
+                          user?.firstName || "Dr."
+                        } ${user?.lastName || ""}`,
                       }));
                     } else if (value === "clinical") {
-                      setContactForm(prev => ({
+                      setContactForm((prev) => ({
                         ...prev,
-                        subject: `Clinical Learning Opportunity - ${user?.firstName || 'Dr.'} ${user?.lastName || ''}`,
-                        message: `Hi ${selectedMentee.firstName},\n\nI see that you're interested in clinical experience. I have opportunities for clinical observation and hands-on learning that might interest you.\n\nThese opportunities would provide valuable exposure to real-world medical practice and could significantly benefit your career development.\n\nWould you like to learn more about these opportunities?\n\nBest regards,\n${user?.firstName || 'Dr.'} ${user?.lastName || ''}`
+                        subject: `Clinical Learning Opportunity - ${
+                          user?.firstName || "Dr."
+                        } ${user?.lastName || ""}`,
+                        message: `Hi ${
+                          selectedMentee.firstName
+                        },\n\nI see that you're interested in clinical experience. I have opportunities for clinical observation and hands-on learning that might interest you.\n\nThese opportunities would provide valuable exposure to real-world medical practice and could significantly benefit your career development.\n\nWould you like to learn more about these opportunities?\n\nBest regards,\n${
+                          user?.firstName || "Dr."
+                        } ${user?.lastName || ""}`,
                       }));
                     }
                   }}
@@ -4636,8 +5046,12 @@ export default function MentorDashboardPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="general">General Mentorship</SelectItem>
-                    <SelectItem value="research">Research Collaboration</SelectItem>
-                    <SelectItem value="clinical">Clinical Opportunities</SelectItem>
+                    <SelectItem value="research">
+                      Research Collaboration
+                    </SelectItem>
+                    <SelectItem value="clinical">
+                      Clinical Opportunities
+                    </SelectItem>
                     <SelectItem value="custom">Custom Message</SelectItem>
                   </SelectContent>
                 </Select>
@@ -4646,18 +5060,33 @@ export default function MentorDashboardPage() {
               {/* Subject Field */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-medium text-slate-700">Subject</Label>
-                  <span className={`text-xs ${contactForm.subject.length > 200 ? 'text-red-500' : 'text-slate-400'
-                    }`}>
+                  <Label className="text-sm font-medium text-slate-700">
+                    Subject
+                  </Label>
+                  <span
+                    className={`text-xs ${
+                      contactForm.subject.length > 200
+                        ? "text-red-500"
+                        : "text-slate-400"
+                    }`}
+                  >
                     {contactForm.subject.length}/200
                   </span>
                 </div>
                 <Input
                   value={contactForm.subject}
-                  onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
+                  onChange={(e) =>
+                    setContactForm((prev) => ({
+                      ...prev,
+                      subject: e.target.value,
+                    }))
+                  }
                   placeholder="Enter message subject"
-                  className={`w-full ${contactForm.subject.length > 200 ? 'border-red-300 focus:border-red-500' : ''
-                    }`}
+                  className={`w-full ${
+                    contactForm.subject.length > 200
+                      ? "border-red-300 focus:border-red-500"
+                      : ""
+                  }`}
                   maxLength={250}
                   disabled={sendingMessage}
                 />
@@ -4671,18 +5100,33 @@ export default function MentorDashboardPage() {
               {/* Message Field */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-medium text-slate-700">Message</Label>
-                  <span className={`text-xs ${contactForm.message.length > 5000 ? 'text-red-500' : 'text-slate-400'
-                    }`}>
+                  <Label className="text-sm font-medium text-slate-700">
+                    Message
+                  </Label>
+                  <span
+                    className={`text-xs ${
+                      contactForm.message.length > 5000
+                        ? "text-red-500"
+                        : "text-slate-400"
+                    }`}
+                  >
                     {contactForm.message.length}/5000
                   </span>
                 </div>
                 <Textarea
                   value={contactForm.message}
-                  onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                  onChange={(e) =>
+                    setContactForm((prev) => ({
+                      ...prev,
+                      message: e.target.value,
+                    }))
+                  }
                   placeholder="Write your message here..."
-                  className={`w-full min-h-[200px] resize-none ${contactForm.message.length > 5000 ? 'border-red-300 focus:border-red-500' : ''
-                    }`}
+                  className={`w-full min-h-[200px] resize-none ${
+                    contactForm.message.length > 5000
+                      ? "border-red-300 focus:border-red-500"
+                      : ""
+                  }`}
                   maxLength={5100}
                   disabled={sendingMessage}
                 />
@@ -4712,7 +5156,13 @@ export default function MentorDashboardPage() {
                 </Button>
                 <Button
                   onClick={handleSendMessage}
-                  disabled={sendingMessage || !contactForm.subject.trim() || !contactForm.message.trim() || contactForm.subject.length > 200 || contactForm.message.length > 5000}
+                  disabled={
+                    sendingMessage ||
+                    !contactForm.subject.trim() ||
+                    !contactForm.message.trim() ||
+                    contactForm.subject.length > 200 ||
+                    contactForm.message.length > 5000
+                  }
                   className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sendingMessage ? (
@@ -4735,7 +5185,10 @@ export default function MentorDashboardPage() {
 
       {/* Discussion View Modal */}
       {showDiscussionModal && selectedDiscussion && (
-        <Dialog open={showDiscussionModal} onOpenChange={handleCloseDiscussionModal}>
+        <Dialog
+          open={showDiscussionModal}
+          onOpenChange={handleCloseDiscussionModal}
+        >
           <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <div className="flex items-center justify-between">
@@ -4749,16 +5202,18 @@ export default function MentorDashboardPage() {
                     </DialogTitle>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge
-                        className={`text-xs font-medium ${selectedDiscussion.status === "ACTIVE"
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : selectedDiscussion.status === "CLOSED"
+                        className={`text-xs font-medium ${
+                          selectedDiscussion.status === "ACTIVE"
+                            ? "bg-green-100 text-green-800 border-green-200"
+                            : selectedDiscussion.status === "CLOSED"
                             ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                             : "bg-gray-100 text-gray-800 border-gray-200"
-                          }`}
+                        }`}
                       >
                         {selectedDiscussion.status === "ACTIVE" && "🟢 Active"}
                         {selectedDiscussion.status === "CLOSED" && "🔒 Closed"}
-                        {selectedDiscussion.status === "ARCHIVED" && "📁 Archived"}
+                        {selectedDiscussion.status === "ARCHIVED" &&
+                          "📁 Archived"}
                       </Badge>
 
                       {user && selectedDiscussion.author.id === user.id && (
@@ -4776,7 +5231,10 @@ export default function MentorDashboardPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                    window.open(
+                      `/discussions/${selectedDiscussion.id}`,
+                      "_blank"
+                    );
                   }}
                   className="text-slate-600 hover:text-blue-600"
                 >
@@ -4796,10 +5254,14 @@ export default function MentorDashboardPage() {
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">
-                      {selectedDiscussion.author.firstName} {selectedDiscussion.author.lastName}
+                      {selectedDiscussion.author.firstName}{" "}
+                      {selectedDiscussion.author.lastName}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {selectedDiscussion.author.role} • {new Date(selectedDiscussion.createdAt).toLocaleDateString()}
+                      {selectedDiscussion.author.role} •{" "}
+                      {new Date(
+                        selectedDiscussion.createdAt
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -4817,19 +5279,22 @@ export default function MentorDashboardPage() {
               </div>
 
               {/* Tags */}
-              {selectedDiscussion.tags && selectedDiscussion.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedDiscussion.tags.map((tag: string, index: number) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="text-xs bg-white/50"
-                    >
-                      #{tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              {selectedDiscussion.tags &&
+                selectedDiscussion.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedDiscussion.tags.map(
+                      (tag: string, index: number) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs bg-white/50"
+                        >
+                          #{tag}
+                        </Badge>
+                      )
+                    )}
+                  </div>
+                )}
 
               {/* Content */}
               <div className="prose prose-slate max-w-none">
@@ -4851,7 +5316,10 @@ export default function MentorDashboardPage() {
                 </Button>
                 <Button
                   onClick={() => {
-                    window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                    window.open(
+                      `/discussions/${selectedDiscussion.id}`,
+                      "_blank"
+                    );
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
                 >
