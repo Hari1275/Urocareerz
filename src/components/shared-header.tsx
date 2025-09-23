@@ -66,7 +66,7 @@ export default function SharedHeader({
             setUserProfile(profileData.profile || null);
           }
         } catch (profileError) {
-          console.log("Could not fetch user profile for avatar");
+          // console.log("Could not fetch user profile for avatar");
           setUserProfile(null);
         }
       } else {
@@ -74,7 +74,7 @@ export default function SharedHeader({
         router.push("/login");
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      // console.error("Error fetching user data:", error);
       setUser(null);
       router.push("/login");
     } finally {
@@ -90,7 +90,7 @@ export default function SharedHeader({
         router.push("/login");
       }
     } catch (error) {
-      console.error("Error logging out:", error);
+      // console.error("Error logging out:", error);
     }
   };
 
@@ -163,7 +163,7 @@ export default function SharedHeader({
             setAvatarImageUrl(data.downloadUrl);
           }
         } catch (error) {
-          console.log('Could not fetch avatar display URL');
+          // console.log('Could not fetch avatar display URL');
           setAvatarImageUrl(undefined);
         }
       } else if (avatarUrl) {

@@ -665,7 +665,7 @@ export default function MenteeDashboardPage() {
         return;
       }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      // console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
     }
@@ -683,15 +683,15 @@ export default function MenteeDashboardPage() {
       return;
     }
 
-    console.log("🔍 fetchDiscussions called with:", {
-      category,
-      status,
-      page,
-      reset,
-      force,
-      myDiscussions,
-    });
-    console.log("👤 Current user for filtering:", user?.id, user?.firstName);
+    // console.log("🔍 fetchDiscussions called with:", {
+    //   category,
+    //   status,
+    //   page,
+    //   reset,
+    //   force,
+    //   myDiscussions,
+    // });
+    // console.log("👤 Current user for filtering:", user?.id, user?.firstName);
 
     setDiscussionsLoading(true);
     try {
@@ -700,12 +700,12 @@ export default function MenteeDashboardPage() {
       if (status && status !== "all") params.set("status", status);
       if (myDiscussions !== undefined) {
         params.set("myDiscussions", myDiscussions.toString());
-        console.log("🔎 Setting myDiscussions parameter to:", myDiscussions);
+        // console.log("🔎 Setting myDiscussions parameter to:", myDiscussions);
       }
       params.set("page", page.toString());
       params.set("limit", discussionPagination.limit.toString());
 
-      console.log("📡 API request params:", params.toString());
+      // console.log("📡 API request params:", params.toString());
 
       // Update current filter state
       if (category) setCurrentDiscussionCategory(category);
@@ -719,14 +719,14 @@ export default function MenteeDashboardPage() {
       if (response.ok) {
         const data = await response.json();
         const newDiscussions = data.threads || [];
-        console.log(`✅ Loaded ${newDiscussions.length} discussions from API`);
-        console.log("🔍 Filter status:", {
-          myDiscussions,
-          userHasDiscussions: newDiscussions.filter(
-            (d: any) => d.author.id === user?.id
-          ).length,
-          totalDiscussions: newDiscussions.length,
-        });
+        // console.log(`✅ Loaded ${newDiscussions.length} discussions from API`);
+        // console.log("🔍 Filter status:", {
+        //   myDiscussions,
+        //   userHasDiscussions: newDiscussions.filter(
+        //     (d: any) => d.author.id === user?.id
+        //   ).length,
+        //   totalDiscussions: newDiscussions.length,
+        // });
 
         setDiscussions((prev) =>
           reset ? newDiscussions : [...prev, ...newDiscussions]
@@ -740,10 +740,10 @@ export default function MenteeDashboardPage() {
           }
         );
       } else {
-        console.error("Failed to fetch discussions:", response.status);
+        // console.error("Failed to fetch discussions:", response.status);
       }
     } catch (error) {
-      console.error("Error fetching discussions:", error);
+      // console.error("Error fetching discussions:", error);
     } finally {
       setDiscussionsLoading(false);
     }
@@ -805,7 +805,7 @@ export default function MenteeDashboardPage() {
         });
       }
     } catch (error) {
-      console.error("Error fetching opportunities:", error);
+      // console.error("Error fetching opportunities:", error);
       setOpportunityPagination((prev) => ({ ...prev, loading: false }));
     }
   };

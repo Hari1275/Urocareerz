@@ -101,20 +101,20 @@ export default function ProfileForm({
   };
 
   useEffect(() => {
-    console.log("ProfileForm: useEffect triggered with profile:", {
-      profileId: profile?.id,
-      avatar: profile?.avatar,
-      resume: profile?.resume,
-      isInitialized: isInitialized.current,
-    });
+    // console.log("ProfileForm: useEffect triggered with profile:", {
+    //   profileId: profile?.id,
+    //   avatar: profile?.avatar,
+    //   resume: profile?.resume,
+    //   isInitialized: isInitialized.current,
+    // });
 
     if (profile && !isInitialized.current && isFormPristine()) {
-      console.log("ProfileForm: Initializing form data from profile:", {
-        avatar: profile.avatar,
-        resume: profile.resume,
-        avatarFileName: profile.avatarFileName,
-        resumeFileName: profile.resumeFileName,
-      });
+      // console.log("ProfileForm: Initializing form data from profile:", {
+      //   avatar: profile.avatar,
+      //   resume: profile.resume,
+      //   avatarFileName: profile.avatarFileName,
+      //   resumeFileName: profile.resumeFileName,
+      // });
 
       // Helper function to convert S3 URL to file key
       const convertUrlToFileKey = (url: string | null | undefined): string => {
@@ -133,7 +133,7 @@ export default function ProfileForm({
             const urlObj = new URL(url);
             return urlObj.pathname.substring(1); // Remove leading slash
           } catch (error) {
-            console.error("Error parsing URL:", error);
+            // console.error("Error parsing URL:", error);
             return url; // Return as is if parsing fails
           }
         }
@@ -160,11 +160,11 @@ export default function ProfileForm({
       });
 
       isInitialized.current = true;
-      console.log("ProfileForm: Form initialized, isInitialized set to true");
+      // console.log("ProfileForm: Form initialized, isInitialized set to true");
     } else if (profile && isInitialized.current) {
-      console.log(
-        "ProfileForm: Profile changed but form already initialized or not pristine, skipping reset"
-      );
+      // console.log(
+      //   "ProfileForm: Profile changed but form already initialized or not pristine, skipping reset"
+      // );
     }
   }, [profile?.id]); // Only depend on profile.id, not the entire profile object
 
@@ -210,11 +210,11 @@ export default function ProfileForm({
   const handleResumeUpload = async () => {
     if (!selectedResumeFile) return;
 
-    console.log("ProfileForm: Starting resume upload with file:", {
-      name: selectedResumeFile.name,
-      size: selectedResumeFile.size,
-      type: selectedResumeFile.type,
-    });
+    // console.log("ProfileForm: Starting resume upload with file:", {
+    //   name: selectedResumeFile.name,
+    //   size: selectedResumeFile.size,
+    //   type: selectedResumeFile.type,
+    // });
 
     setIsUploadingResume(true);
     try {
@@ -222,42 +222,42 @@ export default function ProfileForm({
       formData.append("file", selectedResumeFile);
       formData.append("fileType", "resume");
 
-      console.log("ProfileForm: Sending resume upload request...");
+      // console.log("ProfileForm: Sending resume upload request...");
       const response = await fetch("/api/upload", {
         method: "POST",
         credentials: "include",
         body: formData,
       });
 
-      console.log(
-        "ProfileForm: Resume upload response status:",
-        response.status
-      );
+      // console.log(
+      //   "ProfileForm: Resume upload response status:",
+      //   response.status
+      // );
       const data = await response.json();
-      console.log("ProfileForm: Resume upload response data:", data);
+      // console.log("ProfileForm: Resume upload response data:", data);
 
       if (!response.ok) {
         throw new Error(data.error || "Upload failed");
       }
 
-      console.log("ProfileForm: Resume upload successful, updating form data");
+      // console.log("ProfileForm: Resume upload successful, updating form data");
       setFormData((prev) => {
         const newData = {
           ...prev,
           resume: data.fileKey, // Store the file key, not the URL
           resumeFileName: data.fileName,
         };
-        console.log(
-          "ProfileForm: Updated form data after resume upload:",
-          newData
-        );
-        console.log("ProfileForm: Previous form data was:", prev);
+        // console.log(
+        //   "ProfileForm: Updated form data after resume upload:",
+        //   newData
+        // );
+        // console.log("ProfileForm: Previous form data was:", prev);
         return newData;
       });
 
       setSelectedResumeFile(null);
     } catch (error: any) {
-      console.error("ProfileForm: Resume upload error:", error);
+      // console.error("ProfileForm: Resume upload error:", error);
       alert(error.message);
     } finally {
       setIsUploadingResume(false);
@@ -267,11 +267,11 @@ export default function ProfileForm({
   const handleAvatarUpload = async () => {
     if (!selectedAvatarFile) return;
 
-    console.log("ProfileForm: Starting avatar upload with file:", {
-      name: selectedAvatarFile.name,
-      size: selectedAvatarFile.size,
-      type: selectedAvatarFile.type,
-    });
+    // console.log("ProfileForm: Starting avatar upload with file:", {
+    //   name: selectedAvatarFile.name,
+    //   size: selectedAvatarFile.size,
+    //   type: selectedAvatarFile.type,
+    // });
 
     setIsUploadingAvatar(true);
     try {
@@ -279,42 +279,42 @@ export default function ProfileForm({
       formData.append("file", selectedAvatarFile);
       formData.append("fileType", "avatar");
 
-      console.log("ProfileForm: Sending avatar upload request...");
+      // console.log("ProfileForm: Sending avatar upload request...");
       const response = await fetch("/api/upload", {
         method: "POST",
         credentials: "include",
         body: formData,
       });
 
-      console.log(
-        "ProfileForm: Avatar upload response status:",
-        response.status
-      );
+      // console.log(
+      //   "ProfileForm: Avatar upload response status:",
+      //   response.status
+      // );
       const data = await response.json();
-      console.log("ProfileForm: Avatar upload response data:", data);
+      // console.log("ProfileForm: Avatar upload response data:", data);
 
       if (!response.ok) {
         throw new Error(data.error || "Upload failed");
       }
 
-      console.log("ProfileForm: Avatar upload successful, updating form data");
+      // console.log("ProfileForm: Avatar upload successful, updating form data");
       setFormData((prev) => {
         const newData = {
           ...prev,
           avatar: data.fileKey, // Store the file key, not the URL
           avatarFileName: data.fileName,
         };
-        console.log(
-          "ProfileForm: Updated form data after avatar upload:",
-          newData
-        );
-        console.log("ProfileForm: Previous form data was:", prev);
+        // console.log(
+        //   "ProfileForm: Updated form data after avatar upload:",
+        //   newData
+        // );
+        // console.log("ProfileForm: Previous form data was:", prev);
         return newData;
       });
 
       setSelectedAvatarFile(null);
     } catch (error: any) {
-      console.error("ProfileForm: Avatar upload error:", error);
+      // console.error("ProfileForm: Avatar upload error:", error);
       alert(error.message);
     } finally {
       setIsUploadingAvatar(false);
@@ -413,14 +413,14 @@ export default function ProfileForm({
         : null,
     };
 
-    console.log("ProfileForm: Submitting data:", submitData);
-    console.log("ProfileForm: Form data state at submit:", formData);
-    console.log("ProfileForm: Avatar field value:", formData.avatar);
-    console.log("ProfileForm: Resume field value:", formData.resume);
-    console.log("ProfileForm: Avatar filename:", formData.avatarFileName);
-    console.log("ProfileForm: Resume filename:", formData.resumeFileName);
-    console.log("ProfileForm: Submit data avatar:", submitData.avatar);
-    console.log("ProfileForm: Submit data resume:", submitData.resume);
+    // console.log("ProfileForm: Submitting data:", submitData);
+    // console.log("ProfileForm: Form data state at submit:", formData);
+    // console.log("ProfileForm: Avatar field value:", formData.avatar);
+    // console.log("ProfileForm: Resume field value:", formData.resume);
+    // console.log("ProfileForm: Avatar filename:", formData.avatarFileName);
+    // console.log("ProfileForm: Resume filename:", formData.resumeFileName);
+    // console.log("ProfileForm: Submit data avatar:", submitData.avatar);
+    // console.log("ProfileForm: Submit data resume:", submitData.resume);
 
     await onSubmit(submitData);
   };
@@ -455,7 +455,7 @@ export default function ProfileForm({
 
       // Check if it's a mock file key (for testing without S3)
       if (formData.resume.startsWith("local-")) {
-        console.log("ProfileForm: Mock resume file key detected");
+        // console.log("ProfileForm: Mock resume file key detected");
         return undefined; // Don't show preview for mock files
       }
 
@@ -501,7 +501,7 @@ export default function ProfileForm({
         throw new Error("No download URL received");
       }
     } catch (error: any) {
-      console.error(`Error previewing ${fileType}:`, error);
+      // console.error(`Error previewing ${fileType}:`, error);
       alert(`Failed to preview ${fileType}: ${error.message}`);
     }
   };

@@ -18,6 +18,7 @@ export interface Mentee {
     specialty?: string;
     workplace?: string;
     availabilityStatus?: string;
+    purposeOfRegistration?: string;
   };
 }
 
@@ -84,7 +85,7 @@ export function useMenteeSearch() {
         setMentees(data.mentees);
         setPagination(data.pagination);
       } catch (err) {
-        console.error("Search error:", err);
+        // console.error("Search error:", err);
         setError(err instanceof Error ? err.message : "Search failed");
         setMentees([]);
       } finally {
