@@ -6,10 +6,36 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,10 +108,17 @@ const statusConfig = {
 export default function SubmissionsPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { opportunityTypes, loading: opportunityTypesLoading, error: opportunityTypesError, getTypeBadge } = useOpportunityTypes();
+  const {
+    opportunityTypes,
+    loading: opportunityTypesLoading,
+    error: opportunityTypesError,
+    getTypeBadge,
+  } = useOpportunityTypes();
   const [user, setUser] = useState<User | null>(null);
   const [opportunities, setOpportunities] = useState<MenteeOpportunity[]>([]);
-  const [filteredOpportunities, setFilteredOpportunities] = useState<MenteeOpportunity[]>([]);
+  const [filteredOpportunities, setFilteredOpportunities] = useState<
+    MenteeOpportunity[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const opportunitiesPagination = usePagination({ initialPageSize: 10 });
@@ -93,8 +126,11 @@ export default function SubmissionsPage() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<MenteeOpportunity | null>(null);
-  const [editingOpportunity, setEditingOpportunity] = useState<Partial<MenteeOpportunity>>({});
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<MenteeOpportunity | null>(null);
+  const [editingOpportunity, setEditingOpportunity] = useState<
+    Partial<MenteeOpportunity>
+  >({});
   const [savingOpportunity, setSavingOpportunity] = useState(false);
 
   useEffect(() => {
@@ -126,7 +162,9 @@ export default function SubmissionsPage() {
           const opportunitiesArray = data.opportunities || [];
           setOpportunities(opportunitiesArray);
           setFilteredOpportunities(opportunitiesArray);
-          opportunitiesPagination.actions.setTotalItems(opportunitiesArray.length);
+          opportunitiesPagination.actions.setTotalItems(
+            opportunitiesArray.length
+          );
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -143,7 +181,9 @@ export default function SubmissionsPage() {
     if (selectedStatus === "all") {
       setFilteredOpportunities(opportunities);
     } else {
-      const filtered = opportunities.filter(opp => opp.status === selectedStatus);
+      const filtered = opportunities.filter(
+        (opp) => opp.status === selectedStatus
+      );
       setFilteredOpportunities(filtered);
     }
     opportunitiesPagination.actions.setCurrentPage(1); // Reset to first page when filtering
@@ -174,13 +214,32 @@ export default function SubmissionsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING":
-        return <Badge variant="outline" className="border-yellow-500 text-yellow-700">Pending Review</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="border-yellow-500 text-yellow-700"
+          >
+            Pending Review
+          </Badge>
+        );
       case "APPROVED":
-        return <Badge variant="outline" className="border-green-500 text-green-700">Approved</Badge>;
+        return (
+          <Badge variant="outline" className="border-green-500 text-green-700">
+            Approved
+          </Badge>
+        );
       case "REJECTED":
-        return <Badge variant="outline" className="border-red-500 text-red-700">Rejected</Badge>;
+        return (
+          <Badge variant="outline" className="border-red-500 text-red-700">
+            Rejected
+          </Badge>
+        );
       case "CONVERTED":
-        return <Badge variant="outline" className="border-blue-500 text-blue-700">Converted</Badge>;
+        return (
+          <Badge variant="outline" className="border-blue-500 text-blue-700">
+            Converted
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -189,10 +248,10 @@ export default function SubmissionsPage() {
   const formatDate = (dateString: string) => {
     // Use a consistent date format to prevent hydration mismatches
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -205,7 +264,9 @@ export default function SubmissionsPage() {
         const opportunitiesArray = data.opportunities || [];
         setOpportunities(opportunitiesArray);
         setFilteredOpportunities(opportunitiesArray);
-        opportunitiesPagination.actions.setTotalItems(opportunitiesArray.length);
+        opportunitiesPagination.actions.setTotalItems(
+          opportunitiesArray.length
+        );
       } else {
         console.error("Failed to fetch opportunities");
       }
@@ -240,42 +301,49 @@ export default function SubmissionsPage() {
 
   const handleSaveOpportunity = async () => {
     if (!selectedOpportunity) return;
-    
+
     setSavingOpportunity(true);
     try {
       const requestBody = {
         ...editingOpportunity,
-        opportunityTypeId: editingOpportunity.opportunityType?.id || selectedOpportunity.opportunityType.id,
+        opportunityTypeId:
+          editingOpportunity.opportunityType?.id ||
+          selectedOpportunity.opportunityType.id,
       };
-      
+
       console.log("Sending request body:", requestBody);
-      
-      const response = await fetch(`/api/mentee-opportunities/${selectedOpportunity.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(requestBody),
-      });
+
+      const response = await fetch(
+        `/api/mentee-opportunities/${selectedOpportunity.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
           router.push("/login");
           return;
         }
-        
+
         // Try to get the error message from the response
         try {
           const errorData = await response.json();
           console.error("API Error:", errorData);
-          
+
           // Handle specific error cases
           if (errorData.status && errorData.status !== "PENDING") {
-            throw new Error(`Cannot edit ${errorData.status.toLowerCase()} opportunities. Only pending opportunities can be edited.`);
+            throw new Error(
+              `Cannot edit ${errorData.status.toLowerCase()} opportunities. Only pending opportunities can be edited.`
+            );
           }
-          
-          throw new Error(errorData.error || 'Failed to update opportunity');
+
+          throw new Error(errorData.error || "Failed to update opportunity");
         } catch (parseError) {
           console.error("Response status:", response.status);
           throw new Error(`Failed to update opportunity (${response.status})`);
@@ -292,7 +360,7 @@ export default function SubmissionsPage() {
         description: "Opportunity updated successfully!",
       });
     } catch (error) {
-      console.error('Error updating opportunity:', error);
+      console.error("Error updating opportunity:", error);
       toast({
         title: "Error",
         description: "Failed to update opportunity. Please try again.",
@@ -323,7 +391,9 @@ export default function SubmissionsPage() {
                 </span>
               </Link>
               <div className="flex items-center gap-4">
-                <span className="text-sm text-slate-500 font-medium animate-pulse">Loading...</span>
+                <span className="text-sm text-slate-500 font-medium animate-pulse">
+                  Loading...
+                </span>
               </div>
             </div>
           </div>
@@ -332,7 +402,9 @@ export default function SubmissionsPage() {
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-slate-600 font-medium">Loading your submissions...</p>
+              <p className="text-slate-600 font-medium">
+                Loading your submissions...
+              </p>
             </div>
           </div>
         </div>
@@ -354,17 +426,25 @@ export default function SubmissionsPage() {
                 UroCareerz
               </span>
             </Link>
-            
+
             <div className="flex items-center gap-4">
               {user && (
                 <span className="text-sm text-slate-600 font-medium">
                   Welcome, {user.firstName || user.email}
                 </span>
               )}
-              <Link href="/profile" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+              <Link
+                href="/profile"
+                className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors"
+              >
                 Profile
               </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-600 hover:text-red-600">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="text-slate-600 hover:text-red-600"
+              >
                 Logout
               </Button>
             </div>
@@ -376,7 +456,10 @@ export default function SubmissionsPage() {
         {/* Breadcrumb Navigation */}
         <div className="mb-6">
           <nav className="flex items-center space-x-2 text-sm text-slate-500">
-            <Link href="/dashboard" className="hover:text-blue-600 transition-colors font-medium">
+            <Link
+              href="/dashboard"
+              className="hover:text-blue-600 transition-colors font-medium"
+            >
               Dashboard
             </Link>
             <span>/</span>
@@ -388,13 +471,19 @@ export default function SubmissionsPage() {
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              My <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">Submissions</span>
+              My{" "}
+              <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                Submissions
+              </span>
             </h1>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-6">
-              Track opportunities you've submitted for admin review and community contribution.
+              Track opportunities you've submitted for admin review and
+              community contribution.
             </p>
             <Button
-              onClick={() => router.push("/dashboard/mentee/submit-opportunity")}
+              onClick={() =>
+                router.push("/dashboard/mentee/submit-opportunity")
+              }
               className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600 rounded-xl px-6"
             >
               Submit New Opportunity
@@ -407,52 +496,65 @@ export default function SubmissionsPage() {
           {(() => {
             const counts = {
               total: opportunities.length,
-              pending: opportunities.filter(opp => opp.status === 'PENDING').length,
-              approved: opportunities.filter(opp => opp.status === 'APPROVED').length,
-              rejected: opportunities.filter(opp => opp.status === 'REJECTED').length,
+              pending: opportunities.filter((opp) => opp.status === "PENDING")
+                .length,
+              approved: opportunities.filter((opp) => opp.status === "APPROVED")
+                .length,
+              rejected: opportunities.filter((opp) => opp.status === "REJECTED")
+                .length,
             };
             return [
-              { 
-                title: "Total Submissions", 
-                count: counts.total, 
-                color: "text-blue-600", 
+              {
+                title: "Total Submissions",
+                count: counts.total,
+                color: "text-blue-600",
                 icon: "📄",
                 status: "all",
-                bgColor: "hover:bg-blue-50"
+                bgColor: "hover:bg-blue-50",
               },
-              { 
-                title: "Pending Review", 
-                count: counts.pending, 
-                color: "text-amber-600", 
+              {
+                title: "Pending Review",
+                count: counts.pending,
+                color: "text-amber-600",
                 icon: "⏳",
                 status: "PENDING",
-                bgColor: "hover:bg-amber-50"
+                bgColor: "hover:bg-amber-50",
               },
-              { 
-                title: "Approved", 
-                count: counts.approved, 
-                color: "text-emerald-600", 
+              {
+                title: "Approved",
+                count: counts.approved,
+                color: "text-emerald-600",
                 icon: "✅",
                 status: "APPROVED",
-                bgColor: "hover:bg-emerald-50"
+                bgColor: "hover:bg-emerald-50",
               },
-              { 
-                title: "Rejected", 
-                count: counts.rejected, 
-                color: "text-red-600", 
+              {
+                title: "Rejected",
+                count: counts.rejected,
+                color: "text-red-600",
                 icon: "❌",
                 status: "REJECTED",
-                bgColor: "hover:bg-red-50"
+                bgColor: "hover:bg-red-50",
               },
             ].map((item, index) => (
-              <div 
-                key={index} 
-                className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${item.bgColor} ${selectedStatus === item.status ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
+              <div
+                key={index}
+                className={`bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${
+                  item.bgColor
+                } ${
+                  selectedStatus === item.status
+                    ? "ring-2 ring-blue-500 ring-opacity-50"
+                    : ""
+                }`}
                 onClick={() => handleStatusCardClick(item.status)}
               >
                 <div className="text-2xl mb-2">{item.icon}</div>
-                <div className={`text-2xl font-bold ${item.color} mb-1`}>{item.count}</div>
-                <div className="text-sm text-slate-600 font-medium">{item.title}</div>
+                <div className={`text-2xl font-bold ${item.color} mb-1`}>
+                  {item.count}
+                </div>
+                <div className="text-sm text-slate-600 font-medium">
+                  {item.title}
+                </div>
               </div>
             ));
           })()}
@@ -463,11 +565,14 @@ export default function SubmissionsPage() {
           <div className="mb-6 flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-500" />
             <span className="text-sm text-gray-600">
-              Filtered by: <span className="font-medium">{getStatusConfig(selectedStatus).label}</span>
+              Filtered by:{" "}
+              <span className="font-medium">
+                {getStatusConfig(selectedStatus).label}
+              </span>
             </span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setSelectedStatus("all")}
               className="text-blue-600 hover:text-blue-700"
             >
@@ -492,7 +597,9 @@ export default function SubmissionsPage() {
                 <span>Show:</span>
                 <Select
                   value={opportunitiesPagination.state.pageSize.toString()}
-                  onValueChange={(value) => opportunitiesPagination.actions.setPageSize(parseInt(value))}
+                  onValueChange={(value) =>
+                    opportunitiesPagination.actions.setPageSize(parseInt(value))
+                  }
                 >
                   <SelectTrigger className="w-20 h-8">
                     <SelectValue />
@@ -506,12 +613,17 @@ export default function SubmissionsPage() {
                 </Select>
                 <span>per page</span>
               </div>
-              <Button onClick={fetchMenteeOpportunities} variant="outline" disabled={loading} className="w-full sm:w-auto">
+              <Button
+                onClick={fetchMenteeOpportunities}
+                variant="outline"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
                 {loading ? "Refreshing..." : "Refresh"}
               </Button>
             </div>
           </div>
-          
+
           {loading ? (
             <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6">
               <div className="flex items-center justify-center py-8">
@@ -523,24 +635,34 @@ export default function SubmissionsPage() {
             <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow p-6 text-center">
               <div className="text-4xl mb-4">📝</div>
               <h3 className="text-lg font-medium mb-2">
-                {selectedStatus === "all" ? "No opportunities submitted yet" : `No ${selectedStatus.toLowerCase()} opportunities`}
+                {selectedStatus === "all"
+                  ? "No opportunities submitted yet"
+                  : `No ${selectedStatus.toLowerCase()} opportunities`}
               </h3>
               <p className="text-gray-600 mb-4">
-                {selectedStatus === "all" 
+                {selectedStatus === "all"
                   ? "Start contributing to the community by submitting opportunities you've found."
-                  : `You don't have any ${selectedStatus.toLowerCase()} opportunities yet.`
-                }
+                  : `You don't have any ${selectedStatus.toLowerCase()} opportunities yet.`}
               </p>
               {selectedStatus === "all" && (
-                <Button className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600" onClick={() => router.push("/dashboard/mentee/submit-opportunity")}>Submit Your First Opportunity</Button>
+                <Button
+                  className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600"
+                  onClick={() =>
+                    router.push("/dashboard/mentee/submit-opportunity")
+                  }
+                >
+                  Submit Your First Opportunity
+                </Button>
               )}
             </div>
           ) : (
             <>
               <div className="mb-4 text-sm text-gray-600">
-                Showing {opportunitiesPagination.state.startIndex + 1} to {opportunitiesPagination.state.endIndex} of {opportunitiesPagination.state.totalItems} opportunities
+                Showing {opportunitiesPagination.state.startIndex + 1} to{" "}
+                {opportunitiesPagination.state.endIndex} of{" "}
+                {opportunitiesPagination.state.totalItems} opportunities
               </div>
-              
+
               {/* Table Layout */}
               <div className="bg-white/70 backdrop-blur-lg rounded-xl shadow overflow-hidden">
                 <Table>
@@ -555,105 +677,153 @@ export default function SubmissionsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {opportunitiesPagination.paginateData(filteredOpportunities).map((opportunity) => (
-                      <TableRow key={opportunity.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium text-gray-900">{opportunity.title}</div>
-                            <div className="text-sm text-gray-500 line-clamp-2">{opportunity.description}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {(() => {
-                            const typeBadge = getTypeBadge(opportunity.opportunityType.name);
-                            return typeBadge ? (
-                              <Badge variant="outline" className={typeBadge.colorClass}>
-                                {typeBadge.name}
-                              </Badge>
+                    {opportunitiesPagination
+                      .paginateData(filteredOpportunities)
+                      .map((opportunity) => (
+                        <TableRow key={opportunity.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {opportunity.title}
+                              </div>
+                              <div className="text-sm text-gray-500 line-clamp-2">
+                                {opportunity.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {(() => {
+                              const typeBadge = getTypeBadge(
+                                opportunity.opportunityType.name
+                              );
+                              return typeBadge ? (
+                                <Badge
+                                  variant="outline"
+                                  className={typeBadge.colorClass}
+                                >
+                                  {typeBadge.name}
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  style={{
+                                    borderColor:
+                                      opportunity.opportunityType.color ||
+                                      undefined,
+                                    color:
+                                      opportunity.opportunityType.color ||
+                                      undefined,
+                                  }}
+                                >
+                                  {opportunity.opportunityType.name}
+                                </Badge>
+                              );
+                            })()}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(opportunity.status)}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-gray-500">
+                              {formatDate(opportunity.createdAt)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {opportunity.adminFeedback ? (
+                              <div className="text-sm text-blue-600 font-medium">
+                                Available
+                              </div>
                             ) : (
-                              <Badge variant="outline" style={{ borderColor: opportunity.opportunityType.color || undefined, color: opportunity.opportunityType.color || undefined }}>
-                                {opportunity.opportunityType.name}
-                              </Badge>
-                            );
-                          })()}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(opportunity.status)}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-gray-500">
-                            {formatDate(opportunity.createdAt)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {opportunity.adminFeedback ? (
-                            <div className="text-sm text-blue-600 font-medium">Available</div>
-                          ) : (
-                            <div className="text-sm text-gray-400">None</div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewOpportunity(opportunity)}
-                              className="text-xs"
-                            >
-                              <Eye className="w-3 h-3 mr-1" />
-                              View
-                            </Button>
-                                                         <Button
-                               variant="outline"
-                               size="sm"
-                               onClick={() => handleEditOpportunity(opportunity)}
-                               className="text-xs"
-                               disabled={opportunity.status !== "PENDING"}
-                               title={opportunity.status !== "PENDING" ? `Cannot edit ${opportunity.status.toLowerCase()} opportunities` : "Edit opportunity"}
-                             >
-                               <Edit className="w-3 h-3 mr-1" />
-                               Edit
-                             </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              <div className="text-sm text-gray-400">None</div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleViewOpportunity(opportunity)
+                                }
+                                className="text-xs"
+                              >
+                                <Eye className="w-3 h-3 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleEditOpportunity(opportunity)
+                                }
+                                className="text-xs"
+                                disabled={opportunity.status !== "PENDING"}
+                                title={
+                                  opportunity.status !== "PENDING"
+                                    ? `Cannot edit ${opportunity.status.toLowerCase()} opportunities`
+                                    : "Edit opportunity"
+                                }
+                              >
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </div>
-              
+
               {/* Pagination Controls */}
               {opportunitiesPagination.state.totalPages > 1 && (
                 <div className="mt-6 flex justify-center">
                   <Pagination>
                     <PaginationContent className="flex flex-wrap justify-center gap-1 sm:gap-2">
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <PaginationPrevious
                           onClick={opportunitiesPagination.actions.previousPage}
-                          className={!opportunitiesPagination.state.hasPreviousPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          className={
+                            !opportunitiesPagination.state.hasPreviousPage
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
                         />
                       </PaginationItem>
-                      
-                      {opportunitiesPagination.getPageNumbers().map((pageNumber, index) => (
-                        <PaginationItem key={index}>
-                          {pageNumber === -1 ? (
-                            <PaginationEllipsis />
-                          ) : (
-                            <PaginationLink
-                              onClick={() => opportunitiesPagination.actions.setCurrentPage(pageNumber)}
-                              isActive={pageNumber === opportunitiesPagination.state.currentPage}
-                              className="cursor-pointer min-w-[2rem] sm:min-w-[2.5rem]"
-                            >
-                              {pageNumber}
-                            </PaginationLink>
-                          )}
-                        </PaginationItem>
-                      ))}
-                      
+
+                      {opportunitiesPagination
+                        .getPageNumbers()
+                        .map((pageNumber, index) => (
+                          <PaginationItem key={index}>
+                            {pageNumber === -1 ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                onClick={() =>
+                                  opportunitiesPagination.actions.setCurrentPage(
+                                    pageNumber
+                                  )
+                                }
+                                isActive={
+                                  pageNumber ===
+                                  opportunitiesPagination.state.currentPage
+                                }
+                                className="cursor-pointer min-w-[2rem] sm:min-w-[2.5rem]"
+                              >
+                                {pageNumber}
+                              </PaginationLink>
+                            )}
+                          </PaginationItem>
+                        ))}
+
                       <PaginationItem>
-                        <PaginationNext 
+                        <PaginationNext
                           onClick={opportunitiesPagination.actions.nextPage}
-                          className={!opportunitiesPagination.state.hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          className={
+                            !opportunitiesPagination.state.hasNextPage
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>
@@ -667,7 +837,7 @@ export default function SubmissionsPage() {
 
       {/* View Opportunity Modal */}
       <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-6">
             <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               {selectedOpportunity?.title}
@@ -680,19 +850,30 @@ export default function SubmissionsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Type */}
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Type
+                    </span>
                     <div>
                       {(() => {
-                        const typeBadge = getTypeBadge(selectedOpportunity.opportunityType.name);
+                        const typeBadge = getTypeBadge(
+                          selectedOpportunity.opportunityType.name
+                        );
                         return typeBadge ? (
-                          <Badge className={`${typeBadge.colorClass} px-3 py-1 text-sm font-medium`}>
+                          <Badge
+                            className={`${typeBadge.colorClass} px-3 py-1 text-sm font-medium`}
+                          >
                             {typeBadge.name}
                           </Badge>
                         ) : (
-                          <Badge className="px-3 py-1 text-sm font-medium" style={{ 
-                            backgroundColor: selectedOpportunity.opportunityType.color || '#6b7280',
-                            color: 'white'
-                          }}>
+                          <Badge
+                            className="px-3 py-1 text-sm font-medium"
+                            style={{
+                              backgroundColor:
+                                selectedOpportunity.opportunityType.color ||
+                                "#6b7280",
+                              color: "white",
+                            }}
+                          >
                             {selectedOpportunity.opportunityType.name}
                           </Badge>
                         );
@@ -702,19 +883,36 @@ export default function SubmissionsPage() {
 
                   {/* Status */}
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</span>
-                    <div>
-                      {getStatusBadge(selectedOpportunity.status)}
-                    </div>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Status
+                    </span>
+                    <div>{getStatusBadge(selectedOpportunity.status)}</div>
                   </div>
 
                   {/* Location */}
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Location
+                    </span>
                     <span className="text-sm font-medium text-gray-900 flex items-center gap-1">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                       {selectedOpportunity.location || "Remote"}
                     </span>
@@ -722,10 +920,22 @@ export default function SubmissionsPage() {
 
                   {/* Duration */}
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Duration
+                    </span>
                     <span className="text-sm font-medium text-gray-900 flex items-center gap-1">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       {selectedOpportunity.duration || "Not specified"}
                     </span>
@@ -739,13 +949,27 @@ export default function SubmissionsPage() {
                 <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                      <svg
+                        className="w-5 h-5 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"
+                        />
                       </svg>
                     </div>
                     <div>
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Experience Level</span>
-                      <p className="text-sm font-medium text-gray-900 capitalize">{selectedOpportunity.experienceLevel || "Not specified"}</p>
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Experience Level
+                      </span>
+                      <p className="text-sm font-medium text-gray-900 capitalize">
+                        {selectedOpportunity.experienceLevel || "Not specified"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -754,22 +978,40 @@ export default function SubmissionsPage() {
                 <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      <svg
+                        className="w-5 h-5 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                        />
                       </svg>
                     </div>
-                                         <div>
-                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Compensation</span>
-                       <p className="text-sm font-medium text-gray-900">
-                         {selectedOpportunity.compensation ? (
-                           selectedOpportunity.compensation.toLowerCase().includes('free') || 
-                           selectedOpportunity.compensation.toLowerCase().includes('unpaid') ||
-                           selectedOpportunity.compensation.toLowerCase().includes('volunteer') ? 
-                           selectedOpportunity.compensation : 
-                           `₹${selectedOpportunity.compensation}`
-                         ) : "Not specified"}
-                       </p>
-                     </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Compensation
+                      </span>
+                      <p className="text-sm font-medium text-gray-900">
+                        {selectedOpportunity.compensation
+                          ? selectedOpportunity.compensation
+                              .toLowerCase()
+                              .includes("free") ||
+                            selectedOpportunity.compensation
+                              .toLowerCase()
+                              .includes("unpaid") ||
+                            selectedOpportunity.compensation
+                              .toLowerCase()
+                              .includes("volunteer")
+                            ? selectedOpportunity.compensation
+                            : `₹${selectedOpportunity.compensation}`
+                          : "Not specified"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -777,17 +1019,31 @@ export default function SubmissionsPage() {
                 <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <svg
+                        className="w-5 h-5 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
                       </svg>
                     </div>
                     <div>
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Posted</span>
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Posted
+                      </span>
                       <p className="text-sm font-medium text-gray-900">
-                        {new Date(selectedOpportunity.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
+                        {new Date(
+                          selectedOpportunity.createdAt
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </p>
                     </div>
@@ -799,17 +1055,31 @@ export default function SubmissionsPage() {
                   <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-5 h-5 text-orange-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
                       <div>
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Deadline</span>
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Deadline
+                        </span>
                         <p className="text-sm font-medium text-gray-900">
-                          {new Date(selectedOpportunity.applicationDeadline).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
+                          {new Date(
+                            selectedOpportunity.applicationDeadline
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
                           })}
                         </p>
                       </div>
@@ -824,14 +1094,26 @@ export default function SubmissionsPage() {
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      <svg
+                        className="w-5 h-5 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
                       </svg>
                       Description
                     </h3>
                   </div>
                   <div className="p-6">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOpportunity.description}</p>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {selectedOpportunity.description}
+                    </p>
                   </div>
                 </div>
 
@@ -840,14 +1122,26 @@ export default function SubmissionsPage() {
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="bg-gradient-to-r from-orange-50 to-orange-100 px-6 py-4 border-b border-orange-200">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-5 h-5 text-orange-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         Requirements
                       </h3>
                     </div>
                     <div className="p-6">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOpportunity.requirements}</p>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {selectedOpportunity.requirements}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -857,14 +1151,26 @@ export default function SubmissionsPage() {
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-4 border-b border-green-200">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        <svg
+                          className="w-5 h-5 text-green-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                          />
                         </svg>
                         Benefits
                       </h3>
                     </div>
                     <div className="p-6">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOpportunity.benefits}</p>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {selectedOpportunity.benefits}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -874,32 +1180,53 @@ export default function SubmissionsPage() {
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-100 px-6 py-4 border-b border-blue-200">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        <svg
+                          className="w-5 h-5 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
                         </svg>
                         Admin Feedback
                       </h3>
                     </div>
                     <div className="p-6">
                       <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOpportunity.adminFeedback}</p>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {selectedOpportunity.adminFeedback}
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
 
-                            {/* Action Buttons */}
+              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6 border-t border-gray-200">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span>
-                    {selectedOpportunity.status === "PENDING" 
-                      ? "This opportunity is pending admin review" 
-                      : `This opportunity has been ${selectedOpportunity.status.toLowerCase()}`
-                    }
+                    {selectedOpportunity.status === "PENDING"
+                      ? "This opportunity is pending admin review"
+                      : `This opportunity has been ${selectedOpportunity.status.toLowerCase()}`}
                   </span>
                 </div>
                 <div className="flex gap-3">
@@ -917,7 +1244,11 @@ export default function SubmissionsPage() {
                     }}
                     className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-700 hover:to-indigo-600 px-6"
                     disabled={selectedOpportunity.status !== "PENDING"}
-                    title={selectedOpportunity.status !== "PENDING" ? `Cannot edit ${selectedOpportunity.status.toLowerCase()} opportunities` : "Edit opportunity"}
+                    title={
+                      selectedOpportunity.status !== "PENDING"
+                        ? `Cannot edit ${selectedOpportunity.status.toLowerCase()} opportunities`
+                        : "Edit opportunity"
+                    }
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Opportunity
@@ -931,7 +1262,7 @@ export default function SubmissionsPage() {
 
       {/* Edit Opportunity Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-gray-900">
               Edit Opportunity
@@ -942,17 +1273,32 @@ export default function SubmissionsPage() {
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title" className="text-sm font-medium text-gray-700">Title *</Label>
+                  <Label
+                    htmlFor="title"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Title *
+                  </Label>
                   <Input
                     id="title"
-                    value={editingOpportunity.title || ''}
-                    onChange={(e) => setEditingOpportunity(prev => ({ ...prev, title: e.target.value }))}
+                    value={editingOpportunity.title || ""}
+                    onChange={(e) =>
+                      setEditingOpportunity((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
                     className="mt-1"
                     placeholder="Enter opportunity title"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="type" className="text-sm font-medium text-gray-700">Opportunity Type *</Label>
+                  <Label
+                    htmlFor="type"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Opportunity Type *
+                  </Label>
                   {opportunityTypesLoading ? (
                     <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50">
                       <div className="animate-pulse flex space-x-4">
@@ -970,35 +1316,52 @@ export default function SubmissionsPage() {
                       No opportunity types available
                     </div>
                   ) : (
-                                         <Select value={editingOpportunity.opportunityType?.id || selectedOpportunity.opportunityType.id} onValueChange={(value) => {
-                       const selectedType = opportunityTypes.find(type => type.id === value);
-                       if (selectedType) {
-                         setEditingOpportunity(prev => ({ 
-                           ...prev, 
-                           opportunityType: {
-                             id: selectedType.id,
-                             name: selectedType.name,
-                             color: selectedType.color || null
-                           }
-                         }));
-                       }
-                     }}>
+                    <Select
+                      value={
+                        editingOpportunity.opportunityType?.id ||
+                        selectedOpportunity.opportunityType.id
+                      }
+                      onValueChange={(value) => {
+                        const selectedType = opportunityTypes.find(
+                          (type) => type.id === value
+                        );
+                        if (selectedType) {
+                          setEditingOpportunity((prev) => ({
+                            ...prev,
+                            opportunityType: {
+                              id: selectedType.id,
+                              name: selectedType.name,
+                              color: selectedType.color || null,
+                            },
+                          }));
+                        }
+                      }}
+                    >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select type">
-                          {editingOpportunity.opportunityType && (() => {
-                            const selectedType = opportunityTypes.find(type => type.id === editingOpportunity.opportunityType?.id);
-                            if (selectedType) {
-                              const typeInfo = getTypeBadge(selectedType.name);
-                              return typeInfo ? (
-                                <Badge className={typeInfo.colorClass}>
-                                  {typeInfo.name}
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary">{selectedType.name}</Badge>
+                          {editingOpportunity.opportunityType &&
+                            (() => {
+                              const selectedType = opportunityTypes.find(
+                                (type) =>
+                                  type.id ===
+                                  editingOpportunity.opportunityType?.id
                               );
-                            }
-                            return null;
-                          })()}
+                              if (selectedType) {
+                                const typeInfo = getTypeBadge(
+                                  selectedType.name
+                                );
+                                return typeInfo ? (
+                                  <Badge className={typeInfo.colorClass}>
+                                    {typeInfo.name}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary">
+                                    {selectedType.name}
+                                  </Badge>
+                                );
+                              }
+                              return null;
+                            })()}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -1023,11 +1386,21 @@ export default function SubmissionsPage() {
               </div>
 
               <div>
-                <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description *</Label>
+                <Label
+                  htmlFor="description"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Description *
+                </Label>
                 <Textarea
                   id="description"
-                  value={editingOpportunity.description || ''}
-                  onChange={(e) => setEditingOpportunity(prev => ({ ...prev, description: e.target.value }))}
+                  value={editingOpportunity.description || ""}
+                  onChange={(e) =>
+                    setEditingOpportunity((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   className="mt-1 min-h-[120px]"
                   placeholder="Provide a detailed description of the opportunity..."
                 />
@@ -1035,23 +1408,51 @@ export default function SubmissionsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+                  <Label
+                    htmlFor="location"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Location
+                  </Label>
                   <Input
                     id="location"
-                    value={editingOpportunity.location || ''}
-                    onChange={(e) => setEditingOpportunity(prev => ({ ...prev, location: e.target.value }))}
+                    value={editingOpportunity.location || ""}
+                    onChange={(e) =>
+                      setEditingOpportunity((prev) => ({
+                        ...prev,
+                        location: e.target.value,
+                      }))
+                    }
                     className="mt-1"
                     placeholder="e.g., New York, NY or Remote"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
-                  <Select value={editingOpportunity.experienceLevel || 'not-specified'} onValueChange={(value) => setEditingOpportunity(prev => ({ ...prev, experienceLevel: value === 'not-specified' ? undefined : value }))}>
+                  <Label
+                    htmlFor="experience"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Experience Level
+                  </Label>
+                  <Select
+                    value={
+                      editingOpportunity.experienceLevel || "not-specified"
+                    }
+                    onValueChange={(value) =>
+                      setEditingOpportunity((prev) => ({
+                        ...prev,
+                        experienceLevel:
+                          value === "not-specified" ? undefined : value,
+                      }))
+                    }
+                  >
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="not-specified">Not specified</SelectItem>
+                      <SelectItem value="not-specified">
+                        Not specified
+                      </SelectItem>
                       <SelectItem value="entry">Entry Level</SelectItem>
                       <SelectItem value="mid">Mid Level</SelectItem>
                       <SelectItem value="senior">Senior Level</SelectItem>
@@ -1063,71 +1464,142 @@ export default function SubmissionsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="duration" className="text-sm font-medium text-gray-700">Duration</Label>
-                  <Select value={editingOpportunity.duration || 'not-specified'} onValueChange={(value) => setEditingOpportunity(prev => ({ ...prev, duration: value === 'not-specified' ? undefined : value }))}>
+                  <Label
+                    htmlFor="duration"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Duration
+                  </Label>
+                  <Select
+                    value={editingOpportunity.duration || "not-specified"}
+                    onValueChange={(value) =>
+                      setEditingOpportunity((prev) => ({
+                        ...prev,
+                        duration: value === "not-specified" ? undefined : value,
+                      }))
+                    }
+                  >
                     <SelectTrigger className="mt-1 text-gray-900">
                       <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="not-specified" className="text-gray-900">Not specified</SelectItem>
-                      <SelectItem value="1-3 months" className="text-gray-900">1-3 months</SelectItem>
-                      <SelectItem value="3-6 months" className="text-gray-900">3-6 months</SelectItem>
-                      <SelectItem value="6 months" className="text-gray-900">6 months</SelectItem>
-                      <SelectItem value="1 year" className="text-gray-900">1 year</SelectItem>
-                      <SelectItem value="2 years" className="text-gray-900">2 years</SelectItem>
-                      <SelectItem value="Permanent" className="text-gray-900">Permanent</SelectItem>
+                      <SelectItem
+                        value="not-specified"
+                        className="text-gray-900"
+                      >
+                        Not specified
+                      </SelectItem>
+                      <SelectItem value="1-3 months" className="text-gray-900">
+                        1-3 months
+                      </SelectItem>
+                      <SelectItem value="3-6 months" className="text-gray-900">
+                        3-6 months
+                      </SelectItem>
+                      <SelectItem value="6 months" className="text-gray-900">
+                        6 months
+                      </SelectItem>
+                      <SelectItem value="1 year" className="text-gray-900">
+                        1 year
+                      </SelectItem>
+                      <SelectItem value="2 years" className="text-gray-900">
+                        2 years
+                      </SelectItem>
+                      <SelectItem value="Permanent" className="text-gray-900">
+                        Permanent
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                                 <div>
-                   <Label htmlFor="compensation" className="text-sm font-medium text-gray-700">Compensation</Label>
-                   <div className="relative mt-1">
-                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                       <span className="text-gray-500 sm:text-sm">₹</span>
-                     </div>
-                     <Input
-                       id="compensation"
-                       value={editingOpportunity.compensation || ''}
-                       onChange={(e) => setEditingOpportunity(prev => ({ ...prev, compensation: e.target.value }))}
-                       className="pl-8"
-                       placeholder="50,000/year, Stipend provided, Free"
-                     />
-                   </div>
-                   <p className="text-xs text-gray-500 mt-1">
-                     Enter amount without ₹ symbol. Use "Free", "Unpaid", or "Volunteer" for non-paid opportunities.
-                   </p>
-                 </div>
+                <div>
+                  <Label
+                    htmlFor="compensation"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Compensation
+                  </Label>
+                  <div className="relative mt-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">₹</span>
+                    </div>
+                    <Input
+                      id="compensation"
+                      value={editingOpportunity.compensation || ""}
+                      onChange={(e) =>
+                        setEditingOpportunity((prev) => ({
+                          ...prev,
+                          compensation: e.target.value,
+                        }))
+                      }
+                      className="pl-8"
+                      placeholder="50,000/year, Stipend provided, Free"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter amount without ₹ symbol. Use "Free", "Unpaid", or
+                    "Volunteer" for non-paid opportunities.
+                  </p>
+                </div>
               </div>
 
               <div>
-                <Label htmlFor="requirements" className="text-sm font-medium text-gray-700">Requirements</Label>
+                <Label
+                  htmlFor="requirements"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Requirements
+                </Label>
                 <Textarea
                   id="requirements"
-                  value={editingOpportunity.requirements || ''}
-                  onChange={(e) => setEditingOpportunity(prev => ({ ...prev, requirements: e.target.value }))}
+                  value={editingOpportunity.requirements || ""}
+                  onChange={(e) =>
+                    setEditingOpportunity((prev) => ({
+                      ...prev,
+                      requirements: e.target.value,
+                    }))
+                  }
                   className="mt-1 min-h-[100px]"
                   placeholder="List the requirements and qualifications needed..."
                 />
               </div>
 
               <div>
-                <Label htmlFor="benefits" className="text-sm font-medium text-gray-700">Benefits</Label>
+                <Label
+                  htmlFor="benefits"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Benefits
+                </Label>
                 <Textarea
                   id="benefits"
-                  value={editingOpportunity.benefits || ''}
-                  onChange={(e) => setEditingOpportunity(prev => ({ ...prev, benefits: e.target.value }))}
+                  value={editingOpportunity.benefits || ""}
+                  onChange={(e) =>
+                    setEditingOpportunity((prev) => ({
+                      ...prev,
+                      benefits: e.target.value,
+                    }))
+                  }
                   className="mt-1 min-h-[100px]"
                   placeholder="Describe the benefits and perks of this opportunity..."
                 />
               </div>
 
               <div>
-                <Label htmlFor="deadline" className="text-sm font-medium text-gray-700">Application Deadline</Label>
+                <Label
+                  htmlFor="deadline"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Application Deadline
+                </Label>
                 <Input
                   id="deadline"
                   type="date"
-                  value={editingOpportunity.applicationDeadline || ''}
-                  onChange={(e) => setEditingOpportunity(prev => ({ ...prev, applicationDeadline: e.target.value }))}
+                  value={editingOpportunity.applicationDeadline || ""}
+                  onChange={(e) =>
+                    setEditingOpportunity((prev) => ({
+                      ...prev,
+                      applicationDeadline: e.target.value,
+                    }))
+                  }
                   className="mt-1"
                 />
               </div>

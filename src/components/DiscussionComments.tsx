@@ -206,7 +206,7 @@ const CommentNode = memo(function CommentNode({
   return (
     <div className={cn(
       "relative",
-      depth > 0 && "ml-2 pl-3 border-l-2 border-slate-200 sm:ml-3 sm:pl-3 md:ml-4 md:pl-4"
+      depth > 0 && "ml-1 pl-2 border-l-2 border-slate-200 sm:ml-3 sm:pl-3 md:ml-4 md:pl-4"
     )}>
       <div className={cn(
         "group relative transition-all duration-200 rounded-xl",
@@ -240,7 +240,7 @@ const CommentNode = memo(function CommentNode({
           </div>
 
           {/* Content Section */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             {/* Header */}
             <div className="flex items-start justify-between mb-2">
               <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
@@ -266,7 +266,7 @@ const CommentNode = memo(function CommentNode({
                 </span>
               </div>
               
-              <div className="flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -296,6 +296,30 @@ const CommentNode = memo(function CommentNode({
               depth === 0 ? "text-sm sm:text-base" : "text-sm"
             )}>
               {node.content}
+            </div>
+
+            {/* Mobile Actions */}
+            <div className="mt-2 flex items-center gap-1 sm:hidden">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 px-2.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-all duration-200",
+                    isReplying && "text-blue-600 bg-blue-50"
+                  )}
+                  onClick={() => setIsReplying(!isReplying)}
+                >
+                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Reply</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
+                  aria-label="More options"
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </Button>
             </div>
 
             {/* Reply Form */}

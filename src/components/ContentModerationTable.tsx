@@ -126,21 +126,31 @@ export default function ContentModerationTable() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showOpportunityForm, setShowOpportunityForm] = useState(false);
-  const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+  const [editingOpportunity, setEditingOpportunity] =
+    useState<Opportunity | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [opportunityToDelete, setOpportunityToDelete] = useState<Opportunity | null>(null);
+  const [opportunityToDelete, setOpportunityToDelete] =
+    useState<Opportunity | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   // New state for mentee details
-  const [applications, setApplications] = useState<Record<string, Mentee[]>>({});
-  const [savedMentees, setSavedMentees] = useState<Record<string, Mentee[]>>({});
-  const [loadingMentees, setLoadingMentees] = useState<Record<string, boolean>>({});
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [applications, setApplications] = useState<Record<string, Mentee[]>>(
+    {}
+  );
+  const [savedMentees, setSavedMentees] = useState<Record<string, Mentee[]>>(
+    {}
+  );
+  const [loadingMentees, setLoadingMentees] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<Opportunity | null>(null);
   const [showApplications, setShowApplications] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [showOpportunityDetails, setShowOpportunityDetails] = useState(false);
-  const [opportunityDetails, setOpportunityDetails] = useState<Opportunity | null>(null);
+  const [opportunityDetails, setOpportunityDetails] =
+    useState<Opportunity | null>(null);
 
   // Pagination for drawer tables
   const applicationsPagination = usePagination({ initialPageSize: 10 });
@@ -166,9 +176,17 @@ export default function ContentModerationTable() {
 
   // Filtering logic
   const filteredOpportunities = opportunities.filter((opportunity) => {
-    if (statusFilter !== "all" && opportunity.status !== statusFilter) return false;
-    if (typeFilter !== "all" && opportunity.opportunityType.name !== typeFilter) return false;
-    if (debouncedSearchQuery && !opportunity.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) return false;
+    if (statusFilter !== "all" && opportunity.status !== statusFilter)
+      return false;
+    if (typeFilter !== "all" && opportunity.opportunityType.name !== typeFilter)
+      return false;
+    if (
+      debouncedSearchQuery &&
+      !opportunity.title
+        .toLowerCase()
+        .includes(debouncedSearchQuery.toLowerCase())
+    )
+      return false;
     return true;
   });
 
@@ -192,15 +210,19 @@ export default function ContentModerationTable() {
       if (typeFilter !== "all") params.append("type", typeFilter);
       if (debouncedSearchQuery) params.append("search", debouncedSearchQuery);
 
-      const response = await fetch(`/api/admin/opportunities?${params.toString()}`);
+      const response = await fetch(
+        `/api/admin/opportunities?${params.toString()}`
+      );
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
       }
       const data = await response.json();
       setOpportunities(data.opportunities || []);
     } catch (err: any) {
-      console.error('Error fetching opportunities:', err);
+      console.error("Error fetching opportunities:", err);
       setError(err.message);
       setOpportunities([]); // Set empty array on error
     } finally {
@@ -212,24 +234,37 @@ export default function ContentModerationTable() {
   const fetchApplications = async (opportunityId: string) => {
     if (applications[opportunityId]) {
       // Update pagination total when data exists
-      applicationsPagination.actions.setTotalItems(applications[opportunityId].length);
+      applicationsPagination.actions.setTotalItems(
+        applications[opportunityId].length
+      );
       return;
     }
 
     try {
-      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-applications`]: true }));
-      const response = await fetch(`/api/admin/opportunities/${opportunityId}/applications`);
+      setLoadingMentees((prev) => ({
+        ...prev,
+        [`${opportunityId}-applications`]: true,
+      }));
+      const response = await fetch(
+        `/api/admin/opportunities/${opportunityId}/applications`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch applications");
       }
       const data = await response.json();
-      setApplications(prev => ({ ...prev, [opportunityId]: data.applications }));
+      setApplications((prev) => ({
+        ...prev,
+        [opportunityId]: data.applications,
+      }));
       // Update pagination total
       applicationsPagination.actions.setTotalItems(data.applications.length);
     } catch (err: any) {
       console.error("Error fetching applications:", err);
     } finally {
-      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-applications`]: false }));
+      setLoadingMentees((prev) => ({
+        ...prev,
+        [`${opportunityId}-applications`]: false,
+      }));
     }
   };
 
@@ -241,19 +276,30 @@ export default function ContentModerationTable() {
     }
 
     try {
-      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-saved`]: true }));
-      const response = await fetch(`/api/admin/opportunities/${opportunityId}/saved`);
+      setLoadingMentees((prev) => ({
+        ...prev,
+        [`${opportunityId}-saved`]: true,
+      }));
+      const response = await fetch(
+        `/api/admin/opportunities/${opportunityId}/saved`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch saved mentees");
       }
       const data = await response.json();
-      setSavedMentees(prev => ({ ...prev, [opportunityId]: data.savedOpportunities }));
+      setSavedMentees((prev) => ({
+        ...prev,
+        [opportunityId]: data.savedOpportunities,
+      }));
       // Update pagination total
       savedPagination.actions.setTotalItems(data.savedOpportunities.length);
     } catch (err: any) {
       console.error("Error fetching saved mentees:", err);
     } finally {
-      setLoadingMentees(prev => ({ ...prev, [`${opportunityId}-saved`]: false }));
+      setLoadingMentees((prev) => ({
+        ...prev,
+        [`${opportunityId}-saved`]: false,
+      }));
     }
   };
 
@@ -428,9 +474,8 @@ export default function ContentModerationTable() {
     setShowOpportunityDetails(true);
   };
 
-
   const formatDate = (dateString: string) => {
-    if (!isClient) return ''; // Return empty string during SSR to prevent hydration mismatch
+    if (!isClient) return ""; // Return empty string during SSR to prevent hydration mismatch
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -486,9 +531,7 @@ export default function ContentModerationTable() {
       <Card>
         <CardHeader>
           <CardTitle>Content Moderation</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            Loading...
-          </div>
+          <div className="text-sm text-muted-foreground">Loading...</div>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
@@ -513,7 +556,6 @@ export default function ContentModerationTable() {
               <h2 className="text-xl text-gray-900 mb-2">Opportunities</h2>
               {/* <CardTitle>Content Moderation</CardTitle> */}
               <div className="text-sm text-muted-foreground">
-
                 Total opportunities: {opportunities.length}
               </div>
             </div>
@@ -585,7 +627,9 @@ export default function ContentModerationTable() {
                   <TableHead className="font-bold text-base">Type</TableHead>
                   <TableHead className="font-bold text-base">Posted</TableHead>
                   <TableHead className="font-bold text-base">Status</TableHead>
-                  <TableHead className="text-right font-bold text-base">Actions</TableHead>
+                  <TableHead className="text-right font-bold text-base">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -595,15 +639,23 @@ export default function ContentModerationTable() {
                       colSpan={8}
                       className="text-center py-8 text-gray-500"
                     >
-                      {statusFilter !== "all" || typeFilter !== "all" || debouncedSearchQuery ? (
+                      {statusFilter !== "all" ||
+                      typeFilter !== "all" ||
+                      debouncedSearchQuery ? (
                         <div className="space-y-2">
                           <p>No opportunities found matching your filters</p>
                           <p className="text-sm">
-                            {statusFilter !== "all" && `Status: ${statusFilter}`}
-                            {statusFilter !== "all" && (typeFilter !== "all" || debouncedSearchQuery) && " • "}
+                            {statusFilter !== "all" &&
+                              `Status: ${statusFilter}`}
+                            {statusFilter !== "all" &&
+                              (typeFilter !== "all" || debouncedSearchQuery) &&
+                              " • "}
                             {typeFilter !== "all" && `Type: ${typeFilter}`}
-                            {typeFilter !== "all" && debouncedSearchQuery && " • "}
-                            {debouncedSearchQuery && `Search: "${debouncedSearchQuery}"`}
+                            {typeFilter !== "all" &&
+                              debouncedSearchQuery &&
+                              " • "}
+                            {debouncedSearchQuery &&
+                              `Search: "${debouncedSearchQuery}"`}
                           </p>
                         </div>
                       ) : (
@@ -621,15 +673,24 @@ export default function ContentModerationTable() {
                       </TableCell>
                       <TableCell className="max-w-32">
                         <div className="font-medium truncate">
-                          {opportunity.creator.firstName && opportunity.creator.lastName
+                          {opportunity.creator.firstName &&
+                          opportunity.creator.lastName
                             ? `${opportunity.creator.firstName} ${opportunity.creator.lastName}`
                             : "No name provided"}
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={opportunity.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
-                          className={opportunity.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
+                          variant={
+                            opportunity.creatorRole === "MENTOR"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            opportunity.creatorRole === "MENTOR"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
+                          }
                         >
                           {opportunity.creatorRole}
                         </Badge>
@@ -689,12 +750,13 @@ export default function ContentModerationTable() {
                           </div>
                         ) : (
                           <Badge
-                            className={`${opportunity.status === "APPROVED"
-                              ? "bg-green-100 text-green-800 border-green-200"
-                              : opportunity.status === "REJECTED"
+                            className={`${
+                              opportunity.status === "APPROVED"
+                                ? "bg-green-100 text-green-800 border-green-200"
+                                : opportunity.status === "REJECTED"
                                 ? "bg-red-100 text-red-800 border-red-200"
                                 : "bg-gray-100 text-gray-800 border-gray-200"
-                              }`}
+                            }`}
                           >
                             {opportunity.status === "APPROVED" && (
                               <CheckCircle className="h-3 w-3 mr-1" />
@@ -705,8 +767,8 @@ export default function ContentModerationTable() {
                             {opportunity.status === "APPROVED"
                               ? "Approved"
                               : opportunity.status === "REJECTED"
-                                ? "Rejected"
-                                : opportunity.status}
+                              ? "Rejected"
+                              : opportunity.status}
                           </Badge>
                         )}
                       </TableCell>
@@ -731,9 +793,7 @@ export default function ContentModerationTable() {
                               View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() =>
-                                handleEditOpportunity(opportunity)
-                              }
+                              onClick={() => handleEditOpportunity(opportunity)}
                               disabled={actionLoading === opportunity.id}
                             >
                               <Edit className="h-4 w-4 mr-2" />
@@ -761,15 +821,20 @@ export default function ContentModerationTable() {
           <div className="lg:hidden space-y-4">
             {paginatedOpportunities.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                {statusFilter !== "all" || typeFilter !== "all" || debouncedSearchQuery ? (
+                {statusFilter !== "all" ||
+                typeFilter !== "all" ||
+                debouncedSearchQuery ? (
                   <div className="space-y-2">
                     <p>No opportunities found matching your filters</p>
                     <p className="text-sm">
                       {statusFilter !== "all" && `Status: ${statusFilter}`}
-                      {statusFilter !== "all" && (typeFilter !== "all" || debouncedSearchQuery) && " • "}
+                      {statusFilter !== "all" &&
+                        (typeFilter !== "all" || debouncedSearchQuery) &&
+                        " • "}
                       {typeFilter !== "all" && `Type: ${typeFilter}`}
                       {typeFilter !== "all" && debouncedSearchQuery && " • "}
-                      {debouncedSearchQuery && `Search: "${debouncedSearchQuery}"`}
+                      {debouncedSearchQuery &&
+                        `Search: "${debouncedSearchQuery}"`}
                     </p>
                   </div>
                 ) : (
@@ -781,7 +846,9 @@ export default function ContentModerationTable() {
                 <Card key={opportunity.id} className="p-4">
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <h3 className="font-medium text-lg">{opportunity.title}</h3>
+                      <h3 className="font-medium text-lg">
+                        {opportunity.title}
+                      </h3>
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {opportunity.description}
                       </p>
@@ -807,7 +874,8 @@ export default function ContentModerationTable() {
                       <User className="h-4 w-4 text-gray-400" />
                       <div>
                         <div className="font-medium text-sm">
-                          {opportunity.creator.firstName && opportunity.creator.lastName
+                          {opportunity.creator.firstName &&
+                          opportunity.creator.lastName
                             ? `${opportunity.creator.firstName} ${opportunity.creator.lastName}`
                             : "No name provided"}
                         </div>
@@ -816,8 +884,16 @@ export default function ContentModerationTable() {
                         </div>
                         <div className="flex items-center gap-1 mt-1">
                           <Badge
-                            variant={opportunity.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
-                            className={opportunity.creatorRole === 'MENTOR' ? 'bg-blue-100 text-blue-800 text-xs' : 'bg-green-100 text-green-800 text-xs'}
+                            variant={
+                              opportunity.creatorRole === "MENTOR"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className={
+                              opportunity.creatorRole === "MENTOR"
+                                ? "bg-blue-100 text-blue-800 text-xs"
+                                : "bg-green-100 text-green-800 text-xs"
+                            }
                           >
                             {opportunity.creatorRole}
                           </Badge>
@@ -876,9 +952,7 @@ export default function ContentModerationTable() {
                               {opportunity._count.applications}
                               <Users className="h-4 w-4" />
                             </div>
-                            <div className="text-xs text-gray-500">
-                              applied
-                            </div>
+                            <div className="text-xs text-gray-500">applied</div>
                           </div>
                         </Button>
                         <Button
@@ -893,9 +967,7 @@ export default function ContentModerationTable() {
                               {opportunity._count.savedOpportunities}
                               <Bookmark className="h-4 w-4" />
                             </div>
-                            <div className="text-xs text-gray-500">
-                              saved
-                            </div>
+                            <div className="text-xs text-gray-500">saved</div>
                           </div>
                         </Button>
                       </div>
@@ -1030,12 +1102,15 @@ export default function ContentModerationTable() {
       />
 
       {/* Applications Drawer */}
-      <Sheet open={showApplications} onOpenChange={(open) => {
-        if (!open) {
-          setShowApplications(false);
-          // Don't reset selectedOpportunity - keep it for potential return to details modal
-        }
-      }}>
+      <Sheet
+        open={showApplications}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowApplications(false);
+            // Don't reset selectedOpportunity - keep it for potential return to details modal
+          }
+        }}
+      >
         <SheetContent side="right" className="w-[50vw] max-w-none">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
@@ -1043,7 +1118,8 @@ export default function ContentModerationTable() {
               Applications for "{selectedOpportunity?.title}"
             </SheetTitle>
             <SheetDescription>
-              {(applications[selectedOpportunity?.id || ''] || []).length} total applicants
+              {(applications[selectedOpportunity?.id || ""] || []).length} total
+              applicants
             </SheetDescription>
           </SheetHeader>
 
@@ -1055,14 +1131,19 @@ export default function ContentModerationTable() {
                   <p className="text-gray-500">Loading applicants...</p>
                 </div>
               </div>
-            ) : !applications[selectedOpportunity?.id || ''] || applications[selectedOpportunity?.id || '']?.length === 0 ? (
+            ) : !applications[selectedOpportunity?.id || ""] ||
+              applications[selectedOpportunity?.id || ""]?.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
-                  <p className="text-gray-500">This opportunity hasn't received any applications.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No applications yet
+                  </h3>
+                  <p className="text-gray-500">
+                    This opportunity hasn't received any applications.
+                  </p>
                 </div>
               </div>
             ) : (
@@ -1070,77 +1151,108 @@ export default function ContentModerationTable() {
                 <Table>
                   <TableHeader className="bg-gray-50">
                     <TableRow>
-                      <TableHead className="w-12 font-bold text-base">#</TableHead>
-                      <TableHead className="font-bold text-base">Applicant</TableHead>
-                      <TableHead className="font-bold text-base">Email</TableHead>
-                      <TableHead className="w-24 font-bold text-base">Role</TableHead>
-                      <TableHead className="w-32 font-bold text-base">Applied</TableHead>
-                      <TableHead className="w-24 font-bold text-base">Status</TableHead>
+                      <TableHead className="w-12 font-bold text-base">
+                        #
+                      </TableHead>
+                      <TableHead className="font-bold text-base">
+                        Applicant
+                      </TableHead>
+                      <TableHead className="font-bold text-base">
+                        Email
+                      </TableHead>
+                      <TableHead className="w-24 font-bold text-base">
+                        Role
+                      </TableHead>
+                      <TableHead className="w-32 font-bold text-base">
+                        Applied
+                      </TableHead>
+                      <TableHead className="w-24 font-bold text-base">
+                        Status
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {applicationsPagination.paginateData(applications[selectedOpportunity?.id || ''] || []).map((mentee, index) => {
-                      // Adjust index for pagination
-                      const actualIndex = applicationsPagination.state.startIndex + index;
-                      const displayName = mentee.firstName && mentee.lastName
-                        ? `${mentee.firstName} ${mentee.lastName}`
-                        : mentee.firstName || mentee.lastName || 'No name provided';
+                    {applicationsPagination
+                      .paginateData(
+                        applications[selectedOpportunity?.id || ""] || []
+                      )
+                      .map((mentee, index) => {
+                        // Adjust index for pagination
+                        const actualIndex =
+                          applicationsPagination.state.startIndex + index;
+                        const displayName =
+                          mentee.firstName && mentee.lastName
+                            ? `${mentee.firstName} ${mentee.lastName}`
+                            : mentee.firstName ||
+                              mentee.lastName ||
+                              "No name provided";
 
-                      const formattedDate = (() => {
-                        if (!isClient) return 'Loading...';
-                        try {
-                          return new Date(mentee.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          });
-                        } catch {
-                          return 'Invalid date';
-                        }
-                      })();
+                        const formattedDate = (() => {
+                          if (!isClient) return "Loading...";
+                          try {
+                            return new Date(
+                              mentee.createdAt
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            });
+                          } catch {
+                            return "Invalid date";
+                          }
+                        })();
 
-                      return (
-                        <TableRow key={mentee.id} className="hover:bg-gray-50">
-                          <TableCell className="font-medium text-sm text-gray-500">
-                            {actualIndex + 1}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <User className="h-4 w-4 text-blue-600" />
+                        return (
+                          <TableRow
+                            key={mentee.id}
+                            className="hover:bg-gray-50"
+                          >
+                            <TableCell className="font-medium text-sm text-gray-500">
+                              {actualIndex + 1}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <User className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">
+                                    {displayName}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-gray-900 truncate">{displayName}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-gray-600 text-sm">{mentee.email}</span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-xs">
-                              {mentee.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-gray-600 text-sm">{formattedDate}</span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs">
-                              Pending
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-gray-600 text-sm">
+                                {mentee.email}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="text-xs">
+                                {mentee.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-gray-600 text-sm">
+                                {formattedDate}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                Pending
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                   </TableBody>
                 </Table>
               </div>
             )}
 
             {/* Applications Pagination */}
-            {(applications[selectedOpportunity?.id || ''] || []).length > 0 && (
+            {(applications[selectedOpportunity?.id || ""] || []).length > 0 && (
               <div className="mt-4 border-t pt-4">
                 <TablePagination
                   pagination={applicationsPagination}
@@ -1154,12 +1266,15 @@ export default function ContentModerationTable() {
       </Sheet>
 
       {/* Saved Drawer */}
-      <Sheet open={showSaved} onOpenChange={(open) => {
-        if (!open) {
-          setShowSaved(false);
-          // Don't reset selectedOpportunity - keep it for potential return to details modal
-        }
-      }}>
+      <Sheet
+        open={showSaved}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowSaved(false);
+            // Don't reset selectedOpportunity - keep it for potential return to details modal
+          }
+        }}
+      >
         <SheetContent side="right" className="w-[50vw] max-w-none">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
@@ -1167,7 +1282,8 @@ export default function ContentModerationTable() {
               Users who saved "{selectedOpportunity?.title}"
             </SheetTitle>
             <SheetDescription>
-              {(savedMentees[selectedOpportunity?.id || ''] || []).length} users saved this opportunity
+              {(savedMentees[selectedOpportunity?.id || ""] || []).length} users
+              saved this opportunity
             </SheetDescription>
           </SheetHeader>
 
@@ -1179,14 +1295,19 @@ export default function ContentModerationTable() {
                   <p className="text-gray-500">Loading saved users...</p>
                 </div>
               </div>
-            ) : !savedMentees[selectedOpportunity?.id || ''] || savedMentees[selectedOpportunity?.id || '']?.length === 0 ? (
+            ) : !savedMentees[selectedOpportunity?.id || ""] ||
+              savedMentees[selectedOpportunity?.id || ""]?.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Bookmark className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No saves yet</h3>
-                  <p className="text-gray-500">This opportunity hasn't been saved by any users.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No saves yet
+                  </h3>
+                  <p className="text-gray-500">
+                    This opportunity hasn't been saved by any users.
+                  </p>
                 </div>
               </div>
             ) : (
@@ -1194,77 +1315,108 @@ export default function ContentModerationTable() {
                 <Table>
                   <TableHeader className="bg-gray-50">
                     <TableRow>
-                      <TableHead className="w-12 font-bold text-base">#</TableHead>
-                      <TableHead className="font-bold text-base">User</TableHead>
-                      <TableHead className="font-bold text-base">Email</TableHead>
-                      <TableHead className="w-24 font-bold text-base">Role</TableHead>
-                      <TableHead className="w-32 font-bold text-base">Saved</TableHead>
-                      <TableHead className="w-24 font-bold text-base">Interest</TableHead>
+                      <TableHead className="w-12 font-bold text-base">
+                        #
+                      </TableHead>
+                      <TableHead className="font-bold text-base">
+                        User
+                      </TableHead>
+                      <TableHead className="font-bold text-base">
+                        Email
+                      </TableHead>
+                      <TableHead className="w-24 font-bold text-base">
+                        Role
+                      </TableHead>
+                      <TableHead className="w-32 font-bold text-base">
+                        Saved
+                      </TableHead>
+                      <TableHead className="w-24 font-bold text-base">
+                        Interest
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {savedPagination.paginateData(savedMentees[selectedOpportunity?.id || ''] || []).map((mentee, index) => {
-                      // Adjust index for pagination
-                      const actualIndex = savedPagination.state.startIndex + index;
-                      const displayName = mentee.firstName && mentee.lastName
-                        ? `${mentee.firstName} ${mentee.lastName}`
-                        : mentee.firstName || mentee.lastName || 'No name provided';
+                    {savedPagination
+                      .paginateData(
+                        savedMentees[selectedOpportunity?.id || ""] || []
+                      )
+                      .map((mentee, index) => {
+                        // Adjust index for pagination
+                        const actualIndex =
+                          savedPagination.state.startIndex + index;
+                        const displayName =
+                          mentee.firstName && mentee.lastName
+                            ? `${mentee.firstName} ${mentee.lastName}`
+                            : mentee.firstName ||
+                              mentee.lastName ||
+                              "No name provided";
 
-                      const formattedDate = (() => {
-                        if (!isClient) return 'Loading...';
-                        try {
-                          return new Date(mentee.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          });
-                        } catch {
-                          return 'Invalid date';
-                        }
-                      })();
+                        const formattedDate = (() => {
+                          if (!isClient) return "Loading...";
+                          try {
+                            return new Date(
+                              mentee.createdAt
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            });
+                          } catch {
+                            return "Invalid date";
+                          }
+                        })();
 
-                      return (
-                        <TableRow key={mentee.id} className="hover:bg-gray-50">
-                          <TableCell className="font-medium text-sm text-gray-500">
-                            {actualIndex + 1}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <Bookmark className="h-4 w-4 text-green-600" />
+                        return (
+                          <TableRow
+                            key={mentee.id}
+                            className="hover:bg-gray-50"
+                          >
+                            <TableCell className="font-medium text-sm text-gray-500">
+                              {actualIndex + 1}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <Bookmark className="h-4 w-4 text-green-600" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">
+                                    {displayName}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-gray-900 truncate">{displayName}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-gray-600 text-sm">{mentee.email}</span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-xs">
-                              {mentee.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-gray-600 text-sm">{formattedDate}</span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-xs">
-                              High
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-gray-600 text-sm">
+                                {mentee.email}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="text-xs">
+                                {mentee.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-gray-600 text-sm">
+                                {formattedDate}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="text-xs">
+                                High
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                   </TableBody>
                 </Table>
               </div>
             )}
 
             {/* Saved Pagination */}
-            {(savedMentees[selectedOpportunity?.id || ''] || []).length > 0 && (
+            {(savedMentees[selectedOpportunity?.id || ""] || []).length > 0 && (
               <div className="mt-4 border-t pt-4">
                 <TablePagination
                   pagination={savedPagination}
@@ -1278,14 +1430,17 @@ export default function ContentModerationTable() {
       </Sheet>
 
       {/* Opportunity Details Dialog */}
-      <Dialog open={showOpportunityDetails} onOpenChange={(open) => {
-        setShowOpportunityDetails(open);
-        if (!open) {
-          // Reset selectedOpportunity when details modal is closed
-          setSelectedOpportunity(null);
-        }
-      }}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <Dialog
+        open={showOpportunityDetails}
+        onOpenChange={(open) => {
+          setShowOpportunityDetails(open);
+          if (!open) {
+            // Reset selectedOpportunity when details modal is closed
+            setSelectedOpportunity(null);
+          }
+        }}
+      >
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
               Opportunity Details
@@ -1296,19 +1451,33 @@ export default function ContentModerationTable() {
             <div className="space-y-8">
               {/* Header */}
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900 leading-tight">{opportunityDetails.title}</h2>
+                <h2 className="text-xl font-semibold text-gray-900 leading-tight">
+                  {opportunityDetails.title}
+                </h2>
                 <div className="flex items-center gap-3">
                   {(() => {
-                    const typeInfo = getTypeBadge(opportunityDetails.opportunityType.name);
+                    const typeInfo = getTypeBadge(
+                      opportunityDetails.opportunityType.name
+                    );
                     return typeInfo ? (
-                      <Badge className={typeInfo.colorClass}>{typeInfo.name}</Badge>
+                      <Badge className={typeInfo.colorClass}>
+                        {typeInfo.name}
+                      </Badge>
                     ) : (
-                      <Badge variant="secondary">{opportunityDetails.opportunityType.name}</Badge>
+                      <Badge variant="secondary">
+                        {opportunityDetails.opportunityType.name}
+                      </Badge>
                     );
                   })()}
                   {(() => {
-                    const statusInfo = getStatusBadge(opportunityDetails.status);
-                    return <Badge className={statusInfo.color}>{statusInfo.label}</Badge>;
+                    const statusInfo = getStatusBadge(
+                      opportunityDetails.status
+                    );
+                    return (
+                      <Badge className={statusInfo.color}>
+                        {statusInfo.label}
+                      </Badge>
+                    );
                   })()}
                 </div>
               </div>
@@ -1319,7 +1488,8 @@ export default function ContentModerationTable() {
                 <div className="flex items-center gap-3">
                   <User className="h-5 w-5 text-gray-500" />
                   <span className="font-semibold text-gray-900">
-                    {opportunityDetails.creator.firstName && opportunityDetails.creator.lastName
+                    {opportunityDetails.creator.firstName &&
+                    opportunityDetails.creator.lastName
                       ? `${opportunityDetails.creator.firstName} ${opportunityDetails.creator.lastName}`
                       : "puneeth K"}
                   </span>
@@ -1331,7 +1501,11 @@ export default function ContentModerationTable() {
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-700">Role:</span>
                     <Badge
-                      variant={opportunityDetails.creatorRole === 'MENTOR' ? 'default' : 'secondary'}
+                      variant={
+                        opportunityDetails.creatorRole === "MENTOR"
+                          ? "default"
+                          : "secondary"
+                      }
                       className="text-xs px-0"
                     >
                       {opportunityDetails.creatorRole}
@@ -1344,7 +1518,9 @@ export default function ContentModerationTable() {
                   <Mail className="h-5 w-5 text-gray-500" />
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-700">Email:</span>
-                    <span className="text-gray-600">{opportunityDetails.creator.email}</span>
+                    <span className="text-gray-600">
+                      {opportunityDetails.creator.email}
+                    </span>
                   </div>
                 </div>
 
@@ -1353,7 +1529,9 @@ export default function ContentModerationTable() {
                   <Calendar className="h-5 w-5 text-gray-500" />
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-700">Posted:</span>
-                    <span className="text-gray-600">{formatDate(opportunityDetails.createdAt)}</span>
+                    <span className="text-gray-600">
+                      {formatDate(opportunityDetails.createdAt)}
+                    </span>
                   </div>
                 </div>
 
@@ -1362,56 +1540,83 @@ export default function ContentModerationTable() {
                   <div className="flex items-center gap-3">
                     <Edit className="h-5 w-5 text-gray-500" />
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-700">Updated:</span>
-                      <span className="text-gray-600">{formatDate(opportunityDetails.updatedAt)}</span>
+                      <span className="font-medium text-gray-700">
+                        Updated:
+                      </span>
+                      <span className="text-gray-600">
+                        {formatDate(opportunityDetails.updatedAt)}
+                      </span>
                     </div>
                   </div>
                 )}
 
                 {/* Source */}
-                {opportunityDetails.sourceName && opportunityDetails.sourceName.trim() !== "" && (
-                  <div className="flex items-center gap-3">
-                    <Globe className="h-5 w-5 text-gray-500" />
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-700">Source:</span>
-                      <span className="text-gray-600">{opportunityDetails.sourceName}</span>
+                {opportunityDetails.sourceName &&
+                  opportunityDetails.sourceName.trim() !== "" && (
+                    <div className="flex items-center gap-3">
+                      <Globe className="h-5 w-5 text-gray-500" />
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">
+                          Source:
+                        </span>
+                        <span className="text-gray-600">
+                          {opportunityDetails.sourceName}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
 
               {/* Description */}
               <div className="space-y-4">
-                <h5 className="text-lg font-semibold text-gray-900">Description</h5>
+                <h5 className="text-lg font-semibold text-gray-900">
+                  Description
+                </h5>
                 <div className="text-gray-700 leading-relaxed text-base bg-gray-50 p-4 rounded-lg">
                   {opportunityDetails.description}
                 </div>
               </div>
 
               {/* Additional Information */}
-              {(opportunityDetails.location || opportunityDetails.duration || opportunityDetails.stipend) && (
+              {(opportunityDetails.location ||
+                opportunityDetails.duration ||
+                opportunityDetails.stipend) && (
                 <div className="space-y-4">
-                  <h5 className="text-lg font-semibold text-gray-900">Additional Information</h5>
+                  <h5 className="text-lg font-semibold text-gray-900">
+                    Additional Information
+                  </h5>
                   <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                     {opportunityDetails.location && (
                       <div className="flex items-center gap-3 text-sm">
                         <MapPin className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                        <span className="font-medium text-gray-700">Location:</span>
-                        <span className="text-gray-600">{opportunityDetails.location}</span>
+                        <span className="font-medium text-gray-700">
+                          Location:
+                        </span>
+                        <span className="text-gray-600">
+                          {opportunityDetails.location}
+                        </span>
                       </div>
                     )}
                     {opportunityDetails.duration && (
                       <div className="flex items-center gap-3 text-sm">
                         <Clock className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                        <span className="font-medium text-gray-700">Duration:</span>
-                        <span className="text-gray-600">{opportunityDetails.duration}</span>
+                        <span className="font-medium text-gray-700">
+                          Duration:
+                        </span>
+                        <span className="text-gray-600">
+                          {opportunityDetails.duration}
+                        </span>
                       </div>
                     )}
                     {opportunityDetails.stipend && (
                       <div className="flex items-center gap-3 text-sm">
                         <DollarSign className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                        <span className="font-medium text-gray-700">Stipend:</span>
-                        <span className="text-gray-600">{opportunityDetails.stipend}</span>
+                        <span className="font-medium text-gray-700">
+                          Stipend:
+                        </span>
+                        <span className="text-gray-600">
+                          {opportunityDetails.stipend}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -1420,16 +1625,22 @@ export default function ContentModerationTable() {
 
               {/* Engagement Metrics */}
               <div className="space-y-4">
-                <h5 className="text-lg font-semibold text-gray-900">Engagement Metrics</h5>
+                <h5 className="text-lg font-semibold text-gray-900">
+                  Engagement Metrics
+                </h5>
                 <div className="bg-gray-50 p-6 rounded-lg">
                   {/* Applications Row */}
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pb-4">
                     <div className="flex items-start gap-3">
                       <Users className="h-6 w-6 text-blue-600 mt-2" />
                       <div>
-                        <div className="text-3xl font-bold text-blue-600 leading-tight">{opportunityDetails._count.applications}</div>
+                        <div className="text-3xl font-bold text-blue-600 leading-tight">
+                          {opportunityDetails._count.applications}
+                        </div>
                         <div className="text-sm text-gray-600 font-medium">
-                          {opportunityDetails._count.applications === 1 ? 'Application' : 'Applications'}
+                          {opportunityDetails._count.applications === 1
+                            ? "Application"
+                            : "Applications"}
                         </div>
                       </div>
                     </div>
@@ -1440,7 +1651,10 @@ export default function ContentModerationTable() {
                       className="flex items-center gap-2 text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
                     >
                       <Users className="h-4 w-4" />
-                      View {opportunityDetails._count.applications === 1 ? 'Application' : 'Applications'}
+                      View{" "}
+                      {opportunityDetails._count.applications === 1
+                        ? "Application"
+                        : "Applications"}
                     </Button>
                   </div>
 
@@ -1452,9 +1666,13 @@ export default function ContentModerationTable() {
                     <div className="flex items-start gap-3">
                       <Bookmark className="h-6 w-6 text-green-600 mt-2" />
                       <div>
-                        <div className="text-3xl font-bold text-green-600 leading-tight">{opportunityDetails._count.savedOpportunities}</div>
+                        <div className="text-3xl font-bold text-green-600 leading-tight">
+                          {opportunityDetails._count.savedOpportunities}
+                        </div>
                         <div className="text-sm text-gray-600 font-medium">
-                          {opportunityDetails._count.savedOpportunities === 1 ? 'Save' : 'Saved'}
+                          {opportunityDetails._count.savedOpportunities === 1
+                            ? "Save"
+                            : "Saved"}
                         </div>
                       </div>
                     </div>
@@ -1465,7 +1683,10 @@ export default function ContentModerationTable() {
                       className="flex items-center gap-2 text-sm px-4 py-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
                     >
                       <Bookmark className="h-4 w-4" />
-                      View {opportunityDetails._count.savedOpportunities === 1 ? 'Save' : 'Saved'}
+                      View{" "}
+                      {opportunityDetails._count.savedOpportunities === 1
+                        ? "Save"
+                        : "Saved"}
                     </Button>
                   </div>
                 </div>
@@ -1490,7 +1711,6 @@ export default function ContentModerationTable() {
           )}
         </DialogContent>
       </Dialog>
-
     </>
   );
 }

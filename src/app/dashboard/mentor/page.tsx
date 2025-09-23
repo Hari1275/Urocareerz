@@ -3434,13 +3434,16 @@ export default function MentorDashboardPage() {
         <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
           <DialogContent
             className="w-[98vw] sm:max-w-[95vw] max-h-[90vh] sm:max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
-            style={{ maxWidth: "min(98vw, 1400px)", maxHeight: "min(90vh, 640px)" }}
+            style={{
+              maxWidth: "min(98vw, 1400px)",
+              maxHeight: "min(90vh, 640px)",
+            }}
           >
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-2 sm:p-4 md:p-6">
-                <div className="flex items-start justify-between gap-2 sm:gap-4">
+              <div className="flex items-start justify-between gap-2 sm:gap-4">
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
                       <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
@@ -3707,7 +3710,9 @@ export default function MentorDashboardPage() {
                         className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md"
                       >
                         <Edit3 className="h-4 w-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Edit Opportunity</span>
+                        <span className="hidden sm:inline">
+                          Edit Opportunity
+                        </span>
                         <span className="sm:hidden">Edit</span>
                       </Button>
                       <Button
@@ -3719,7 +3724,9 @@ export default function MentorDashboardPage() {
                         className="w-full bg-white/80 hover:bg-white border-red-200 text-red-600 hover:text-red-700"
                       >
                         <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Delete Opportunity</span>
+                        <span className="hidden sm:inline">
+                          Delete Opportunity
+                        </span>
                         <span className="sm:hidden">Delete</span>
                       </Button>
                       <Button
@@ -3733,7 +3740,9 @@ export default function MentorDashboardPage() {
                         className="w-full bg-white/80 hover:bg-white border-slate-200"
                       >
                         <Eye className="h-4 w-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">View Public Page</span>
+                        <span className="hidden sm:inline">
+                          View Public Page
+                        </span>
                         <span className="sm:hidden">View</span>
                       </Button>
                     </CardContent>
@@ -3781,7 +3790,10 @@ export default function MentorDashboardPage() {
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
           <DialogContent
             className="w-[98vw] sm:max-w-[95vw] max-h-[90vh] sm:max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
-            style={{ maxWidth: "min(98vw, 1200px)", maxHeight: "min(90vh, 720px)" }}
+            style={{
+              maxWidth: "min(98vw, 1200px)",
+              maxHeight: "min(90vh, 720px)",
+            }}
           >
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-2 sm:p-4 md:p-6">
@@ -5192,7 +5204,7 @@ export default function MentorDashboardPage() {
           open={showDiscussionModal}
           onOpenChange={handleCloseDiscussionModal}
         >
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -5248,19 +5260,19 @@ export default function MentorDashboardPage() {
 
             <div className="space-y-6">
               {/* Author and Date */}
-              <div className="flex items-center gap-4 text-sm text-slate-600">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 text-sm text-slate-600">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-semibold text-xs">
                       {selectedDiscussion.author.firstName?.[0] || "U"}
                     </span>
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900 truncate">
                       {selectedDiscussion.author.firstName}{" "}
                       {selectedDiscussion.author.lastName}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 truncate">
                       {selectedDiscussion.author.role} •{" "}
                       {new Date(
                         selectedDiscussion.createdAt
@@ -5269,14 +5281,18 @@ export default function MentorDashboardPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 ml-auto">
+                <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
                   <div className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
-                    <span>{selectedDiscussion.viewCount || 0}</span>
+                    <span className="text-xs sm:text-sm">
+                      {selectedDiscussion.viewCount || 0}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <MessageSquare className="h-4 w-4" />
-                    <span>{selectedDiscussion._count?.comments || 0}</span>
+                    <span className="text-xs sm:text-sm">
+                      {selectedDiscussion._count?.comments || 0}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -5284,17 +5300,25 @@ export default function MentorDashboardPage() {
               {/* Tags */}
               {selectedDiscussion.tags &&
                 selectedDiscussion.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedDiscussion.tags.map(
-                      (tag: string, index: number) => (
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {selectedDiscussion.tags
+                      .slice(0, 6)
+                      .map((tag: string, index: number) => (
                         <Badge
                           key={index}
                           variant="outline"
-                          className="text-xs bg-white/50"
+                          className="text-xs bg-white/50 truncate max-w-[120px] sm:max-w-none"
                         >
                           #{tag}
                         </Badge>
-                      )
+                      ))}
+                    {selectedDiscussion.tags.length > 6 && (
+                      <Badge
+                        variant="outline"
+                        className="text-xs bg-slate-100 text-slate-600"
+                      >
+                        +{selectedDiscussion.tags.length - 6} more
+                      </Badge>
                     )}
                   </div>
                 )}
@@ -5309,11 +5333,11 @@ export default function MentorDashboardPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={handleCloseDiscussionModal}
-                  className="flex-1"
+                  className="flex-1 order-2 sm:order-1"
                 >
                   Close
                 </Button>
@@ -5324,8 +5348,9 @@ export default function MentorDashboardPage() {
                       "_blank"
                     );
                   }}
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                  className="flex-1 order-1 sm:order-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
                 >
+                  <MessageSquare className="h-4 w-4 mr-2" />
                   Join Full Discussion
                 </Button>
               </div>

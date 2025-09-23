@@ -4293,20 +4293,20 @@ export default function MenteeDashboardPage() {
         open={showDiscussionModal}
         onOpenChange={handleCloseDiscussionModal}
       >
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedDiscussion ? (
             <>
               <DialogHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-500">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 mt-1 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-500 shrink-0">
                       <MessageSquare className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">
+                      <DialogTitle className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                         {selectedDiscussion.title}
                       </DialogTitle>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
                         <Badge
                           className={`text-xs font-medium ${
                             selectedDiscussion.status === "ACTIVE"
@@ -4356,18 +4356,18 @@ export default function MenteeDashboardPage() {
                         "_blank"
                       );
                     }}
-                    className="text-slate-600 hover:text-blue-600"
+                    className="text-slate-600 hover:text-blue-600 self-end sm:self-auto"
                   >
                     Open Full View
                   </Button>
                 </div>
               </DialogHeader>
 
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6 pt-5 border-t mt-4">
                 {/* Author and Date */}
-                <div className="flex items-center gap-4 text-sm text-slate-600">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shrink-0">
                       <span className="text-white font-semibold text-xs">
                         {selectedDiscussion.author.firstName?.[0] || "U"}
                       </span>
@@ -4384,7 +4384,7 @@ export default function MenteeDashboardPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 ml-auto">
+                  <div className="flex items-center gap-4 sm:ml-auto">
                     <div className="flex items-center gap-1">
                       <Eye className="h-4 w-4" />
                       <span>{selectedDiscussion.viewCount}</span>
@@ -4412,8 +4412,8 @@ export default function MenteeDashboardPage() {
                 )}
 
                 {/* Content */}
-                <div className="prose prose-slate max-w-none">
-                  <div className="p-4 bg-slate-50 rounded-lg border">
+                <div className="prose prose-sm sm:prose-base max-w-none">
+                  <div className="p-3 sm:p-4 bg-slate-50 rounded-lg border">
                     <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
                       {selectedDiscussion.content}
                     </p>
@@ -4421,7 +4421,7 @@ export default function MenteeDashboardPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-4 border-t">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                   <Button
                     variant="outline"
                     onClick={handleCloseDiscussionModal}
