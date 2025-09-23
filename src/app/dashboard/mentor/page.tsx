@@ -1450,8 +1450,8 @@ export default function MentorDashboardPage() {
             {activeSection === "main" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight py-4">
+                <div className="py-4 sm:py-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
                     Welcome back, {user?.firstName || "Dr."}!
                   </h1>
                   <p className="text-sm sm:text-base text-slate-600">
@@ -1627,9 +1627,9 @@ export default function MentorDashboardPage() {
             {activeSection === "opportunities" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4 sm:py-6">
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
                       My Opportunities
                     </h1>
                     <p className="text-sm sm:text-base text-slate-600">
@@ -2052,8 +2052,8 @@ export default function MentorDashboardPage() {
             {activeSection === "applications" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                <div className="py-4 sm:py-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
                     Applications
                   </h1>
                   <p className="text-sm sm:text-base text-slate-600">
@@ -2505,8 +2505,8 @@ export default function MentorDashboardPage() {
             {activeSection === "post-opportunity" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                <div className="py-4 sm:py-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
                     Post New Opportunity
                   </h1>
                   <p className="text-sm sm:text-base text-slate-600">
@@ -2797,13 +2797,13 @@ export default function MentorDashboardPage() {
             {activeSection === "find-mentees" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Enhanced Page Header with Stats */}
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4 py-4 sm:py-6">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                     <div className="flex-1">
-                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
                         Find Mentees
                       </h1>
-                      <p className="text-xs sm:text-sm lg:text-base text-slate-600">
+                      <p className="text-sm sm:text-base text-slate-600">
                         Discover and connect with talented mentees looking for
                         guidance.
                       </p>
@@ -3310,8 +3310,8 @@ export default function MentorDashboardPage() {
             {activeSection === "discussions" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div className="text-center">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                <div className="text-center py-4 sm:py-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
                     Community{" "}
                     <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                       Discussions
@@ -3384,14 +3384,14 @@ export default function MentorDashboardPage() {
             {/* New Discussion Section */}
             {activeSection === "new-discussion" && (
               <div className="space-y-6">
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
+                <div className="text-center py-4 sm:py-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3 sm:mb-4">
                     Start a{" "}
                     <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                       Discussion
                     </span>
                   </h1>
-                  <p className="text-slate-600 mb-6">
+                  <p className="text-sm sm:text-base text-slate-600 mb-6">
                     Share your thoughts, questions, or case details with the
                     community.
                   </p>
