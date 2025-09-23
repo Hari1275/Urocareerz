@@ -227,7 +227,7 @@ export default function MentorDashboardSidebar({
                           {/* Mobile: Shorter labels for key actions */}
                           <span className="sm:hidden">
                             {item.id === "post-opportunity"
-                              ? "Post Opp"
+                              ? "Post Opportunity"
                               : item.label}
                           </span>
                           <span className="hidden sm:block">{item.label}</span>
