@@ -373,22 +373,28 @@ export default function DiscussionThreadForm({ onSuccess, onCancel }: Discussion
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleBack}
-          disabled={loading}
-          className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:border-blue-500 w-full sm:w-auto"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Discussions
-        </Button>
-        <div className="flex gap-3 w-full sm:w-auto">
+      <div className="flex flex-col gap-4">
+        {/* Back Button */}
+        <div className="flex justify-start">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleBack}
+            disabled={loading}
+            className="bg-white/70 backdrop-blur-lg border-gray-200 hover:bg-white hover:border-blue-500 w-full sm:w-auto"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Discussions
+          </Button>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
           <Button
             variant="outline"
             onClick={handleCancel}
-            className="text-gray-700 hover:text-blue-600 transition-colors"
+            disabled={loading}
+            className="text-gray-700 hover:text-blue-600 transition-colors w-full sm:w-auto order-2 sm:order-1"
           >
             Cancel
           </Button>
@@ -402,7 +408,7 @@ export default function DiscussionThreadForm({ onSuccess, onCancel }: Discussion
               formData.content.trim().length < MIN_CONTENT ||
               formData.content.length > MAX_CONTENT
             }
-            className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600 w-full sm:w-auto"
+            className="bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-semibold shadow-md hover:from-purple-700 hover:to-indigo-600 w-full sm:w-auto order-1 sm:order-2"
           >
             {loading ? "Creating..." : "Create Discussion"}
           </Button>

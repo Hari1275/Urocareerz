@@ -1346,8 +1346,8 @@ export default function MentorDashboardPage() {
         }}
       />
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-6 xl:px-8 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-4 xl:gap-8">
           {/* Sidebar */}
           <MentorDashboardSidebar
             activeSection={activeSection}

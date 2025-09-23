@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -400,8 +406,10 @@ export default function MenteeDashboardPage() {
     pages: 0,
   });
   const [discussionsLoading, setDiscussionsLoading] = useState(false);
-  const [currentDiscussionCategory, setCurrentDiscussionCategory] = useState<string>("all");
-  const [currentDiscussionStatus, setCurrentDiscussionStatus] = useState<string>("all");
+  const [currentDiscussionCategory, setCurrentDiscussionCategory] =
+    useState<string>("all");
+  const [currentDiscussionStatus, setCurrentDiscussionStatus] =
+    useState<string>("all");
   const [showMyDiscussions, setShowMyDiscussions] = useState<boolean>(false);
 
   // Search and filter states
@@ -417,7 +425,9 @@ export default function MenteeDashboardPage() {
 
   // Withdraw confirmation dialog state
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
-  const [applicationToWithdraw, setApplicationToWithdraw] = useState<string | null>(null);
+  const [applicationToWithdraw, setApplicationToWithdraw] = useState<
+    string | null
+  >(null);
 
   // Pagination states
   const [opportunityPagination, setOpportunityPagination] = useState({
@@ -487,7 +497,8 @@ export default function MenteeDashboardPage() {
 
   // Discussion modal state
   const [showDiscussionModal, setShowDiscussionModal] = useState(false);
-  const [selectedDiscussion, setSelectedDiscussion] = useState<DiscussionThread | null>(null);
+  const [selectedDiscussion, setSelectedDiscussion] =
+    useState<DiscussionThread | null>(null);
   const [discussionModalLoading, setDiscussionModalLoading] = useState(false);
   // Check user role and redirect if necessary
   const checkUserRole = async () => {
@@ -575,7 +586,10 @@ export default function MenteeDashboardPage() {
 
         // Calculate success rate
         const totalProcessedApps = acceptedApps.length + rejectedApps.length;
-        const successRate = totalProcessedApps > 0 ? Math.round((acceptedApps.length / totalProcessedApps) * 100) : 0;
+        const successRate =
+          totalProcessedApps > 0
+            ? Math.round((acceptedApps.length / totalProcessedApps) * 100)
+            : 0;
 
         setApplications(applications);
         setUserApplications(applications.map((app: any) => app.opportunityId));
@@ -657,12 +671,26 @@ export default function MenteeDashboardPage() {
     }
   };
 
-  const fetchDiscussions = async (category?: string, status?: string, page = 1, reset = false, force = false, myDiscussions?: boolean) => {
+  const fetchDiscussions = async (
+    category?: string,
+    status?: string,
+    page = 1,
+    reset = false,
+    force = false,
+    myDiscussions?: boolean
+  ) => {
     if (!force && activeSection !== "discussions") {
       return;
     }
 
-    console.log("🔍 fetchDiscussions called with:", { category, status, page, reset, force, myDiscussions });
+    console.log("🔍 fetchDiscussions called with:", {
+      category,
+      status,
+      page,
+      reset,
+      force,
+      myDiscussions,
+    });
     console.log("👤 Current user for filtering:", user?.id, user?.firstName);
 
     setDiscussionsLoading(true);
@@ -694,11 +722,15 @@ export default function MenteeDashboardPage() {
         console.log(`✅ Loaded ${newDiscussions.length} discussions from API`);
         console.log("🔍 Filter status:", {
           myDiscussions,
-          userHasDiscussions: newDiscussions.filter((d: any) => d.author.id === user?.id).length,
-          totalDiscussions: newDiscussions.length
+          userHasDiscussions: newDiscussions.filter(
+            (d: any) => d.author.id === user?.id
+          ).length,
+          totalDiscussions: newDiscussions.length,
         });
 
-        setDiscussions(prev => reset ? newDiscussions : [...prev, ...newDiscussions]);
+        setDiscussions((prev) =>
+          reset ? newDiscussions : [...prev, ...newDiscussions]
+        );
         setDiscussionPagination(
           data.pagination || {
             page: 1,
@@ -822,7 +854,8 @@ export default function MenteeDashboardPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: applicationsPagination.limit.toString(),
-        status: applicationStatusFilter !== "all" ? applicationStatusFilter : "",
+        status:
+          applicationStatusFilter !== "all" ? applicationStatusFilter : "",
       });
 
       const response = await fetch(`/api/applications?${params.toString()}`);
@@ -937,17 +970,24 @@ export default function MenteeDashboardPage() {
     console.log("🔄 Discussion filters changed - refetching", {
       currentDiscussionCategory,
       currentDiscussionStatus,
-      showMyDiscussions
+      showMyDiscussions,
     });
     fetchDiscussions(
-      currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+      currentDiscussionCategory === "all"
+        ? undefined
+        : currentDiscussionCategory,
       currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
       1,
       true,
       true,
       showMyDiscussions
     );
-  }, [currentDiscussionCategory, currentDiscussionStatus, showMyDiscussions, isClient]);
+  }, [
+    currentDiscussionCategory,
+    currentDiscussionStatus,
+    showMyDiscussions,
+    isClient,
+  ]);
 
   // Clear all filters function
   const handleClearFilters = () => {
@@ -963,7 +1003,11 @@ export default function MenteeDashboardPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm !== "" || experienceFilter !== "all" || typeFilter !== "all" || savedFilter !== "all";
+  const hasActiveFilters =
+    searchTerm !== "" ||
+    experienceFilter !== "all" ||
+    typeFilter !== "all" ||
+    savedFilter !== "all";
 
   // Check if any application filters are active
   const hasActiveApplicationFilters = applicationStatusFilter !== "all";
@@ -1013,7 +1057,9 @@ export default function MenteeDashboardPage() {
       !discussionsLoading
     ) {
       fetchDiscussions(
-        currentDiscussionCategory === "all" ? undefined : currentDiscussionCategory,
+        currentDiscussionCategory === "all"
+          ? undefined
+          : currentDiscussionCategory,
         currentDiscussionStatus === "all" ? undefined : currentDiscussionStatus,
         discussionPagination.page + 1,
         false,
@@ -1054,9 +1100,10 @@ export default function MenteeDashboardPage() {
       console.error("Failed to save opportunity:", err);
       toast({
         title: "Error",
-        description: err instanceof Error
-          ? err.message
-          : "Failed to save opportunity. Please try again.",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Failed to save opportunity. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -1085,7 +1132,9 @@ export default function MenteeDashboardPage() {
         // Update the application status locally
         setApplications((prev) =>
           prev.map((app) =>
-            app.id === applicationToWithdraw ? { ...app, status: "WITHDRAWN" } : app
+            app.id === applicationToWithdraw
+              ? { ...app, status: "WITHDRAWN" }
+              : app
           )
         );
 
@@ -1207,9 +1256,10 @@ export default function MenteeDashboardPage() {
       console.error("Error submitting application:", error);
       toast({
         title: "Error",
-        description: error instanceof Error
-          ? error.message
-          : "Failed to submit application. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit application. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -1284,9 +1334,10 @@ export default function MenteeDashboardPage() {
       console.error("Failed to save opportunity:", err);
       toast({
         title: "Error",
-        description: err instanceof Error
-          ? err.message
-          : "Failed to save opportunity. Please try again.",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Failed to save opportunity. Please try again.",
         variant: "destructive",
       });
     }
@@ -1309,11 +1360,11 @@ export default function MenteeDashboardPage() {
     // Track the view (silently, no UI updates)
     try {
       await fetch(`/api/discussions/${thread.id}/view`, {
-        method: 'POST',
-        credentials: 'include'
+        method: "POST",
+        credentials: "include",
       });
     } catch (error) {
-      console.error('Error tracking discussion view:', error);
+      console.error("Error tracking discussion view:", error);
     }
   };
 
@@ -1375,7 +1426,10 @@ export default function MenteeDashboardPage() {
       console.error("Error deleting submission:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete submission",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete submission",
         variant: "destructive",
       });
     }
@@ -1416,7 +1470,10 @@ export default function MenteeDashboardPage() {
       console.error("Error updating submission:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update submission",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update submission",
         variant: "destructive",
       });
     } finally {
@@ -1603,7 +1660,8 @@ export default function MenteeDashboardPage() {
   // Filter applications for client-side filtering
   const filteredApplications = applications.filter((application) => {
     const matchesStatus =
-      applicationStatusFilter === "all" || application.status === applicationStatusFilter;
+      applicationStatusFilter === "all" ||
+      application.status === applicationStatusFilter;
 
     return matchesStatus;
   });
@@ -1641,8 +1699,8 @@ export default function MenteeDashboardPage() {
         }}
       />
 
-      <div className="max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-4 sm:gap-6 lg:gap-6 xl:gap-8">
+      <div className="max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-4 xl:px-8 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-4 sm:gap-6 lg:gap-4 xl:gap-8">
           {/* Sidebar - Responsive widths */}
           <div className="lg:col-span-3 xl:col-span-3">
             <DashboardSidebar
@@ -1660,12 +1718,21 @@ export default function MenteeDashboardPage() {
             {activeSection === "dashboard" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Page Header */}
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                <div className="px-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2 leading-tight lg:text-center xl:text-left">
                     Welcome back, {user?.firstName || "there"}!
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600">
-                    Here's what's happening with your career journey today.
+                  <p className="text-sm sm:text-base lg:text-base text-slate-600 leading-relaxed max-w-none lg:text-center xl:text-left">
+                    {/* Shorter text for medium screens, full text for larger screens */}
+                    <span className="block sm:hidden">
+                      Here's your career progress today.
+                    </span>
+                    <span className="hidden sm:block lg:hidden">
+                      Here's what's happening with your journey today.
+                    </span>
+                    <span className="hidden lg:block">
+                      Here's what's happening with your career journey today.
+                    </span>
                   </p>
                 </div>
 
@@ -1689,9 +1756,11 @@ export default function MenteeDashboardPage() {
                             Applications
                           </p>
                           <p className="text-xs text-blue-600 font-medium leading-tight">
-                            {stats.totalApplications === 0 ? "Start applying" :
-                              stats.applicationSuccessRate > 0 ? `${stats.applicationSuccessRate}% success` :
-                                "Track your progress"}
+                            {stats.totalApplications === 0
+                              ? "Start applying"
+                              : stats.applicationSuccessRate > 0
+                              ? `${stats.applicationSuccessRate}% success`
+                              : "Track your progress"}
                           </p>
                         </div>
                       </div>
@@ -1716,7 +1785,9 @@ export default function MenteeDashboardPage() {
                             Pending Review
                           </p>
                           <p className="text-xs text-amber-600 font-medium leading-tight">
-                            {stats.pendingApplications === 0 ? "All caught up" : "Waiting for response"}
+                            {stats.pendingApplications === 0
+                              ? "All caught up"
+                              : "Waiting for response"}
                           </p>
                         </div>
                       </div>
@@ -1741,7 +1812,9 @@ export default function MenteeDashboardPage() {
                             Saved
                           </p>
                           <p className="text-xs text-pink-600 font-medium leading-tight">
-                            {stats.savedOpportunities === 0 ? "Save to apply later" : "Ready to apply"}
+                            {stats.savedOpportunities === 0
+                              ? "Save to apply later"
+                              : "Ready to apply"}
                           </p>
                         </div>
                       </div>
@@ -1766,9 +1839,11 @@ export default function MenteeDashboardPage() {
                             My Posts
                           </p>
                           <p className="text-xs text-emerald-600 font-medium leading-tight">
-                            {stats.submittedOpportunities === 0 ? "Share opportunities" :
-                              stats.approvedSubmissions > 0 ? `${stats.approvedSubmissions} approved` :
-                                "Under review"}
+                            {stats.submittedOpportunities === 0
+                              ? "Share opportunities"
+                              : stats.approvedSubmissions > 0
+                              ? `${stats.approvedSubmissions} approved`
+                              : "Under review"}
                           </p>
                         </div>
                       </div>
@@ -1791,27 +1866,41 @@ export default function MenteeDashboardPage() {
                       {/* Applications Progress */}
                       <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-blue-900">Applications</h4>
+                          <h4 className="font-semibold text-blue-900">
+                            Applications
+                          </h4>
                           <FileText className="h-4 w-4 text-blue-600" />
                         </div>
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-blue-700">Total Applied:</span>
-                            <span className="font-semibold">{stats.totalApplications}</span>
+                            <span className="text-blue-700">
+                              Total Applied:
+                            </span>
+                            <span className="font-semibold">
+                              {stats.totalApplications}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-amber-700">Pending:</span>
-                            <span className="font-semibold">{stats.pendingApplications}</span>
+                            <span className="font-semibold">
+                              {stats.pendingApplications}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-green-700">Accepted:</span>
-                            <span className="font-semibold">{stats.acceptedApplications}</span>
+                            <span className="font-semibold">
+                              {stats.acceptedApplications}
+                            </span>
                           </div>
                           {stats.applicationSuccessRate > 0 && (
                             <div className="pt-2 mt-2 border-t border-blue-200">
                               <div className="flex justify-between">
-                                <span className="text-blue-700">Success Rate:</span>
-                                <span className="font-bold text-green-600">{stats.applicationSuccessRate}%</span>
+                                <span className="text-blue-700">
+                                  Success Rate:
+                                </span>
+                                <span className="font-bold text-green-600">
+                                  {stats.applicationSuccessRate}%
+                                </span>
                               </div>
                             </div>
                           )}
@@ -1829,25 +1918,37 @@ export default function MenteeDashboardPage() {
                       {/* Submissions Progress */}
                       <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-emerald-900">Contributions</h4>
+                          <h4 className="font-semibold text-emerald-900">
+                            Contributions
+                          </h4>
                           <Send className="h-4 w-4 text-emerald-600" />
                         </div>
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-emerald-700">Total Posted:</span>
-                            <span className="font-semibold">{stats.submittedOpportunities}</span>
+                            <span className="text-emerald-700">
+                              Total Posted:
+                            </span>
+                            <span className="font-semibold">
+                              {stats.submittedOpportunities}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-amber-700">Pending:</span>
-                            <span className="font-semibold">{stats.pendingSubmissions}</span>
+                            <span className="font-semibold">
+                              {stats.pendingSubmissions}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-green-700">Approved:</span>
-                            <span className="font-semibold">{stats.approvedSubmissions}</span>
+                            <span className="font-semibold">
+                              {stats.approvedSubmissions}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-red-700">Rejected:</span>
-                            <span className="font-semibold">{stats.rejectedSubmissions}</span>
+                            <span className="font-semibold">
+                              {stats.rejectedSubmissions}
+                            </span>
                           </div>
                         </div>
                         <Button
@@ -1892,16 +1993,68 @@ export default function MenteeDashboardPage() {
                         {recentOpportunities.map((opportunity) => (
                           <div
                             key={opportunity.id}
-                            className="flex items-start gap-4 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer"
+                            className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 p-4 sm:p-3 rounded-xl sm:rounded-lg bg-white sm:bg-slate-50 hover:bg-slate-50 sm:hover:bg-slate-100 transition-colors cursor-pointer border border-slate-100 sm:border-0 shadow-sm sm:shadow-none"
                             onClick={() =>
                               handleShowOpportunityDetails(opportunity.id)
                             }
                           >
-                            <div className="p-2 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-500">
-                              <Briefcase className="h-4 w-4 text-white" />
+                            {/* Mobile: Header row with icon and save button */}
+                            <div className="flex items-start justify-between sm:contents">
+                              <div className="flex items-center gap-3 sm:contents">
+                                <div className="p-2.5 sm:p-2 rounded-xl sm:rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-500 flex-shrink-0">
+                                  <Briefcase className="h-4 w-4 text-white" />
+                                </div>
+                                <div className="flex-1 sm:hidden">
+                                  <p className="font-medium text-slate-900 text-sm line-clamp-1 pr-2">
+                                    {opportunity.title}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Mobile save button */}
+                              <div className="sm:hidden">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSaveOpportunity(opportunity.id);
+                                  }}
+                                  disabled={saveLoading[opportunity.id]}
+                                  className={cn(
+                                    "h-8 w-8 p-0 border-slate-200 rounded-lg",
+                                    savedOpportunityIds.includes(opportunity.id)
+                                      ? "bg-pink-50 text-pink-600 border-pink-200"
+                                      : "hover:bg-slate-50"
+                                  )}
+                                >
+                                  {saveLoading[opportunity.id] ? (
+                                    <LoadingSpinner
+                                      size="sm"
+                                      variant="minimal"
+                                      showText={false}
+                                      className="h-4 w-4"
+                                    />
+                                  ) : (
+                                    <Heart
+                                      className={cn(
+                                        "h-3.5 w-3.5",
+                                        savedOpportunityIds.includes(
+                                          opportunity.id
+                                        )
+                                          ? "fill-current"
+                                          : ""
+                                      )}
+                                    />
+                                  )}
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2">
+
+                            {/* Content section */}
+                            <div className="flex-1 min-w-0 space-y-2 sm:space-y-0">
+                              {/* Desktop title and content layout */}
+                              <div className="hidden sm:flex sm:items-start sm:justify-between sm:gap-2">
                                 <div className="flex-1">
                                   <p className="font-medium text-slate-900 text-sm line-clamp-1">
                                     {opportunity.title}
@@ -1937,6 +2090,8 @@ export default function MenteeDashboardPage() {
                                     )}
                                   </div>
                                 </div>
+
+                                {/* Desktop save button */}
                                 <div className="flex items-center gap-2">
                                   <Button
                                     variant="outline"
@@ -1977,7 +2132,45 @@ export default function MenteeDashboardPage() {
                                   </Button>
                                 </div>
                               </div>
-                              <p className="text-xs text-slate-500 mt-2">
+
+                              {/* Mobile content */}
+                              <div className="sm:hidden space-y-2">
+                                <p className="text-xs text-slate-600 line-clamp-2">
+                                  {opportunity.description}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs px-2 py-1"
+                                    style={{
+                                      backgroundColor: opportunity
+                                        .opportunityType?.color
+                                        ? `${opportunity.opportunityType.color}20`
+                                        : "#f1f5f9",
+                                      color:
+                                        opportunity.opportunityType?.color ||
+                                        "#64748b",
+                                      borderColor:
+                                        opportunity.opportunityType?.color ||
+                                        "#e2e8f0",
+                                    }}
+                                  >
+                                    {opportunity.opportunityType?.name ||
+                                      "No Type"}
+                                  </Badge>
+                                  {opportunity.location && (
+                                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                                      <span className="truncate max-w-32">
+                                        {opportunity.location}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Author info */}
+                              <p className="text-xs text-slate-500 pt-1 sm:pt-2">
                                 Posted by Dr. {opportunity.creator.firstName}{" "}
                                 {opportunity.creator.lastName} •{" "}
                                 {formatDate(opportunity.createdAt)}
@@ -2047,7 +2240,10 @@ export default function MenteeDashboardPage() {
                             <SelectItem value="SENIOR">Senior Level</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <Select
+                          value={typeFilter}
+                          onValueChange={setTypeFilter}
+                        >
                           <SelectTrigger className="bg-white/80 w-full">
                             <SelectValue placeholder="All Types" />
                           </SelectTrigger>
@@ -2068,7 +2264,9 @@ export default function MenteeDashboardPage() {
                             <SelectValue placeholder="All Opportunities" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">All Opportunities</SelectItem>
+                            <SelectItem value="all">
+                              All Opportunities
+                            </SelectItem>
                             <SelectItem value="saved">Saved Only</SelectItem>
                             <SelectItem value="not_saved">Not Saved</SelectItem>
                           </SelectContent>
@@ -2096,7 +2294,7 @@ export default function MenteeDashboardPage() {
                 {/* Opportunities Grid */}
                 <div className="grid gap-6">
                   {opportunityPagination.loading &&
-                    opportunities.length === 0 ? (
+                  opportunities.length === 0 ? (
                     <div className="space-y-6">
                       {[...Array(6)].map((_, i) => (
                         <LoadingCard
@@ -2154,7 +2352,9 @@ export default function MenteeDashboardPage() {
                                   {opportunity.location && (
                                     <div className="flex items-center gap-1 text-sm text-slate-500">
                                       <MapPin className="h-4 w-4" />
-                                      <span className="truncate">{opportunity.location}</span>
+                                      <span className="truncate">
+                                        {opportunity.location}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -2195,7 +2395,11 @@ export default function MenteeDashboardPage() {
                                         )}
                                       />
                                       <span className="sm:hidden">
-                                        {savedOpportunityIds.includes(opportunity.id) ? "Saved" : "Save"}
+                                        {savedOpportunityIds.includes(
+                                          opportunity.id
+                                        )
+                                          ? "Saved"
+                                          : "Save"}
                                       </span>
                                     </>
                                   )}
@@ -2224,16 +2428,16 @@ export default function MenteeDashboardPage() {
                       {/* Infinite Scroll Load More */}
                       {opportunityPagination.page <
                         opportunityPagination.pages && (
-                          <InfiniteScrollTrigger
-                            onLoadMore={loadMoreOpportunities}
-                            loading={opportunityPagination.loading}
-                            totalItems={opportunityPagination.total}
-                            currentItems={opportunities.length}
-                            loadingText="Loading more opportunities..."
-                            buttonText="Load More Opportunities"
-                            progressColor="from-blue-500 to-indigo-500"
-                          />
-                        )}
+                        <InfiniteScrollTrigger
+                          onLoadMore={loadMoreOpportunities}
+                          loading={opportunityPagination.loading}
+                          totalItems={opportunityPagination.total}
+                          currentItems={opportunities.length}
+                          loadingText="Loading more opportunities..."
+                          buttonText="Load More Opportunities"
+                          progressColor="from-blue-500 to-indigo-500"
+                        />
+                      )}
                     </>
                   )}
                 </div>
@@ -2243,10 +2447,10 @@ export default function MenteeDashboardPage() {
             {activeSection === "applications" && (
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2 lg:text-center xl:text-left">
                     My Applications
                   </h1>
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 lg:text-center xl:text-left">
                     Track the status of your opportunity applications.
                   </p>
                 </div>
@@ -2267,10 +2471,14 @@ export default function MenteeDashboardPage() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all">All Status</SelectItem>
-                              <SelectItem value="PENDING">Pending Review</SelectItem>
+                              <SelectItem value="PENDING">
+                                Pending Review
+                              </SelectItem>
                               <SelectItem value="ACCEPTED">Accepted</SelectItem>
                               <SelectItem value="REJECTED">Rejected</SelectItem>
-                              <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
+                              <SelectItem value="WITHDRAWN">
+                                Withdrawn
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -2294,7 +2502,7 @@ export default function MenteeDashboardPage() {
 
                 <div className="space-y-6">
                   {applicationsPagination.loading &&
-                    applications.length === 0 ? (
+                  applications.length === 0 ? (
                     <div className="space-y-6">
                       {[...Array(5)].map((_, i) => (
                         <LoadingCard
@@ -2314,13 +2522,14 @@ export default function MenteeDashboardPage() {
                         <FileText className="h-12 w-12 text-slate-400" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 mb-2">
-                        {applicationStatusFilter !== "all" ? "No applications found" : "No applications yet"}
+                        {applicationStatusFilter !== "all"
+                          ? "No applications found"
+                          : "No applications yet"}
                       </h3>
                       <p className="text-slate-600 mb-6 max-w-md mx-auto">
                         {applicationStatusFilter !== "all"
                           ? `No applications with ${applicationStatusFilter.toLowerCase()} status found.`
-                          : "Start applying for opportunities to see your applications here."
-                        }
+                          : "Start applying for opportunities to see your applications here."}
                       </p>
                       {applicationStatusFilter === "all" && (
                         <Button
@@ -2370,7 +2579,9 @@ export default function MenteeDashboardPage() {
                                   className="w-full sm:w-auto h-9 sm:h-8 bg-white/80 hover:bg-white border-slate-200"
                                 >
                                   <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-                                  <span className="text-sm font-medium">View Details</span>
+                                  <span className="text-sm font-medium">
+                                    View Details
+                                  </span>
                                 </Button>
                                 {application.status === "PENDING" && (
                                   <Button
@@ -2398,16 +2609,16 @@ export default function MenteeDashboardPage() {
                       {/* Infinite Scroll Load More */}
                       {applicationsPagination.page <
                         applicationsPagination.pages && (
-                          <InfiniteScrollTrigger
-                            onLoadMore={loadMoreApplications}
-                            loading={applicationsPagination.loading}
-                            totalItems={applicationsPagination.total}
-                            currentItems={filteredApplications.length}
-                            loadingText="Loading more applications..."
-                            buttonText="Load More Applications"
-                            progressColor="from-indigo-500 to-purple-500"
-                          />
-                        )}
+                        <InfiniteScrollTrigger
+                          onLoadMore={loadMoreApplications}
+                          loading={applicationsPagination.loading}
+                          totalItems={applicationsPagination.total}
+                          currentItems={filteredApplications.length}
+                          loadingText="Loading more applications..."
+                          buttonText="Load More Applications"
+                          progressColor="from-indigo-500 to-purple-500"
+                        />
+                      )}
                     </>
                   )}
                 </div>
@@ -2417,20 +2628,20 @@ export default function MenteeDashboardPage() {
             {activeSection === "saved" && (
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2 lg:text-center xl:text-left">
                     Saved{" "}
                     <span className="bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent">
                       Opportunities
                     </span>
                   </h1>
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 lg:text-center xl:text-left">
                     Your bookmarked opportunities for future reference.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   {savedPagination.loading &&
-                    savedOpportunities.length === 0 ? (
+                  savedOpportunities.length === 0 ? (
                     <div className="space-y-4">
                       {[...Array(5)].map((_, i) => (
                         <LoadingCard
@@ -2557,7 +2768,7 @@ export default function MenteeDashboardPage() {
 
             {activeSection === "submit-opportunity" && (
               <div className="space-y-6">
-                <div className="text-center">
+                <div className="text-center xl:text-left">
                   <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
                     Submit{" "}
                     <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -2565,14 +2776,22 @@ export default function MenteeDashboardPage() {
                     </span>
                   </h1>
                   <p className="text-slate-600 mb-6">
-                    Share opportunities you've discovered with the UroCareerz
-                    community.
+                    Share an opportunity you've found with the community. It
+                    will be reviewed by our admin team before being published.
                   </p>
                 </div>
 
                 <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-lg shadow-slate-900/5">
-                  <CardContent className="p-8">
+                  {/* <CardHeader className="px-4 sm:px-6 lg:px-8">
+                    <CardTitle>Submit Opportunity for Review</CardTitle>
+                    <CardDescription>
+                      Share an opportunity you've found with the community. It
+                      will be reviewed by our admin team before being published.
+                    </CardDescription>
+                  </CardHeader> */}
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
                     <MenteeOpportunityForm
+                      showCard={false}
                       onSuccess={() => {
                         // Switch to submissions tab and refresh data
                         setActiveSection("submissions");
@@ -2588,7 +2807,7 @@ export default function MenteeDashboardPage() {
 
             {activeSection === "discussions" && (
               <div className="space-y-6">
-                <div className="text-center">
+                <div className="text-center xl:text-left">
                   <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
                     Community{" "}
                     <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -2642,14 +2861,14 @@ export default function MenteeDashboardPage() {
 
             {activeSection === "submissions" && (
               <div className="space-y-6">
-                <div className="text-center">
+                <div className="text-center xl:text-left">
                   <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-4">
                     My{" "}
                     <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                       Submissions
                     </span>
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600 mb-6 max-w-2xl mx-auto">
+                  <p className="text-sm sm:text-base text-slate-600 mb-6 max-w-2xl mx-auto xl:mx-0 xl:max-w-none">
                     Track and manage the opportunities you've submitted for
                     review.
                   </p>
@@ -2686,12 +2905,8 @@ export default function MenteeDashboardPage() {
                               <SelectItem value="PENDING">
                                 Pending Review
                               </SelectItem>
-                              <SelectItem value="APPROVED">
-                                Approved
-                              </SelectItem>
-                              <SelectItem value="REJECTED">
-                                Rejected
-                              </SelectItem>
+                              <SelectItem value="APPROVED">Approved</SelectItem>
+                              <SelectItem value="REJECTED">Rejected</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -2716,7 +2931,9 @@ export default function MenteeDashboardPage() {
                       </div>
 
                       {/* Clear Filters Row */}
-                      {(submissionSearchTerm !== "" || selectedStatus !== "all" || submissionTypeFilter !== "all") && (
+                      {(submissionSearchTerm !== "" ||
+                        selectedStatus !== "all" ||
+                        submissionTypeFilter !== "all") && (
                         <div className="flex justify-start pt-2 border-t border-slate-100">
                           <Button
                             variant="outline"
@@ -2891,18 +3108,18 @@ export default function MenteeDashboardPage() {
                       {/* Infinite Scroll Load More */}
                       {submissionsPagination.page <
                         submissionsPagination.pages && (
-                          <InfiniteScrollTrigger
-                            onLoadMore={() =>
-                              fetchSubmissions(submissionsPagination.page + 1)
-                            }
-                            loading={submissionsPagination.loading}
-                            totalItems={submissionsPagination.total}
-                            currentItems={submissions.length}
-                            loadingText="Loading more submissions..."
-                            buttonText="Load More Submissions"
-                            progressColor="from-emerald-500 to-teal-500"
-                          />
-                        )}
+                        <InfiniteScrollTrigger
+                          onLoadMore={() =>
+                            fetchSubmissions(submissionsPagination.page + 1)
+                          }
+                          loading={submissionsPagination.loading}
+                          totalItems={submissionsPagination.total}
+                          currentItems={submissions.length}
+                          loadingText="Loading more submissions..."
+                          buttonText="Load More Submissions"
+                          progressColor="from-emerald-500 to-teal-500"
+                        />
+                      )}
                     </>
                   )}
                 </div>
@@ -2911,7 +3128,7 @@ export default function MenteeDashboardPage() {
 
             {activeSection === "new-discussion" && (
               <div className="space-y-6">
-                <div className="text-center">
+                <div className="text-center xl:text-left">
                   <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
                     Start a{" "}
                     <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -2947,7 +3164,7 @@ export default function MenteeDashboardPage() {
                       console.log("Calling fetchDiscussions from onSuccess");
                       fetchDiscussions(undefined, undefined, 1, true, true);
                       // Scroll to top of the page
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }, 0);
                   }}
                   onCancel={() => setActiveSection("discussions")}
@@ -2956,8 +3173,8 @@ export default function MenteeDashboardPage() {
             )}
           </div>
 
-          {/* Right Sidebar - Profile Strength & Widgets */}
-          <div className="lg:col-span-12 xl:col-span-3 order-3 lg:order-2">
+          {/* Right Sidebar - Profile Strength & Widgets - Hidden below xl (1200px) */}
+          <div className="hidden xl:block xl:col-span-3 order-3">
             <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-4 sm:space-y-6">
               {/* Profile Strength */}
               <ProfileStrength
@@ -3017,11 +3234,11 @@ export default function MenteeDashboardPage() {
                                   ? `${saved.opportunity.opportunityType.color}20`
                                   : "#f1f5f9",
                                 color:
-                                  saved.opportunity.opportunityType
-                                    ?.color || "#64748b",
+                                  saved.opportunity.opportunityType?.color ||
+                                  "#64748b",
                                 borderColor:
-                                  saved.opportunity.opportunityType
-                                    ?.color || "#e2e8f0",
+                                  saved.opportunity.opportunityType?.color ||
+                                  "#e2e8f0",
                               }}
                             >
                               {saved.opportunity.opportunityType?.name ||
@@ -3087,7 +3304,10 @@ export default function MenteeDashboardPage() {
                 <DialogTitle className="text-lg font-semibold text-slate-900 leading-tight">
                   Apply for Position
                 </DialogTitle>
-                <DialogDescription className="text-sm text-slate-600 truncate" title={selectedOpportunityForApply?.title}>
+                <DialogDescription
+                  className="text-sm text-slate-600 truncate"
+                  title={selectedOpportunityForApply?.title}
+                >
                   {selectedOpportunityForApply?.title}
                 </DialogDescription>
               </div>
@@ -3101,7 +3321,9 @@ export default function MenteeDashboardPage() {
                 className="text-sm font-medium text-slate-700 flex items-center gap-2"
               >
                 Cover Letter
-                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Optional</span>
+                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                  Optional
+                </span>
               </Label>
               <Textarea
                 id="coverLetter"
@@ -3118,11 +3340,16 @@ export default function MenteeDashboardPage() {
                 className="text-sm font-medium text-slate-700 flex items-center gap-2"
               >
                 CV/Resume
-                <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">Required</span>
+                <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                  Required
+                </span>
               </Label>
 
               {/* Compact File Upload */}
-              <div className="relative border-2 border-dashed border-slate-300 rounded-lg p-4 hover:border-slate-400 transition-colors cursor-pointer" onClick={() => document.getElementById('cvFile')?.click()}>
+              <div
+                className="relative border-2 border-dashed border-slate-300 rounded-lg p-4 hover:border-slate-400 transition-colors cursor-pointer"
+                onClick={() => document.getElementById("cvFile")?.click()}
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
                     <FileText className="h-5 w-5 text-slate-600" />
@@ -3132,7 +3359,9 @@ export default function MenteeDashboardPage() {
                       {cvFile ? cvFile.name : "Upload CV/Resume"}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {cvFile ? `${(cvFile.size / 1024 / 1024).toFixed(2)} MB` : "Click to select file (Max 10MB)"}
+                      {cvFile
+                        ? `${(cvFile.size / 1024 / 1024).toFixed(2)} MB`
+                        : "Click to select file (Max 10MB)"}
                     </p>
                   </div>
                   <Button
@@ -3142,7 +3371,7 @@ export default function MenteeDashboardPage() {
                     className="h-8 px-3 text-xs font-medium"
                     onClick={(e) => {
                       e.stopPropagation();
-                      document.getElementById('cvFile')?.click();
+                      document.getElementById("cvFile")?.click();
                     }}
                   >
                     Browse
@@ -3318,7 +3547,10 @@ export default function MenteeDashboardPage() {
                 )}
 
                 {/* Quick Info Grid */}
-                {(selectedOpportunity.experienceLevel || selectedOpportunity.duration || selectedOpportunity.compensation || selectedOpportunity.applicationDeadline) && (
+                {(selectedOpportunity.experienceLevel ||
+                  selectedOpportunity.duration ||
+                  selectedOpportunity.compensation ||
+                  selectedOpportunity.applicationDeadline) && (
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-3">
                       Quick Info
@@ -3576,7 +3808,10 @@ export default function MenteeDashboardPage() {
                 )}
 
                 {/* Quick Info Grid */}
-                {(selectedSubmission.experienceLevel || selectedSubmission.duration || selectedSubmission.compensation || selectedSubmission.applicationDeadline) && (
+                {(selectedSubmission.experienceLevel ||
+                  selectedSubmission.duration ||
+                  selectedSubmission.compensation ||
+                  selectedSubmission.applicationDeadline) && (
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-3">
                       Quick Info
@@ -3636,7 +3871,9 @@ export default function MenteeDashboardPage() {
                               Application Deadline
                             </p>
                             <p className="text-sm text-slate-600">
-                              {formatDate(selectedSubmission.applicationDeadline)}
+                              {formatDate(
+                                selectedSubmission.applicationDeadline
+                              )}
                             </p>
                           </div>
                         </div>
@@ -3648,35 +3885,35 @@ export default function MenteeDashboardPage() {
                 {/* Source Information */}
                 {(selectedSubmission.sourceUrl ||
                   selectedSubmission.sourceName) && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                        Source Information
-                      </h3>
-                      <div className="space-y-2">
-                        {selectedSubmission.sourceName && (
-                          <p className="text-sm text-slate-600">
-                            <span className="font-medium">Source:</span>{" "}
-                            {selectedSubmission.sourceName}
-                          </p>
-                        )}
-                        {selectedSubmission.sourceUrl && (
-                          <p className="text-sm">
-                            <span className="font-medium text-slate-600">
-                              URL:
-                            </span>{" "}
-                            <a
-                              href={selectedSubmission.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-700 underline"
-                            >
-                              {selectedSubmission.sourceUrl}
-                            </a>
-                          </p>
-                        )}
-                      </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                      Source Information
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedSubmission.sourceName && (
+                        <p className="text-sm text-slate-600">
+                          <span className="font-medium">Source:</span>{" "}
+                          {selectedSubmission.sourceName}
+                        </p>
+                      )}
+                      {selectedSubmission.sourceUrl && (
+                        <p className="text-sm">
+                          <span className="font-medium text-slate-600">
+                            URL:
+                          </span>{" "}
+                          <a
+                            href={selectedSubmission.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-700 underline"
+                          >
+                            {selectedSubmission.sourceUrl}
+                          </a>
+                        </p>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* Admin Feedback */}
                 {selectedSubmission.status === "REJECTED" &&
@@ -3927,8 +4164,8 @@ export default function MenteeDashboardPage() {
                     value={
                       editingSubmission.applicationDeadline
                         ? new Date(editingSubmission.applicationDeadline)
-                          .toISOString()
-                          .split("T")[0]
+                            .toISOString()
+                            .split("T")[0]
                         : ""
                     }
                     onChange={(e) =>
@@ -4022,7 +4259,8 @@ export default function MenteeDashboardPage() {
               Edit Profile
             </DialogTitle>
             <DialogDescription className="text-sm sm:text-base text-slate-600 mt-1">
-              Update your profile information to help others find and connect with you.
+              Update your profile information to help others find and connect
+              with you.
             </DialogDescription>
           </DialogHeader>
 
@@ -4051,7 +4289,10 @@ export default function MenteeDashboardPage() {
       />
 
       {/* Discussion View Modal */}
-      <Dialog open={showDiscussionModal} onOpenChange={handleCloseDiscussionModal}>
+      <Dialog
+        open={showDiscussionModal}
+        onOpenChange={handleCloseDiscussionModal}
+      >
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedDiscussion ? (
             <>
@@ -4067,23 +4308,28 @@ export default function MenteeDashboardPage() {
                       </DialogTitle>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge
-                          className={`text-xs font-medium ${selectedDiscussion.status === "ACTIVE"
-                            ? "bg-green-100 text-green-800 border-green-200"
-                            : selectedDiscussion.status === "CLOSED"
+                          className={`text-xs font-medium ${
+                            selectedDiscussion.status === "ACTIVE"
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : selectedDiscussion.status === "CLOSED"
                               ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                               : "bg-gray-100 text-gray-800 border-gray-200"
-                            }`}
+                          }`}
                         >
-                          {selectedDiscussion.status === "ACTIVE" && "🟢 Active"}
-                          {selectedDiscussion.status === "CLOSED" && "🔒 Closed"}
-                          {selectedDiscussion.status === "ARCHIVED" && "📁 Archived"}
+                          {selectedDiscussion.status === "ACTIVE" &&
+                            "🟢 Active"}
+                          {selectedDiscussion.status === "CLOSED" &&
+                            "🔒 Closed"}
+                          {selectedDiscussion.status === "ARCHIVED" &&
+                            "📁 Archived"}
                         </Badge>
 
                         <Badge
-                          className={`text-xs ${categoryColors[
-                            selectedDiscussion.category as keyof typeof categoryColors
-                          ] || categoryColors.GENERAL
-                            }`}
+                          className={`text-xs ${
+                            categoryColors[
+                              selectedDiscussion.category as keyof typeof categoryColors
+                            ] || categoryColors.GENERAL
+                          }`}
                         >
                           {categoryLabels[
                             selectedDiscussion.category as keyof typeof categoryLabels
@@ -4105,7 +4351,10 @@ export default function MenteeDashboardPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                      window.open(
+                        `/discussions/${selectedDiscussion.id}`,
+                        "_blank"
+                      );
                     }}
                     className="text-slate-600 hover:text-blue-600"
                   >
@@ -4125,10 +4374,12 @@ export default function MenteeDashboardPage() {
                     </div>
                     <div>
                       <p className="font-medium text-slate-900">
-                        {selectedDiscussion.author.firstName} {selectedDiscussion.author.lastName}
+                        {selectedDiscussion.author.firstName}{" "}
+                        {selectedDiscussion.author.lastName}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {selectedDiscussion.author.role} • {formatDate(selectedDiscussion.createdAt)}
+                        {selectedDiscussion.author.role} •{" "}
+                        {formatDate(selectedDiscussion.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -4182,16 +4433,22 @@ export default function MenteeDashboardPage() {
                     onClick={async () => {
                       // Track the view when joining discussion (silently)
                       try {
-                        await fetch(`/api/discussions/${selectedDiscussion.id}/view`, {
-                          method: 'POST',
-                          credentials: 'include'
-                        });
+                        await fetch(
+                          `/api/discussions/${selectedDiscussion.id}/view`,
+                          {
+                            method: "POST",
+                            credentials: "include",
+                          }
+                        );
                       } catch (error) {
-                        console.error('Error tracking discussion view:', error);
+                        console.error("Error tracking discussion view:", error);
                       }
 
                       // Open the discussion page
-                      window.open(`/discussions/${selectedDiscussion.id}`, "_blank");
+                      window.open(
+                        `/discussions/${selectedDiscussion.id}`,
+                        "_blank"
+                      );
                     }}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
                   >
@@ -4208,7 +4465,9 @@ export default function MenteeDashboardPage() {
                 </DialogTitle>
               </DialogHeader>
               <div className="text-center py-8">
-                <p className="text-slate-600">Failed to load discussion details</p>
+                <p className="text-slate-600">
+                  Failed to load discussion details
+                </p>
               </div>
             </>
           )}
