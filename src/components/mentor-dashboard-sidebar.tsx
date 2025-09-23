@@ -223,7 +223,7 @@ export default function MentorDashboardSidebar({
                         )}
                       />
                       <div className="flex-1 text-left">
-                        <div className="font-medium leading-tight text-sm sm:text-base">
+                        <div className="font-medium leading-tight text-sm">
                           {/* Mobile: Shorter labels for key actions */}
                           <span className="sm:hidden">
                             {item.id === "post-opportunity"
