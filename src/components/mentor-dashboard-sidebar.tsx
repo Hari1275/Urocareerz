@@ -131,7 +131,7 @@ export default function MentorDashboardSidebar({
               <h2 className="text-lg font-bold text-slate-900 tracking-tight">
                 Mentor Dashboard
               </h2>
-              <p className="text-xs text-slate-600">Navigation Menu</p>
+              {/* <p className="text-xs text-slate-600">Navigation Menu</p> */}
             </div>
           </div>
           <Button

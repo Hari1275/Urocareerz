@@ -275,9 +275,9 @@ const CommentNode = memo(function CommentNode({
                 <span className="text-xs font-medium">Reply</span>
               </button>
 
-              <button className="text-slate-500 hover:text-slate-700 transition-colors">
+              {/* <button className="text-slate-500 hover:text-slate-700 transition-colors">
                 <MoreVertical className="h-4 w-4" />
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

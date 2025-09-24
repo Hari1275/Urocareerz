@@ -89,9 +89,9 @@ export default function DashboardSidebar({
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                Navigation
+                Mentee Dashboard
               </h2>
-              <p className="text-xs text-slate-600">UroCareerz Dashboard</p>
+              {/* <p className="text-xs text-slate-600">UroCareerz Dashboard</p> */}
             </div>
           </div>
           <Button
