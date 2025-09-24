@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageCircle, MoreVertical, Clock, Send, X } from "lucide-react";
+import { MessageCircle, MoreVertical, Clock, Send, X, ChevronDown, ChevronRight, Reply } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Author = {
@@ -122,22 +122,39 @@ export default function DiscussionComments({
 }: DiscussionCommentsProps) {
   const tree = useMemo(() => buildCommentTree(comments), [comments]);
 
+  // Calculate total comment count (including all nested replies)
+  const getTotalCommentCount = (comments: TreeComment[]): number => {
+    return comments.reduce((total, comment) => {
+      return total + 1 + getTotalCommentCount(comment.replies);
+    }, 0);
+  };
+
+  const totalComments = getTotalCommentCount(tree);
+
   return (
-    <div className="space-y-3">
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6">
+      {/* Comments Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <h2 className="text-2xl font-bold text-slate-900">Comments</h2>
+        <Badge className="bg-orange-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+          {totalComments}
+        </Badge>
+      </div>
+
       {tree.length === 0 ? (
-        <div className="text-center py-8 bg-gradient-to-br from-slate-50/50 to-white rounded-xl border border-slate-200/60 shadow-sm">
-          <div className="flex flex-col items-center space-y-2.5">
-            <div className="p-2.5 bg-blue-50 rounded-full">
-              <MessageCircle className="h-6 w-6 text-blue-500" />
+        <div className="text-center py-12 bg-gradient-to-br from-slate-50/50 to-white rounded-2xl border border-slate-200/60 shadow-sm">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="p-3 bg-blue-50 rounded-full">
+              <MessageCircle className="h-7 w-7 text-blue-500" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-slate-900">No comments yet</h3>
-              <p className="text-sm text-slate-600 mt-0.5">Be the first to share your thoughts!</p>
+              <h3 className="text-lg font-semibold text-slate-900">No comments yet</h3>
+              <p className="text-sm text-slate-600 mt-1">Be the first to share your thoughts!</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-6 w-full">
           {tree.map((c) => (
             <CommentNode
               key={c.id}
@@ -200,215 +217,143 @@ const CommentNode = memo(function CommentNode({
     }
   };
 
+
   const avatarColors = getAvatarColors(node.author.id);
   const currentUserAvatarColors = currentUser ? getAvatarColors(currentUser.id) : null;
 
   return (
-    <div className={cn(
-      "relative",
-      depth > 0 && "ml-1 pl-2 border-l-2 border-slate-200 sm:ml-3 sm:pl-3 md:ml-4 md:pl-4"
-    )}>
+    <div className="relative">
+      {/* Thread Line for nested comments */}
+      {depth > 0 && (
+        <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" 
+             style={{ left: `${depth * 20}px` }} />
+      )}
+      
       <div className={cn(
-        "group relative transition-all duration-200 rounded-xl",
-        depth === 0 
-          ? "bg-white/80 backdrop-blur-sm border border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300/70 p-3 sm:p-4"
-          : "hover:bg-slate-50/40 p-2 rounded-lg"
+        "relative",
+        depth > 0 && "ml-8"
       )}>
-        <div className="flex space-x-3 sm:space-x-3.5">
-          {/* Avatar Section */}
+        {/* Main Comment */}
+        <div className="flex gap-3 mb-4">
+          {/* Avatar */}
           <div className="flex-shrink-0">
-            <div className="relative">
-              <Avatar className={cn(
-                "ring-2 ring-white shadow-sm transition-all duration-200 group-hover:ring-slate-200",
-                depth === 0 ? "h-9 w-9 sm:h-10 sm:w-10" : "h-7 w-7 sm:h-8 sm:w-8"
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className={cn(
+                "font-semibold text-sm",
+                avatarColors.background,
+                avatarColors.foreground
               )}>
-                <AvatarFallback className={cn(
-                  "font-semibold transition-colors duration-200",
-                  depth === 0 ? "text-sm" : "text-xs sm:text-sm",
-                  avatarColors.background,
-                  avatarColors.foreground
-                )}>
-                  {getInitials(node.author.firstName, node.author.lastName)}
-                </AvatarFallback>
-              </Avatar>
-              {depth === 0 && node.replies.length > 0 && (
-                <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center border-2 border-white font-medium">
-                  {node.replies.length > 99 ? '99+' : node.replies.length}
-                </div>
-              )}
-            </div>
+                {getInitials(node.author.firstName, node.author.lastName)}
+              </AvatarFallback>
+            </Avatar>
           </div>
 
-          {/* Content Section */}
-          <div className="flex-1 min-w-0 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "font-semibold text-slate-900 tracking-tight",
-                    depth === 0 ? "text-sm sm:text-base" : "text-sm"
-                  )}>
-                    {node.author.firstName} {node.author.lastName}
-                  </span>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs px-2 py-0.5 bg-blue-50/80 text-blue-700 border-blue-200/60 font-medium"
-                  >
-                    {node.author.role}
-                  </Badge>
-                </div>
-                <span className="text-xs text-slate-500 flex items-center gap-1.5">
-                  <Clock className="h-3 w-3" />
-                  <span title={new Date(node.createdAt).toLocaleString()}>
-                    {formatRelativeTime(node.createdAt)}
-                  </span>
-                </span>
-              </div>
-              
-              <div className="hidden sm:flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-7 px-2.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-all duration-200",
-                    isReplying && "text-blue-600 bg-blue-50"
-                  )}
-                  onClick={() => setIsReplying(!isReplying)}
-                >
-                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                  <span>Reply</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200"
-                  aria-label="More options"
-                >
-                  <MoreVertical className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+          {/* Comment Content */}
+          <div className="flex-1 min-w-0">
+            {/* User Info */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-semibold text-slate-900 text-sm">
+                {node.author.firstName} {node.author.lastName}
+              </span>
+              <span className="text-xs text-slate-500">
+                {formatRelativeTime(node.createdAt)}
+              </span>
             </div>
 
-            {/* Content */}
-            <div className={cn(
-              "text-slate-700 leading-relaxed prose prose-sm max-w-none",
-              depth === 0 ? "text-sm sm:text-base" : "text-sm"
-            )}>
+            {/* Comment Text */}
+            <div className="text-slate-700 text-sm leading-relaxed mb-3 break-words">
               {node.content}
             </div>
 
-            {/* Mobile Actions */}
-            <div className="mt-2 flex items-center gap-1 sm:hidden">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-7 px-2.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-all duration-200",
-                    isReplying && "text-blue-600 bg-blue-50"
-                  )}
-                  onClick={() => setIsReplying(!isReplying)}
-                >
-                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                  <span>Reply</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
-                  aria-label="More options"
-                >
-                  <MoreVertical className="h-3.5 w-3.5" />
-                </Button>
-            </div>
+            {/* Action Bar */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsReplying(!isReplying)}
+                className="flex items-center gap-1 text-slate-600 hover:text-blue-600 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span className="text-xs font-medium">Reply</span>
+              </button>
 
-            {/* Reply Form */}
-            {isReplying && canReply && (
-              <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="bg-slate-50/40 rounded-lg p-3 border border-slate-200/50">
-                  <div className="flex space-x-3">
-                    <div className="flex-shrink-0">
-                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-1 ring-slate-200">
-                        <AvatarFallback className={cn(
-                          "text-xs font-medium",
-                          currentUserAvatarColors ? [currentUserAvatarColors.background, currentUserAvatarColors.foreground] : "bg-slate-400 text-white"
-                        )}>
-                          {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div className="flex-1 space-y-2.5">
-                      <Textarea
-                        value={reply}
-                        onChange={(e) => setReply(e.target.value)}
-                        placeholder={`Reply to ${node.author.firstName}...`}
-                        className="min-h-[70px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 text-sm bg-white/80 backdrop-blur-sm"
-                        autoFocus
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setIsReplying(false);
-                            setReply("");
-                          }}
-                          className="h-8 text-slate-600 hover:text-slate-800 hover:bg-white/60"
-                        >
-                          <X className="h-3.5 w-3.5 mr-1" />
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={handleReply}
-                          disabled={!reply.trim() || isSubmitting}
-                          className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                        >
-                          <Send className="h-3.5 w-3.5 mr-1" />
-                          {isSubmitting ? "Posting..." : "Reply"}
-                        </Button>
-                      </div>
-                    </div>
+              <button className="text-slate-500 hover:text-slate-700 transition-colors">
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Reply Form */}
+        {isReplying && canReply && (
+          <div className="ml-13 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className={cn(
+                      "text-xs font-medium",
+                      currentUserAvatarColors ? [currentUserAvatarColors.background, currentUserAvatarColors.foreground] : "bg-slate-400 text-white"
+                    )}>
+                      {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="flex-1 space-y-3 min-w-0">
+                  <Textarea
+                    value={reply}
+                    onChange={(e) => setReply(e.target.value)}
+                    placeholder={`Reply to ${node.author.firstName}...`}
+                    className="min-h-[80px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 text-sm bg-white"
+                    autoFocus
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsReplying(false);
+                        setReply("");
+                      }}
+                      className="h-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-sm"
+                    >
+                      <X className="h-3.5 w-3.5 mr-1.5" />
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleReply}
+                      disabled={!reply.trim() || isSubmitting}
+                      className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm"
+                    >
+                      <Send className="h-3.5 w-3.5 mr-1.5" />
+                      {isSubmitting ? "Posting..." : "Reply"}
+                    </Button>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Replies */}
-            {node.replies.length > 0 && (
-              <div className="mt-3 space-y-2.5">
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium transition-all duration-200 hover:bg-blue-50 px-2 py-1 rounded-md -ml-2"
-                >
-                  <div className={cn(
-                    "w-2 h-2 border-r-2 border-b-2 border-current transform transition-transform duration-200",
-                    isExpanded ? "rotate-45" : "-rotate-45"
-                  )} />
-                  <span>
-                    {isExpanded ? "Hide" : "Show"} {node.replies.length} {node.replies.length === 1 ? "reply" : "replies"}
-                  </span>
-                </button>
-                
-                {isExpanded && (
-                  <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                    {node.replies.map((r) => (
-                      <CommentNode
-                        key={r.id}
-                        node={r}
-                        threadId={threadId}
-                        depth={depth + 1}
-                        onAdded={onAdded}
-                        canReply={canReply}
-                        currentUser={currentUser}
-                      />
-                    ))}
-                  </div>
-                )}
+        {/* Replies */}
+        {node.replies.length > 0 && (
+          <div className="ml-13">
+            {isExpanded && (
+              <div className="space-y-4">
+                {node.replies.map((r) => (
+                  <CommentNode
+                    key={r.id}
+                    node={r}
+                    threadId={threadId}
+                    depth={depth + 1}
+                    onAdded={onAdded}
+                    canReply={canReply}
+                    currentUser={currentUser}
+                  />
+                ))}
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
