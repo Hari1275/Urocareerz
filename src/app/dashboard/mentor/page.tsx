@@ -4525,69 +4525,81 @@ export default function MentorDashboardPage() {
           onOpenChange={setShowMenteeProfileModal}
         >
           <DialogContent
-            className="max-w-[90vw] w-full max-h-[95vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 to-white"
-            style={{ maxWidth: "min(90vw, 1200px)" }}
+            className="max-w-[98vw] max-h-[95vh] overflow-y-auto overflow-x-hidden p-0 bg-gradient-to-br from-slate-50 to-white sm:max-w-[95vw] lg:max-w-[min(90vw,1200px)] [&_*]:max-w-full [&_*]:box-border [&_*]:break-words"
+            style={{ 
+              width: "min(98vw, 1200px)",
+              maxWidth: "min(98vw, 1200px)",
+              boxSizing: "border-box",
+              wordWrap: "break-word",
+              overflowWrap: "break-word"
+            }}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className="h-16 w-16 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
-                      {selectedMentee.profile?.avatar ? (
-                        <img
-                          src={selectedMentee.profile.avatar}
-                          alt={`${selectedMentee.firstName} ${selectedMentee.lastName}`}
-                          className="h-16 w-16 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <span className="text-white font-bold text-2xl">
-                          {selectedMentee.firstName?.[0]?.toUpperCase()}
-                          {selectedMentee.lastName?.[0]?.toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 h-6 w-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                      <div className="h-2 w-2 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <DialogTitle className="text-2xl font-bold text-slate-900 leading-tight">
-                      {selectedMentee.firstName} {selectedMentee.lastName}
-                    </DialogTitle>
-                    <p className="text-slate-600 text-sm mt-1">
-                      {selectedMentee.email}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
-                        <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
-                        Available for Mentorship
-                      </Badge>
-                      {selectedMentee.profile?.location && (
-                        <div className="flex items-center gap-1 text-xs text-slate-600">
-                          <MapPin className="h-3 w-3" />
-                          {selectedMentee.profile.location}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200/60 p-3 sm:p-4 lg:p-6" style={{ boxSizing: "border-box" }}>
+              {/* Close Button - Top Right */}
+              <div className="flex justify-end mb-3">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowMenteeProfileModal(false)}
-                  className="text-slate-500 hover:text-slate-700"
+                  className="text-slate-500 hover:text-slate-700 p-1"
                 >
                   <XCircle className="h-4 w-4" />
                 </Button>
               </div>
+              
+              {/* Profile Info */}
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="relative flex-shrink-0">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                    {selectedMentee.profile?.avatar ? (
+                      <img
+                        src={selectedMentee.profile.avatar}
+                        alt={`${selectedMentee.firstName} ${selectedMentee.lastName}`}
+                        className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-bold text-lg sm:text-2xl">
+                        {selectedMentee.firstName?.[0]?.toUpperCase()}
+                        {selectedMentee.lastName?.[0]?.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 h-5 w-5 sm:h-6 sm:w-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 bg-white rounded-full"></div>
+                  </div>
+                </div>
+                
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 leading-tight break-words">
+                    {selectedMentee.firstName} {selectedMentee.lastName}
+                  </DialogTitle>
+                  <p className="text-slate-600 text-xs sm:text-sm mt-1 break-all overflow-hidden" style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}>
+                    {selectedMentee.email}
+                  </p>
+                  
+                  {/* Status and Location - Stacked on mobile */}
+                  <div className="mt-2 space-y-1 sm:space-y-0 sm:flex sm:items-center sm:gap-2">
+                    <Badge className="bg-green-100 text-green-800 border-green-200 text-xs w-fit max-w-full">
+                      <div className="h-2 w-2 bg-green-500 rounded-full mr-1 flex-shrink-0"></div>
+                      <span className="truncate">Available for Mentorship</span>
+                    </Badge>
+                    {selectedMentee.profile?.location && (
+                      <div className="flex items-center gap-1 text-xs text-slate-600">
+                        <MapPin className="h-3 w-3 flex-shrink-0" />
+                        <span className="break-words">{selectedMentee.profile.location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-x-hidden" style={{ boxSizing: "border-box" }}>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 min-w-0" style={{ boxSizing: "border-box" }}>
                 {/* Main Profile Column */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
                   {/* About Section */}
                   {selectedMentee.profile?.bio && (
                     <Card className="bg-white/60 backdrop-blur-sm border-slate-200/60">
@@ -4598,7 +4610,7 @@ export default function MentorDashboardPage() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-slate-700 leading-relaxed">
+                        <p className="text-slate-700 leading-relaxed break-words overflow-wrap-anywhere">
                           {selectedMentee.profile.bio}
                         </p>
                       </CardContent>
@@ -4622,7 +4634,7 @@ export default function MentorDashboardPage() {
                             </div>
                             Education
                           </h4>
-                          <p className="text-slate-700 ml-6">
+                          <p className="text-slate-700 ml-6 break-words overflow-wrap-anywhere">
                             {selectedMentee.profile.education}
                           </p>
                         </div>
@@ -4636,7 +4648,7 @@ export default function MentorDashboardPage() {
                             </div>
                             Experience
                           </h4>
-                          <p className="text-slate-700 ml-6">
+                          <p className="text-slate-700 ml-6 break-words overflow-wrap-anywhere">
                             {selectedMentee.profile.experience}
                           </p>
                         </div>
@@ -4695,7 +4707,7 @@ export default function MentorDashboardPage() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-slate-700 leading-relaxed">
+                        <p className="text-slate-700 leading-relaxed break-words overflow-wrap-anywhere">
                           {selectedMentee.profile.purposeOfRegistration}
                         </p>
                       </CardContent>
@@ -4704,7 +4716,7 @@ export default function MentorDashboardPage() {
                 </div>
 
                 {/* Sidebar - Quick Info & Actions - Mobile-First Optimized Bottom Section */}
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-3 sm:space-y-4 lg:space-y-6 min-w-0">
                   {/* Mobile: Contact Information First (Most Important) */}
                   <div className="block lg:hidden">
                     <Card className="bg-white/70 backdrop-blur-sm border-slate-200/60 shadow-sm">
@@ -4717,7 +4729,7 @@ export default function MentorDashboardPage() {
                       <CardContent className="space-y-2 pt-0">
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-3.5 w-3.5 text-slate-400" />
-                          <span className="text-slate-700 truncate">
+                          <span className="text-slate-700 break-all text-xs sm:text-sm">
                             {selectedMentee.email}
                           </span>
                         </div>
@@ -4734,7 +4746,7 @@ export default function MentorDashboardPage() {
                         {selectedMentee.profile?.location && (
                           <div className="flex items-center gap-2 text-sm">
                             <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700 truncate">
+                            <span className="text-slate-700 break-words text-xs sm:text-sm">
                               {selectedMentee.profile.location}
                             </span>
                           </div>
@@ -4944,7 +4956,7 @@ export default function MentorDashboardPage() {
                       <CardContent className="space-y-3">
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-700">
+                          <span className="text-slate-700 break-all text-sm">
                             {selectedMentee.email}
                           </span>
                         </div>
@@ -4961,7 +4973,7 @@ export default function MentorDashboardPage() {
                         {selectedMentee.profile?.location && (
                           <div className="flex items-center gap-2 text-sm">
                             <MapPin className="h-4 w-4 text-slate-400" />
-                            <span className="text-slate-700">
+                            <span className="text-slate-700 break-words text-sm">
                               {selectedMentee.profile.location}
                             </span>
                           </div>
