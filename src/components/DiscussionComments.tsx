@@ -136,7 +136,7 @@ export default function DiscussionComments({
       {/* Comments Header */}
       <div className="flex items-center gap-3 mb-6">
         <h2 className="text-2xl font-bold text-slate-900">Comments</h2>
-        <Badge className="bg-orange-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+        <Badge className="bg-blue-600 text-white text-sm font-medium px-3 py-1 rounded-full">
           {totalComments}
         </Badge>
       </div>
